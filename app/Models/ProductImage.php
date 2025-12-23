@@ -32,6 +32,15 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
+        // Use placeholder images from picsum.photos for demo
+        if (str_starts_with($this->path, 'products/placeholder')) {
+            $productId = $this->product_id ?? 1;
+            $imageNumber = $this->sort_order + 1;
+            // Use product_id and sort_order as seed for consistent images
+            $seed = ($productId * 10) + $imageNumber;
+            return "https://picsum.photos/seed/{$seed}/800/800";
+        }
+
         return asset('storage/' . $this->path);
     }
 }
