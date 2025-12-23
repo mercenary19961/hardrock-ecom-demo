@@ -13,8 +13,8 @@ A production-ready e-commerce demonstration platform built with Laravel + Inerti
 | Backend | Laravel 12, PHP 8.2+ |
 | Frontend | React 18, TypeScript 5 |
 | Bridge | Inertia.js 2.0 |
-| Styling | Tailwind CSS 3 |
-| Build | Vite 7 |
+| Styling | Tailwind CSS 4 |
+| Build | Vite 6 |
 | Database | MySQL 8.0 |
 | Hosting | Railway |
 | CDN/DNS | Cloudflare |
