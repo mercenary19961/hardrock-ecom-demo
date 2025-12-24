@@ -181,7 +181,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for complete Railway + Cloudflare s
 ## Documentation
 
 - [Architecture Overview](docs/ARCHITECTURE.md)
-- [Database Schema](docs/DATABASE.md)
+- [Database Schema](docs/DATABASE.md) | [View Diagram](https://drawsql.app/teams/hardrock/diagrams/hardrock-e-commerce-demo)
 - [Development Workflow](docs/DEV_WORKFLOW.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Demo Script](docs/DEMO_SCRIPT.md)

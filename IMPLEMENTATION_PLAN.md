@@ -215,14 +215,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 ### Step 5.1: Create Directory Structure
 
+> **⚠️ IMPORTANT: Case Sensitivity**
+>
+> Laravel Breeze creates folders with **capital letters**: `Components/`, `Layouts/`, `Pages/`.
+> TypeScript with `forceConsistentCasingInFileNames: true` (default) enforces exact case matching.
+>
+> **Always use the existing folder names created by Breeze:**
+> - `@/Components/` (not `@/components/`)
+> - `@/Layouts/` (not `@/layouts/`)
+> - `@/Pages/` (not `@/pages/`)
+>
+> If you create new folders, match the existing convention (capital first letter).
+
 ```
 resources/js/
-├── components/
+├── Components/          # ← Capital C (created by Breeze)
 │   ├── ui/
 │   ├── shop/
 │   └── admin/
-├── layouts/
-├── pages/
+├── Layouts/             # ← Capital L (created by Breeze)
+├── Pages/               # ← Capital P (created by Breeze)
 │   ├── Shop/
 │   ├── Admin/
 │   └── Auth/
@@ -234,7 +246,7 @@ resources/js/
 
 ### Step 5.2: Create Base UI Components
 
-Build these first (in `components/ui/`):
+Build these first (in `Components/ui/`):
 1. Button.tsx
 2. Input.tsx
 3. Card.tsx
@@ -266,7 +278,7 @@ export interface Order { ... }
 
 ### Step 6.1: Core Shop Components
 
-Build in `components/shop/`:
+Build in `Components/shop/`:
 1. ProductCard.tsx
 2. ProductGrid.tsx
 3. CategoryNav.tsx
@@ -283,14 +295,14 @@ Build in `components/shop/`:
 ### Step 6.3: Shop Pages
 
 Build in order:
-1. `pages/Shop/Home.tsx` - Featured products, categories
-2. `pages/Shop/Category.tsx` - Product listing with filters
-3. `pages/Shop/Product.tsx` - Detail page with gallery
-4. `pages/Shop/Search.tsx` - Search results
-5. `pages/Shop/Cart.tsx` - Full cart page
-6. `pages/Shop/Checkout.tsx` - Checkout form
-7. `pages/Shop/OrderConfirmation.tsx` - Success page
-8. `pages/Shop/OrderHistory.tsx` - Past orders
+1. `Pages/Shop/Home.tsx` - Featured products, categories
+2. `Pages/Shop/Category.tsx` - Product listing with filters
+3. `Pages/Shop/Product.tsx` - Detail page with gallery
+4. `Pages/Shop/Search.tsx` - Search results
+5. `Pages/Shop/Cart.tsx` - Full cart page
+6. `Pages/Shop/Checkout.tsx` - Checkout form
+7. `Pages/Shop/OrderConfirmation.tsx` - Success page
+8. `Pages/Shop/OrderHistory.tsx` - Past orders
 
 ---
 
@@ -298,7 +310,7 @@ Build in order:
 
 ### Step 7.1: Admin Components
 
-Build in `components/admin/`:
+Build in `Components/admin/`:
 1. Sidebar.tsx
 2. StatsCard.tsx
 3. DataTable.tsx
@@ -308,15 +320,15 @@ Build in `components/admin/`:
 ### Step 7.2: Admin Pages
 
 Build in order:
-1. `pages/Admin/Dashboard.tsx` - Stats overview
-2. `pages/Admin/Categories/Index.tsx` - Category list
-3. `pages/Admin/Categories/Create.tsx` - Category form
-4. `pages/Admin/Categories/Edit.tsx` - Category edit
-5. `pages/Admin/Products/Index.tsx` - Product list
-6. `pages/Admin/Products/Create.tsx` - Product form
-7. `pages/Admin/Products/Edit.tsx` - Product edit
-8. `pages/Admin/Orders/Index.tsx` - Order list
-9. `pages/Admin/Orders/Show.tsx` - Order detail
+1. `Pages/Admin/Dashboard.tsx` - Stats overview
+2. `Pages/Admin/Categories/Index.tsx` - Category list
+3. `Pages/Admin/Categories/Create.tsx` - Category form
+4. `Pages/Admin/Categories/Edit.tsx` - Category edit
+5. `Pages/Admin/Products/Index.tsx` - Product list
+6. `Pages/Admin/Products/Create.tsx` - Product form
+7. `Pages/Admin/Products/Edit.tsx` - Product edit
+8. `Pages/Admin/Orders/Index.tsx` - Order list
+9. `Pages/Admin/Orders/Show.tsx` - Order detail
 
 ---
 

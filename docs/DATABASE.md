@@ -1,5 +1,7 @@
 # Database Schema
 
+**[View Interactive Diagram on DrawSQL](https://drawsql.app/teams/hardrock/diagrams/hardrock-e-commerce-demo)**
+
 ## Entity Relationship Diagram
 
 ```
