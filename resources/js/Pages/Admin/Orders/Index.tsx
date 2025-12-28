@@ -3,8 +3,8 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Order, PaginatedData } from '@/types/models';
 import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
-import { Search, Eye } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Eye, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -14,17 +14,63 @@ interface Props {
 
 const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
+// Debounce hook for search
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
+    const [currentStatus, setCurrentStatus] = useState(filters.status || '');
+    const isFirstRender = useRef(true);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/admin/orders', { search, status: filters.status }, { preserveState: true });
-    };
+    const debouncedSearch = useDebounce(search, 300);
+
+    // SPA-style filter function
+    const applyFilters = useCallback((searchVal: string, statusVal: string) => {
+        router.get(
+            '/admin/orders',
+            {
+                search: searchVal || undefined,
+                status: statusVal || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    }, []);
+
+    // Auto-filter when debounced search changes
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        applyFilters(debouncedSearch, currentStatus);
+    }, [debouncedSearch, applyFilters]);
 
     const handleStatusFilter = (status: string) => {
-        router.get('/admin/orders', { search, status: status === 'all' ? '' : status }, { preserveState: true });
+        const newStatus = status === 'all' ? '' : status;
+        setCurrentStatus(newStatus);
+        applyFilters(search, newStatus);
     };
+
+    const handleClearFilters = () => {
+        setSearch('');
+        setCurrentStatus('');
+        applyFilters('', '');
+    };
+
+    const hasActiveFilters = filters.search || filters.status;
 
     return (
         <AdminLayout>
@@ -54,8 +100,8 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                 </div>
 
                 {/* Search */}
-                <form onSubmit={handleSearch} className="max-w-md">
-                    <div className="relative">
+                <div className="flex gap-4 items-center">
+                    <div className="relative flex-1 max-w-md">
                         <input
                             type="text"
                             value={search}
@@ -65,7 +111,13 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                         />
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
-                </form>
+                    {hasActiveFilters && (
+                        <Button variant="outline" onClick={handleClearFilters}>
+                            <X className="h-4 w-4 mr-2" />
+                            Clear Filters
+                        </Button>
+                    )}
+                </div>
 
                 {/* Table */}
                 <Card>
@@ -120,7 +172,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                             </Badge>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link href={`/admin/orders/${order.id}`}>
+                                            <Link href={`/admin/orders/${order.id}`} preserveScroll>
                                                 <Button variant="ghost" size="sm">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
@@ -143,6 +195,8 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                             <Link
                                 key={index}
                                 href={link.url || '#'}
+                                preserveScroll
+                                preserveState
                                 className={`px-4 py-2 rounded-lg text-sm ${
                                     link.active
                                         ? 'bg-gray-900 text-white'

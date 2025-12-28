@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'url' => $request->path() === '/' ? '/' : '/' . $request->path(),
         ];
     }
 }

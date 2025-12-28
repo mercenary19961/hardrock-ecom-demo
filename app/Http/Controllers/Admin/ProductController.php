@@ -20,15 +20,15 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->search($request->search);
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->active();
             } elseif ($request->status === 'inactive') {

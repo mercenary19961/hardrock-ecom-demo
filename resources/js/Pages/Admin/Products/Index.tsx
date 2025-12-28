@@ -3,8 +3,8 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Product, Category, PaginatedData } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Edit, Trash2, Search, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Props {
     products: PaginatedData<Product>;
@@ -12,14 +12,71 @@ interface Props {
     filters: { search?: string; category?: string; status?: string };
 }
 
+// Debounce hook for search
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 export default function ProductsIndex({ products, categories, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [category, setCategory] = useState(filters.category || '');
     const [status, setStatus] = useState(filters.status || '');
+    const isFirstRender = useRef(true);
 
-    const handleFilter = () => {
-        router.get('/admin/products', { search, category, status }, { preserveState: true });
+    const debouncedSearch = useDebounce(search, 300);
+
+    // SPA-style filter function
+    const applyFilters = useCallback((searchVal: string, categoryVal: string, statusVal: string) => {
+        router.get(
+            '/admin/products',
+            {
+                search: searchVal || undefined,
+                category: categoryVal || undefined,
+                status: statusVal || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            }
+        );
+    }, []);
+
+    // Auto-filter when debounced search changes
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        applyFilters(debouncedSearch, category, status);
+    }, [debouncedSearch, applyFilters]);
+
+    // Instant filter for dropdowns
+    const handleCategoryChange = (value: string) => {
+        setCategory(value);
+        applyFilters(search, value, status);
     };
+
+    const handleStatusChange = (value: string) => {
+        setStatus(value);
+        applyFilters(search, category, value);
+    };
+
+    const handleClearFilters = () => {
+        setSearch('');
+        setCategory('');
+        setStatus('');
+        applyFilters('', '', '');
+    };
+
+    const hasActiveFilters = filters.search || filters.category || filters.status;
 
     const handleDelete = (product: Product) => {
         if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
@@ -57,7 +114,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                         </div>
                         <select
                             value={category}
-                            onChange={(e) => setCategory(e.target.value)}
+                            onChange={(e) => handleCategoryChange(e.target.value)}
                             className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
                         >
                             <option value="">All Categories</option>
@@ -69,7 +126,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                         </select>
                         <select
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            onChange={(e) => handleStatusChange(e.target.value)}
                             className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
                         >
                             <option value="">All Status</option>
@@ -77,7 +134,12 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             <option value="inactive">Inactive</option>
                             <option value="out_of_stock">Out of Stock</option>
                         </select>
-                        <Button onClick={handleFilter}>Filter</Button>
+                        {hasActiveFilters && (
+                            <Button variant="outline" onClick={handleClearFilters}>
+                                <X className="h-4 w-4 mr-2" />
+                                Clear Filters
+                            </Button>
+                        )}
                     </div>
                 </Card>
 
@@ -156,7 +218,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/admin/products/${product.id}/edit`}>
+                                                <Link href={`/admin/products/${product.id}/edit`} preserveScroll>
                                                     <Button variant="ghost" size="sm">
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
@@ -187,6 +249,8 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             <Link
                                 key={index}
                                 href={link.url || '#'}
+                                preserveScroll
+                                preserveState
                                 className={`px-4 py-2 rounded-lg text-sm ${
                                     link.active
                                         ? 'bg-gray-900 text-white'

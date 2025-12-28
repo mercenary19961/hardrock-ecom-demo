@@ -24,7 +24,7 @@ class OrderController extends Controller
             });
         }
 
-        if ($request->has('status') && $request->status !== 'all') {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
