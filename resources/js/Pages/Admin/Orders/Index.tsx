@@ -119,22 +119,26 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
 
                 {/* Status Tabs */}
                 <div className="flex flex-wrap gap-2">
-                    {statuses.map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => handleStatusFilter(status)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                (filters.status || 'all') === status
-                                    ? 'bg-gray-900 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                            {status !== 'all' && statusCounts[status] !== undefined && (
-                                <span className="ml-1 opacity-70">({statusCounts[status] || 0})</span>
-                            )}
-                        </button>
-                    ))}
+                    {statuses.map((status) => {
+                        const totalOrders = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
+                        const count = status === 'all' ? totalOrders : statusCounts[status];
+                        return (
+                            <button
+                                key={status}
+                                onClick={() => handleStatusFilter(status)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                    (filters.status || 'all') === status
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                {count !== undefined && (
+                                    <span className="ml-1 opacity-70">({count})</span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Search */}
