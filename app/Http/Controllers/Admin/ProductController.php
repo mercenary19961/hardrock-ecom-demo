@@ -18,17 +18,17 @@ class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Product::with('category');
+        $query = Product::with(['category', 'primaryImage']);
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->search($request->search);
         }
 
-        if ($request->has('category')) {
+        if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->active();
             } elseif ($request->status === 'inactive') {
@@ -38,14 +38,18 @@ class ProductController extends Controller
             }
         }
 
-        $products = $query->latest()->paginate(15)->withQueryString();
+        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
+            ? (int) $request->per_page
+            : 15;
+
+        $products = $query->latest()->paginate($perPage)->withQueryString();
 
         $categories = Category::ordered()->get(['id', 'name']);
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category', 'status']),
+            'filters' => $request->only(['search', 'category', 'status', 'per_page']),
         ]);
     }
 

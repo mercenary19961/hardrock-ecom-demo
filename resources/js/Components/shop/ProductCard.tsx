@@ -9,7 +9,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
     const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
-    const imageUrl = primaryImage ? getImageUrl(primaryImage.path) : '/images/placeholder.jpg';
+    const imageUrl = primaryImage
+        ? getImageUrl(primaryImage.path, product.id, primaryImage.sort_order)
+        : '/images/placeholder.jpg';
     const hasDiscount = product.compare_price && product.compare_price > product.price;
 
     return (

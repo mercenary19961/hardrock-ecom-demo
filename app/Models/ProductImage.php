@@ -25,6 +25,20 @@ class ProductImage extends Model
         ];
     }
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function ($image) {
+            if ($image->is_primary) {
+                // Unset other primaries for the same product
+                ProductImage::where('product_id', $image->product_id)
+                    ->where('id', '!=', $image->id ?? 0)
+                    ->update(['is_primary' => false]);
+            }
+        });
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

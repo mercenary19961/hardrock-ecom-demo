@@ -7,6 +7,8 @@ use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Shop routes
@@ -36,6 +38,17 @@ Route::name('shop.')->group(function () {
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });
 });
+
+// Dashboard redirect (Breeze expects this route)
+Route::middleware('auth')->get('/dashboard', function () {
+    // Redirect admins to admin dashboard, customers to home
+    /** @var User $user */
+    $user = Auth::user();
+    if ($user->isAdmin()) {
+        return redirect('/admin');
+    }
+    return redirect('/');
+})->name('dashboard');
 
 // Profile routes (from Breeze)
 Route::middleware('auth')->group(function () {

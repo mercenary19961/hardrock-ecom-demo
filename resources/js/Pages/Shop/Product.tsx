@@ -62,7 +62,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                     <div>
                         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
                             <img
-                                src={images[selectedImage] ? getImageUrl(images[selectedImage].path) : '/images/placeholder.jpg'}
+                                src={images[selectedImage] ? getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order) : '/images/placeholder.jpg'}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                             />
@@ -80,7 +80,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                                         }`}
                                     >
                                         <img
-                                            src={getImageUrl(image.path)}
+                                            src={getImageUrl(image.path, product.id, image.sort_order)}
                                             alt={image.alt_text || product.name}
                                             className="w-full h-full object-cover"
                                         />

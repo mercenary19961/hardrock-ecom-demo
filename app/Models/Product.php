@@ -90,8 +90,12 @@ class Product extends Model
         return $query->where('stock', '>', 0);
     }
 
-    public function scopeSearch($query, string $term)
+    public function scopeSearch($query, ?string $term)
     {
+        if (empty($term)) {
+            return $query;
+        }
+
         return $query->where(function ($q) use ($term) {
             $q->where('name', 'like', "%{$term}%")
               ->orWhere('description', 'like', "%{$term}%")
