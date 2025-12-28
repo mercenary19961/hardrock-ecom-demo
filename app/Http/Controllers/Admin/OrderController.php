@@ -28,7 +28,11 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
 
-        $orders = $query->recent()->paginate(15)->withQueryString();
+        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
+            ? (int) $request->per_page
+            : 15;
+
+        $orders = $query->recent()->paginate($perPage)->withQueryString();
 
         $statusCounts = Order::selectRaw('status, count(*) as count')
             ->groupBy('status')
@@ -37,7 +41,7 @@ class OrderController extends Controller
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
             'statusCounts' => $statusCounts,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => $request->only(['search', 'status', 'per_page']),
         ]);
     }
 

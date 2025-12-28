@@ -74,14 +74,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 left-0 z-40 bg-gray-900 text-white transition-all duration-300 ${
-                    sidebarOpen ? 'w-64' : 'w-20'
+                    mobileMenuOpen ? 'w-64' : sidebarOpen ? 'w-64' : 'w-20'
                 } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo */}
                     <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
-                        {sidebarOpen && (
-                            <Link href="/admin" className="text-xl font-bold">
+                        {(sidebarOpen || mobileMenuOpen) && (
+                            <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0">
                                 HardRock Admin
                             </Link>
                         )}
@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                     }`}
                                 >
                                     <Icon className="h-5 w-5 flex-shrink-0" />
-                                    {sidebarOpen && <span>{item.name}</span>}
+                                    {(sidebarOpen || mobileMenuOpen) && <span>{item.name}</span>}
                                 </Link>
                             );
                         })}
@@ -127,7 +127,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             className="flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800"
                         >
                             <Store className="h-5 w-5" />
-                            {sidebarOpen && <span>View Store</span>}
+                            {(sidebarOpen || mobileMenuOpen) && <span>View Store</span>}
                         </Link>
                         <Link
                             href="/logout"
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             className="flex items-center gap-3 w-full px-3 py-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800"
                         >
                             <LogOut className="h-5 w-5" />
-                            {sidebarOpen && <span>Logout</span>}
+                            {(sidebarOpen || mobileMenuOpen) && <span>Logout</span>}
                         </Link>
                     </div>
                 </div>
