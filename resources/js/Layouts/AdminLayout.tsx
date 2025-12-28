@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Link, usePage, router } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard,
     Package,
@@ -12,7 +12,6 @@ import {
     Store,
     Menu,
     X,
-    Loader2,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
 
@@ -34,23 +33,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const { auth, url } = usePage<{ auth: { user: UserType }; url: string }>().props;
     const [sidebarOpen, setSidebarOpen] = useState(globalSidebarOpen);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isNavigating, setIsNavigating] = useState(false);
 
     // Sync sidebar state globally
     useEffect(() => {
         globalSidebarOpen = sidebarOpen;
     }, [sidebarOpen]);
-
-    // Listen for Inertia navigation events
-    useEffect(() => {
-        const removeStartListener = router.on('start', () => setIsNavigating(true));
-        const removeFinishListener = router.on('finish', () => setIsNavigating(false));
-
-        return () => {
-            removeStartListener();
-            removeFinishListener();
-        };
-    }, []);
 
     const isActive = (href: string) => {
         if (href === '/admin') {
@@ -168,15 +155,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </div>
                 </header>
 
-                {/* Loading indicator */}
-                {isNavigating && (
-                    <div className="fixed top-0 left-0 right-0 z-50">
-                        <div className="h-1 bg-gray-900 animate-pulse" />
-                    </div>
-                )}
-
                 {/* Page content */}
-                <main className={`p-6 transition-opacity duration-150 ${isNavigating ? 'opacity-60' : 'opacity-100'}`}>
+                <main className="p-6">
                     {children}
                 </main>
             </div>

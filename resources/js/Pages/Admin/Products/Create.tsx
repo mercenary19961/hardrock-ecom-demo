@@ -234,7 +234,7 @@ export default function CreateProduct({ categories }: Props) {
                     </Card>
 
                     <div className="flex gap-4">
-                        <Button type="submit" loading={processing}>
+                        <Button type="submit" disabled={processing}>
                             Create Product
                         </Button>
                         <Link href="/admin/products">

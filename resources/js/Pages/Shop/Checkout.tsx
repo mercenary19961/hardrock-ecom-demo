@@ -243,8 +243,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         type="submit"
                                         size="lg"
                                         className="w-full mt-6"
-                                        loading={processing}
-                                        disabled={stockErrors.length > 0}
+                                        disabled={processing || stockErrors.length > 0}
                                     >
                                         Place Order (Demo)
                                     </Button>

@@ -138,7 +138,7 @@ export default function CreateCategory({ parentCategories }: Props) {
                             </div>
 
                             <div className="flex gap-4">
-                                <Button type="submit" loading={processing}>
+                                <Button type="submit" disabled={processing}>
                                     Create Category
                                 </Button>
                                 <Link href="/admin/categories">

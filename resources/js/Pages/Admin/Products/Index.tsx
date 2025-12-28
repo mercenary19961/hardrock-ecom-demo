@@ -255,9 +255,9 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold">{formatPrice(product.price)}</div>
+                                            <div className="font-semibold tabular-nums">{formatPrice(product.price)}</div>
                                             {product.compare_price && (
-                                                <div className="text-xs text-gray-400 line-through">
+                                                <div className="text-xs text-gray-400 line-through tabular-nums">
                                                     {formatPrice(product.compare_price)}
                                                 </div>
                                             )}
@@ -349,11 +349,11 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                             {product.category?.name}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-medium">
+                                            <div className="font-medium tabular-nums">
                                                 {formatPrice(product.price)}
                                             </div>
                                             {product.compare_price && (
-                                                <div className="text-sm text-gray-400 line-through">
+                                                <div className="text-sm text-gray-400 line-through tabular-nums">
                                                     {formatPrice(product.compare_price)}
                                                 </div>
                                             )}

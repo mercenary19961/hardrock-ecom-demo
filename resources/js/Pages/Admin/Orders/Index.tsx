@@ -192,7 +192,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                             <div className="text-xs text-gray-500">
                                                 {formatDateTime(order.created_at)}
                                             </div>
-                                            <div className="font-semibold text-gray-900">
+                                            <div className="font-semibold text-gray-900 tabular-nums">
                                                 {formatPrice(order.total)}
                                             </div>
                                         </div>
@@ -252,7 +252,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                         <td className="hidden lg:table-cell px-6 py-4 text-gray-500">
                                             {formatDateTime(order.created_at)}
                                         </td>
-                                        <td className="px-6 py-4 font-medium">
+                                        <td className="px-6 py-4 font-medium tabular-nums">
                                             {formatPrice(order.total)}
                                         </td>
                                         <td className="px-6 py-4">

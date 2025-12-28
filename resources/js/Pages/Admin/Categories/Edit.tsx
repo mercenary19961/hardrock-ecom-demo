@@ -140,7 +140,7 @@ export default function EditCategory({ category, parentCategories }: Props) {
                             </div>
 
                             <div className="flex gap-4">
-                                <Button type="submit" loading={processing}>
+                                <Button type="submit" disabled={processing}>
                                     Update Category
                                 </Button>
                                 <Link href="/admin/categories">

@@ -262,7 +262,7 @@ export default function EditProduct({ product, categories }: Props) {
                     </Card>
 
                     <div className="flex gap-4">
-                        <Button type="submit" loading={processing}>
+                        <Button type="submit" disabled={processing}>
                             Update Product
                         </Button>
                         <Link href="/admin/products">
