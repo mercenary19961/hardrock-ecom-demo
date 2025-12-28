@@ -50,8 +50,17 @@ export function getStatusColor(status: string): string {
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
-export function getImageUrl(path: string | null): string {
+export function getImageUrl(path: string | null, productId?: number, sortOrder?: number): string {
     if (!path) return '/images/placeholder.jpg';
     if (path.startsWith('http')) return path;
+
+    // Handle placeholder images with picsum.photos
+    if (path.startsWith('products/placeholder')) {
+        const id = productId ?? 1;
+        const order = sortOrder ?? 0;
+        const seed = (id * 10) + order + 1;
+        return `https://picsum.photos/seed/${seed}/800/800`;
+    }
+
     return `/storage/${path}`;
 }

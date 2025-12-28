@@ -186,7 +186,7 @@ export default function EditProduct({ product, categories }: Props) {
                                     {existingImages.map((image) => (
                                         <div key={image.id} className="relative">
                                             <img
-                                                src={getImageUrl(image.path)}
+                                                src={getImageUrl(image.path, product.id, image.sort_order)}
                                                 alt=""
                                                 className="w-24 h-24 object-cover rounded-lg"
                                             />
