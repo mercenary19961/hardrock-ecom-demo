@@ -1,16 +1,19 @@
 -- HardRock Ecommerce Demo - Database Schema
 -- MySQL DDL for drawsql.app
+-- Updated: 2024-12-28
 
 CREATE TABLE users (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     email_verified_at TIMESTAMP NULL,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'customer') NOT NULL DEFAULT 'customer',
     remember_token VARCHAR(100) NULL,
     created_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NULL
+    updated_at TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL
 );
 
 CREATE TABLE categories (
@@ -81,17 +84,24 @@ CREATE TABLE cart_items (
 CREATE TABLE orders (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NULL,
-    order_number VARCHAR(255) NOT NULL UNIQUE,
+    order_number VARCHAR(50) NOT NULL UNIQUE,
     status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') NOT NULL DEFAULT 'pending',
+    payment_method ENUM('card', 'paypal', 'cod') NOT NULL DEFAULT 'cod',
+    payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+    transaction_id VARCHAR(255) NULL,
+    paid_at TIMESTAMP NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     tax DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    shipping_fee DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,
     customer_name VARCHAR(255) NOT NULL,
     customer_email VARCHAR(255) NOT NULL,
-    customer_phone VARCHAR(255) NULL,
+    customer_phone VARCHAR(50) NULL,
     shipping_address JSON NOT NULL,
-    billing_address JSON NOT NULL,
+    billing_address JSON NULL,
     notes TEXT NULL,
+    tracking_number VARCHAR(255) NULL,
+    carrier VARCHAR(100) NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
@@ -102,7 +112,7 @@ CREATE TABLE order_items (
     order_id BIGINT UNSIGNED NOT NULL,
     product_id BIGINT UNSIGNED NULL,
     product_name VARCHAR(255) NOT NULL,
-    product_sku VARCHAR(255) NOT NULL,
+    product_sku VARCHAR(100) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     quantity INT UNSIGNED NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
@@ -111,3 +121,18 @@ CREATE TABLE order_items (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
 );
+
+CREATE TABLE inquiries (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    items JSON NOT NULL,
+    message TEXT NULL,
+    status ENUM('pending', 'contacted', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+);
+
+-- Noted for future implementation:
+-- Refunds table or orders.refunded_at TIMESTAMP NULL
