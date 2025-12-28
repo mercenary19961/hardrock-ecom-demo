@@ -62,14 +62,16 @@ export default function CreateCategory({ parentCategories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="cat_description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Description
                                 </label>
                                 <textarea
+                                    id="cat_description"
+                                    name="description"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                                 {errors.description && (
                                     <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -77,13 +79,15 @@ export default function CreateCategory({ parentCategories }: Props) {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="parent_id" className="block text-sm font-medium text-gray-700 mb-1">
                                     Parent Category
                                 </label>
                                 <select
+                                    id="parent_id"
+                                    name="parent_id"
                                     value={data.parent_id}
                                     onChange={(e) => setData('parent_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 >
                                     <option value="">None (Top Level)</option>
                                     {parentCategories.map((category) => (
@@ -103,14 +107,16 @@ export default function CreateCategory({ parentCategories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="cat_image" className="block text-sm font-medium text-gray-700 mb-1">
                                     Image
                                 </label>
                                 <input
+                                    id="cat_image"
+                                    name="image"
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setData('image', e.target.files?.[0] || null)}
-                                    className="w-full"
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                                 />
                                 {errors.image && (
                                     <p className="mt-1 text-sm text-red-600">{errors.image}</p>
@@ -119,13 +125,14 @@ export default function CreateCategory({ parentCategories }: Props) {
 
                             <div className="flex items-center gap-2">
                                 <input
+                                    id="cat_is_active"
+                                    name="is_active"
                                     type="checkbox"
-                                    id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-gray-300"
+                                    className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                 />
-                                <label htmlFor="is_active" className="text-sm text-gray-700">
+                                <label htmlFor="cat_is_active" className="text-sm text-gray-700">
                                     Active
                                 </label>
                             </div>

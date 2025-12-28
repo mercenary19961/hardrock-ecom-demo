@@ -141,11 +141,15 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                 <Card>
                     <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <div className="relative flex-1">
+                            <label htmlFor="orders-search" className="sr-only">Search orders</label>
                             <input
+                                id="orders-search"
+                                name="search"
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search by order #, name, or email..."
+                                autoComplete="off"
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -354,8 +358,10 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Show:</span>
+                            <label htmlFor="orders-per-page" className="text-sm text-gray-500">Show:</label>
                             <select
+                                id="orders-per-page"
+                                name="per_page"
                                 value={perPage}
                                 onChange={(e) => handlePerPageChange(e.target.value)}
                                 className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-gray-900 outline-none min-w-[80px]"

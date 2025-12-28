@@ -69,13 +69,15 @@ export default function EditProduct({ product, categories }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_category_id" className="block text-sm font-medium text-gray-700 mb-1">
                                     Category
                                 </label>
                                 <select
+                                    id="edit_category_id"
+                                    name="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                     required
                                 >
                                     {categories.map((cat) => (
@@ -102,27 +104,31 @@ export default function EditProduct({ product, categories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_short_description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Short Description
                                 </label>
                                 <textarea
+                                    id="edit_short_description"
+                                    name="short_description"
                                     value={data.short_description}
                                     onChange={(e) => setData('short_description', e.target.value)}
                                     rows={2}
                                     maxLength={500}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Description
                                 </label>
                                 <textarea
+                                    id="edit_description"
+                                    name="description"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={5}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                             </div>
                         </CardContent>
@@ -207,14 +213,19 @@ export default function EditProduct({ product, categories }: Props) {
                                 </div>
                             )}
 
+                            <label htmlFor="edit_images" className="block text-sm font-medium text-gray-700 mb-1">
+                                Add Images
+                            </label>
                             <input
+                                id="edit_images"
+                                name="images"
                                 type="file"
                                 accept="image/*"
                                 multiple
                                 onChange={handleImageChange}
-                                className="w-full"
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                             />
-                            <p className="text-sm text-gray-500">Add more images (max 5 total)</p>
+                            <p className="text-sm text-gray-500 mt-1">Add more images (max 5 total)</p>
                         </CardContent>
                     </Card>
 
@@ -224,24 +235,28 @@ export default function EditProduct({ product, categories }: Props) {
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-4">
-                                <label className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <input
+                                        id="edit_is_active"
+                                        name="is_active"
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="rounded border-gray-300"
+                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                     />
-                                    <span className="text-sm text-gray-700">Active</span>
-                                </label>
-                                <label className="flex items-center gap-2">
+                                    <label htmlFor="edit_is_active" className="text-sm text-gray-700">Active</label>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <input
+                                        id="edit_is_featured"
+                                        name="is_featured"
                                         type="checkbox"
                                         checked={data.is_featured}
                                         onChange={(e) => setData('is_featured', e.target.checked)}
-                                        className="rounded border-gray-300"
+                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                     />
-                                    <span className="text-sm text-gray-700">Featured</span>
-                                </label>
+                                    <label htmlFor="edit_is_featured" className="text-sm text-gray-700">Featured</label>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

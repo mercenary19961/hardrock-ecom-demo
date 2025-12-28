@@ -63,25 +63,29 @@ export default function EditCategory({ category, parentCategories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_cat_description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Description
                                 </label>
                                 <textarea
+                                    id="edit_cat_description"
+                                    name="description"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_parent_id" className="block text-sm font-medium text-gray-700 mb-1">
                                     Parent Category
                                 </label>
                                 <select
+                                    id="edit_parent_id"
+                                    name="parent_id"
                                     value={data.parent_id}
                                     onChange={(e) => setData('parent_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 >
                                     <option value="">None (Top Level)</option>
                                     {parentCategories.map((cat) => (
@@ -101,7 +105,7 @@ export default function EditCategory({ category, parentCategories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="edit_cat_image" className="block text-sm font-medium text-gray-700 mb-1">
                                     Image
                                 </label>
                                 {category.image && (
@@ -112,22 +116,25 @@ export default function EditCategory({ category, parentCategories }: Props) {
                                     />
                                 )}
                                 <input
+                                    id="edit_cat_image"
+                                    name="image"
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setData('image', e.target.files?.[0] || null)}
-                                    className="w-full"
+                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                                 />
                             </div>
 
                             <div className="flex items-center gap-2">
                                 <input
+                                    id="edit_cat_is_active"
+                                    name="is_active"
                                     type="checkbox"
-                                    id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-gray-300"
+                                    className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                 />
-                                <label htmlFor="is_active" className="text-sm text-gray-700">
+                                <label htmlFor="edit_cat_is_active" className="text-sm text-gray-700">
                                     Active
                                 </label>
                             </div>

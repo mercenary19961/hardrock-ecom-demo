@@ -42,12 +42,16 @@ export default function CategoriesIndex({ categories, filters }: Props) {
                 {/* Search */}
                 <form onSubmit={handleSearch} className="max-w-md">
                     <div className="relative">
+                        <label htmlFor="categories-search" className="sr-only">Search categories</label>
                         <input
+                            id="categories-search"
+                            name="search"
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search categories..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                            autoComplete="off"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
                         />
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>

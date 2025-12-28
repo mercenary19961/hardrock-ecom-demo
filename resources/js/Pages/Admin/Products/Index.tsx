@@ -143,11 +143,15 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                 <Card>
                     <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <div className="relative flex-1">
+                            <label htmlFor="products-search" className="sr-only">Search products</label>
                             <input
+                                id="products-search"
+                                name="search"
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search products..."
+                                autoComplete="off"
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -479,11 +483,13 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Show:</span>
+                            <label htmlFor="products-per-page" className="text-sm text-gray-500">Show:</label>
                             <select
+                                id="products-per-page"
+                                name="per_page"
                                 value={perPage}
                                 onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-gray-900 focus:outline-none min-w-[80px]"
+                                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-gray-900 outline-none min-w-[80px]"
                             >
                                 {perPageOptions.map((option) => (
                                     <option key={option} value={option}>
