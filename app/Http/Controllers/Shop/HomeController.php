@@ -15,7 +15,6 @@ class HomeController extends Controller
         $featuredProducts = Product::with(['category', 'images'])
             ->active()
             ->featured()
-            ->inStock()
             ->take(8)
             ->get();
 

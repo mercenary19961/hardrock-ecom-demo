@@ -7,7 +7,7 @@ import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { Product as ProductType, Breadcrumb } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { ChevronRight, ShoppingCart, Check } from 'lucide-react';
+import { ChevronRight, ShoppingCart, Check, Bell } from 'lucide-react';
 
 interface Props {
     product: ProductType;
@@ -20,6 +20,20 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
+
+    // Check localStorage for previously requested notifications
+    const storageKey = `notify_product_${product.id}`;
+    const [notifyRequested, setNotifyRequested] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(storageKey) === 'true';
+        }
+        return false;
+    });
+
+    const handleNotifyRequest = () => {
+        setNotifyRequested(true);
+        localStorage.setItem(storageKey, 'true');
+    };
 
     const images = product.images || [];
     const hasDiscount = product.compare_price && product.compare_price > product.price;
@@ -129,9 +143,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
 
                         <div className="mb-6">
                             {product.stock > 0 ? (
-                                <Badge variant="success">
-                                    In Stock ({product.stock} available)
-                                </Badge>
+                                <Badge variant="success">In Stock</Badge>
                             ) : (
                                 <Badge variant="danger">Out of Stock</Badge>
                             )}
@@ -141,8 +153,8 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             <p className="text-gray-600 mb-6">{product.short_description}</p>
                         )}
 
-                        {/* Add to Cart */}
-                        {product.stock > 0 && (
+                        {/* Add to Cart or Notify Me */}
+                        {product.stock > 0 ? (
                             <div className="flex items-center gap-4 mb-8">
                                 <QuantitySelector
                                     quantity={quantity}
@@ -168,12 +180,34 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                                     )}
                                 </Button>
                             </div>
+                        ) : (
+                            <div className="mb-8">
+                                <Button
+                                    onClick={handleNotifyRequest}
+                                    disabled={notifyRequested}
+                                    variant="outline"
+                                    size="lg"
+                                    className="w-full"
+                                >
+                                    {notifyRequested ? (
+                                        <>
+                                            <Check className="mr-2 h-5 w-5" />
+                                            Request Submitted
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Bell className="mr-2 h-5 w-5" />
+                                            Notify Me When Available
+                                        </>
+                                    )}
+                                </Button>
+                                {notifyRequested && (
+                                    <p className="text-sm text-gray-500 mt-2 text-center">
+                                        We'll let you know when this product is back in stock.
+                                    </p>
+                                )}
+                            </div>
                         )}
-
-                        {/* SKU */}
-                        <p className="text-sm text-gray-500">
-                            SKU: {product.sku}
-                        </p>
 
                         {/* Description */}
                         {product.description && (

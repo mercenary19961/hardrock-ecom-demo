@@ -4,6 +4,7 @@ import ShopLayout from '@/Layouts/ShopLayout';
 import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
 import { Cart, User } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
+import { Truck, RotateCcw, Clock } from 'lucide-react';
 
 interface Props {
     cart: Cart;
@@ -37,7 +38,9 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
         post('/checkout');
     };
 
-    const total = cart.subtotal;
+    const FREE_DELIVERY_THRESHOLD = 100;
+    const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
+    const total = cart.subtotal + deliveryFee;
 
     return (
         <ShopLayout>
@@ -227,7 +230,11 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Delivery</span>
-                                            <span className="text-green-600">Free</span>
+                                            {deliveryFee === 0 ? (
+                                                <span className="text-green-600">Free</span>
+                                            ) : (
+                                                <span>{formatPrice(deliveryFee)}</span>
+                                            )}
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-semibold">
                                             <span>Total</span>
@@ -247,6 +254,31 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     </p>
                                 </CardContent>
                             </Card>
+
+                            {/* Delivery & Returns Policy */}
+                            <div className="mt-4 bg-gray-50 rounded-xl p-4 space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <Truck className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">Free Delivery</p>
+                                        <p className="text-xs text-gray-500">On orders over {formatPrice(FREE_DELIVERY_THRESHOLD)}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Clock className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">Fast Delivery</p>
+                                        <p className="text-xs text-gray-500">Same day or next day delivery. Available Saturday to Thursday.</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <RotateCcw className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">Easy Returns</p>
+                                        <p className="text-xs text-gray-500">14-day return policy for unused items</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>

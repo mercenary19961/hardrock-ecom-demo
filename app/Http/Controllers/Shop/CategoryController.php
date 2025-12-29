@@ -23,8 +23,7 @@ class CategoryController extends Controller
 
         $query = Product::with(['images'])
             ->whereIn('category_id', $categoryIds)
-            ->active()
-            ->inStock();
+            ->active();
 
         // Sorting
         $sort = $request->get('sort', 'newest');
