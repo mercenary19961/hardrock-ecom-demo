@@ -4,6 +4,7 @@ import { Button, Card, Badge } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
 import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePolling } from '@/hooks';
 
 interface Props {
     categories: PaginatedData<Category>;
@@ -30,6 +31,9 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
     const [status, setStatus] = useState(filters.status || '');
     const [perPage, setPerPage] = useState(filters.per_page || '15');
     const isFirstRender = useRef(true);
+
+    // Auto-refresh data every 30 seconds
+    usePolling({ interval: 30000 });
 
     const debouncedSearch = useDebounce(search, 300);
 

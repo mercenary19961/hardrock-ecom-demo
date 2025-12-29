@@ -5,6 +5,7 @@ import { Order, PaginatedData } from '@/types/models';
 import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import { Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePolling } from '@/hooks';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -38,6 +39,9 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
         return 'table';
     });
     const isFirstRender = useRef(true);
+
+    // Auto-refresh data every 30 seconds
+    usePolling({ interval: 30000 });
 
     const debouncedSearch = useDebounce(search, 300);
 

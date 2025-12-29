@@ -5,6 +5,7 @@ import { Product, Category, PaginatedData } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
 import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePolling } from '@/hooks';
 
 interface Props {
     products: PaginatedData<Product>;
@@ -38,6 +39,9 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
         return 'table';
     });
     const isFirstRender = useRef(true);
+
+    // Auto-refresh data every 30 seconds
+    usePolling({ interval: 30000 });
 
     const debouncedSearch = useDebounce(search, 300);
 
