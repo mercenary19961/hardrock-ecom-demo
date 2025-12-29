@@ -108,6 +108,12 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
         }
     };
 
+    const getStockBadgeVariant = (product: Product): 'danger' | 'warning' | 'success' => {
+        if (product.stock === 0) return 'danger';
+        const threshold = product.effective_low_stock_threshold ?? 10;
+        return product.stock <= threshold ? 'warning' : 'success';
+    };
+
     return (
         <AdminLayout>
             <Head title="Products" />
@@ -267,15 +273,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                 </div>
                                             )}
                                         </div>
-                                        <Badge
-                                            variant={
-                                                product.stock === 0
-                                                    ? 'danger'
-                                                    : product.stock <= 10
-                                                    ? 'warning'
-                                                    : 'success'
-                                            }
-                                        >
+                                        <Badge variant={getStockBadgeVariant(product)}>
                                             {product.stock}
                                         </Badge>
                                     </div>

@@ -21,46 +21,9 @@ class CategorySeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Clothing',
-                'description' => 'Stylish apparel for men, women, and children.',
-                'children' => [
-                    ['name' => 'Men\'s Wear', 'description' => 'Trendy clothing for men'],
-                    ['name' => 'Women\'s Wear', 'description' => 'Fashion-forward women\'s clothing'],
-                    ['name' => 'Kids', 'description' => 'Comfortable and fun clothes for children'],
-                ],
-            ],
-            [
-                'name' => 'Home & Garden',
-                'description' => 'Everything you need to make your house a home.',
-                'children' => [
-                    ['name' => 'Furniture', 'description' => 'Quality furniture for every room'],
-                    ['name' => 'Decor', 'description' => 'Beautiful decorative items'],
-                    ['name' => 'Kitchen', 'description' => 'Kitchen essentials and appliances'],
-                ],
-            ],
-            [
-                'name' => 'Sports & Outdoors',
-                'description' => 'Gear up for your active lifestyle.',
-                'children' => [
-                    ['name' => 'Fitness', 'description' => 'Exercise equipment and gear'],
-                    ['name' => 'Outdoor Recreation', 'description' => 'Camping, hiking, and outdoor gear'],
-                ],
-            ],
-            [
-                'name' => 'Books & Media',
-                'description' => 'Books, music, movies, and more for entertainment.',
-                'children' => [
-                    ['name' => 'Fiction', 'description' => 'Novels and fictional works'],
-                    ['name' => 'Non-Fiction', 'description' => 'Educational and informative books'],
-                ],
-            ],
-            [
-                'name' => 'Health & Beauty',
-                'description' => 'Personal care, wellness, and beauty products.',
-                'children' => [
-                    ['name' => 'Skincare', 'description' => 'Products for healthy, glowing skin'],
-                    ['name' => 'Wellness', 'description' => 'Supplements and wellness products'],
-                ],
+                'name' => 'Skincare',
+                'description' => 'Premium skincare products for healthy, glowing skin.',
+                'children' => [],
             ],
         ];
 
@@ -73,7 +36,7 @@ class CategorySeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            if (isset($categoryData['children'])) {
+            if (!empty($categoryData['children'])) {
                 foreach ($categoryData['children'] as $childIndex => $childData) {
                     Category::create([
                         'name' => $childData['name'],

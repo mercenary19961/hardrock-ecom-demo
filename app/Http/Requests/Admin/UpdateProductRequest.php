@@ -34,6 +34,7 @@ class UpdateProductRequest extends FormRequest
                 Rule::unique('products', 'sku')->ignore($this->product->id),
             ],
             'stock' => 'required|integer|min:0',
+            'low_stock_threshold' => 'nullable|integer|min:1|max:1000',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'images' => 'nullable|array|max:5',

@@ -18,6 +18,7 @@ export default function EditCategory({ category, parentCategories }: Props) {
         parent_id: category.parent_id?.toString() || '',
         sort_order: category.sort_order,
         is_active: category.is_active,
+        low_stock_threshold: category.low_stock_threshold ?? 10,
         image: null as File | null,
     });
 
@@ -103,6 +104,21 @@ export default function EditCategory({ category, parentCategories }: Props) {
                                 onChange={(e) => setData('sort_order', parseInt(e.target.value) || 0)}
                                 error={errors.sort_order}
                             />
+
+                            <div>
+                                <Input
+                                    label="Low Stock Threshold"
+                                    type="number"
+                                    value={data.low_stock_threshold}
+                                    onChange={(e) => setData('low_stock_threshold', parseInt(e.target.value) || 10)}
+                                    error={errors.low_stock_threshold}
+                                    min={1}
+                                    max={1000}
+                                />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Products in this category will be marked as "low stock" when their quantity falls to or below this number.
+                                </p>
+                            </div>
 
                             <div>
                                 <label htmlFor="edit_cat_image" className="block text-sm font-medium text-gray-700 mb-1">

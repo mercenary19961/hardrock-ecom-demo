@@ -13,56 +13,240 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $products = [
-            // Electronics - Smartphones
-            ['category' => 'smartphones', 'name' => 'ProMax Ultra Phone', 'price' => 999.99, 'compare' => 1199.99, 'stock' => 25, 'featured' => true],
-            ['category' => 'smartphones', 'name' => 'Galaxy Elite S24', 'price' => 849.99, 'compare' => null, 'stock' => 30, 'featured' => true],
-            ['category' => 'smartphones', 'name' => 'Budget Smart X', 'price' => 299.99, 'compare' => 349.99, 'stock' => 50, 'featured' => false],
-            ['category' => 'smartphones', 'name' => 'Pixel Perfect 8', 'price' => 699.99, 'compare' => null, 'stock' => 20, 'featured' => false],
+            // Electronics - Smartphones (7 products)
+            [
+                'category' => 'smartphones',
+                'name' => 'iPhone 15 Pro Max 256GB',
+                'short' => 'Apple\'s flagship with A17 Pro chip, titanium design, and 48MP camera system.',
+                'price' => 1399.00,
+                'compare' => null,
+                'stock' => 25,
+                'featured' => true,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'Samsung Galaxy S24 Ultra',
+                'short' => 'AI-powered Galaxy with S Pen, 200MP camera, and Snapdragon 8 Gen 3.',
+                'price' => 1299.00,
+                'compare' => 1449.00,
+                'stock' => 18,
+                'featured' => true,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'Xiaomi 14 Pro',
+                'short' => 'Leica optics, Snapdragon 8 Gen 3, and 120W HyperCharge.',
+                'price' => 799.00,
+                'compare' => 899.00,
+                'stock' => 35,
+                'featured' => false,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'HUAWEI Mate 60 Pro',
+                'short' => 'Satellite calling, Kirin 9000S chip, and variable aperture camera.',
+                'price' => 999.00,
+                'compare' => null,
+                'stock' => 12,
+                'featured' => false,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'OPPO Reno 11 Pro',
+                'short' => 'Portrait expert with Hasselblad color science and 80W fast charging.',
+                'price' => 549.00,
+                'compare' => 649.00,
+                'stock' => 42,
+                'featured' => false,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'Google Pixel 8 Pro',
+                'short' => 'Best-in-class AI photography with Tensor G3 chip and 7 years of updates.',
+                'price' => 999.00,
+                'compare' => 1099.00,
+                'stock' => 20,
+                'featured' => true,
+            ],
+            [
+                'category' => 'smartphones',
+                'name' => 'OnePlus 12',
+                'short' => 'Flagship killer with Snapdragon 8 Gen 3 and 100W SUPERVOOC charging.',
+                'price' => 799.00,
+                'compare' => null,
+                'stock' => 28,
+                'featured' => false,
+            ],
 
-            // Electronics - Laptops
-            ['category' => 'laptops', 'name' => 'MacBook Pro 16"', 'price' => 2499.99, 'compare' => null, 'stock' => 15, 'featured' => true],
-            ['category' => 'laptops', 'name' => 'ThinkPad X1 Carbon', 'price' => 1799.99, 'compare' => 1999.99, 'stock' => 20, 'featured' => false],
-            ['category' => 'laptops', 'name' => 'Gaming Laptop RTX', 'price' => 1499.99, 'compare' => null, 'stock' => 10, 'featured' => true],
-            ['category' => 'laptops', 'name' => 'ChromeBook Lite', 'price' => 349.99, 'compare' => 399.99, 'stock' => 40, 'featured' => false],
+            // Electronics - Laptops (7 products)
+            [
+                'category' => 'laptops',
+                'name' => 'MacBook Pro 14" M3 Pro',
+                'short' => 'Apple silicon powerhouse with Liquid Retina XDR display and 18-hour battery.',
+                'price' => 1999.00,
+                'compare' => null,
+                'stock' => 8,
+                'featured' => true,
+                'low_threshold' => 5,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'Dell XPS 15 (2024)',
+                'short' => 'Intel Core Ultra, OLED display, and premium aluminum build.',
+                'price' => 1599.00,
+                'compare' => 1799.00,
+                'stock' => 15,
+                'featured' => true,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'ASUS ROG Strix G16',
+                'short' => 'RTX 4070 gaming laptop with 165Hz display and RGB lighting.',
+                'price' => 1449.00,
+                'compare' => null,
+                'stock' => 10,
+                'featured' => false,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'Lenovo ThinkPad X1 Carbon Gen 11',
+                'short' => 'Business ultrabook with Intel vPro, 4G LTE, and legendary keyboard.',
+                'price' => 1699.00,
+                'compare' => 1899.00,
+                'stock' => 6,
+                'featured' => false,
+                'low_threshold' => 5,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'HP Pavilion 15',
+                'short' => 'Affordable everyday laptop with Intel Core i5 and 512GB SSD.',
+                'price' => 549.00,
+                'compare' => 649.00,
+                'stock' => 45,
+                'featured' => false,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'Microsoft Surface Laptop 5',
+                'short' => 'Sleek design with PixelSense touchscreen and all-day battery life.',
+                'price' => 1299.00,
+                'compare' => null,
+                'stock' => 12,
+                'featured' => false,
+            ],
+            [
+                'category' => 'laptops',
+                'name' => 'Acer Swift Go 14',
+                'short' => 'Ultra-portable with Intel Core Ultra and stunning 2.8K OLED display.',
+                'price' => 899.00,
+                'compare' => 999.00,
+                'stock' => 22,
+                'featured' => false,
+            ],
 
-            // Electronics - Accessories
-            ['category' => 'accessories', 'name' => 'Wireless Earbuds Pro', 'price' => 149.99, 'compare' => 179.99, 'stock' => 100, 'featured' => true],
-            ['category' => 'accessories', 'name' => 'USB-C Hub 7-in-1', 'price' => 49.99, 'compare' => null, 'stock' => 75, 'featured' => false],
-            ['category' => 'accessories', 'name' => 'Fast Charger 65W', 'price' => 39.99, 'compare' => 49.99, 'stock' => 120, 'featured' => false],
+            // Electronics - Accessories (6 products)
+            [
+                'category' => 'accessories',
+                'name' => 'Apple AirPods Pro 2nd Gen',
+                'short' => 'Active noise cancellation, spatial audio, and USB-C charging case.',
+                'price' => 249.00,
+                'compare' => null,
+                'stock' => 65,
+                'featured' => true,
+            ],
+            [
+                'category' => 'accessories',
+                'name' => 'Samsung 25W USB-C Charger',
+                'short' => 'Super fast charging adapter compatible with Galaxy devices.',
+                'price' => 29.00,
+                'compare' => 39.00,
+                'stock' => 150,
+                'featured' => false,
+            ],
+            [
+                'category' => 'accessories',
+                'name' => 'Anker PowerCore 20000mAh',
+                'short' => 'High-capacity power bank with dual USB ports and fast charging.',
+                'price' => 59.00,
+                'compare' => null,
+                'stock' => 85,
+                'featured' => false,
+            ],
+            [
+                'category' => 'accessories',
+                'name' => 'Logitech MX Master 3S',
+                'short' => 'Quiet clicks, 8K DPI sensor, and MagSpeed electromagnetic scrolling.',
+                'price' => 99.00,
+                'compare' => 119.00,
+                'stock' => 40,
+                'featured' => true,
+            ],
+            [
+                'category' => 'accessories',
+                'name' => 'JBL Tune 760NC Headphones',
+                'short' => 'Wireless over-ear headphones with active noise cancelling and 50hr battery.',
+                'price' => 119.00,
+                'compare' => 149.00,
+                'stock' => 55,
+                'featured' => false,
+            ],
+            [
+                'category' => 'accessories',
+                'name' => 'Apple Watch Series 9',
+                'short' => 'Advanced health features with double tap gesture and brighter display.',
+                'price' => 429.00,
+                'compare' => null,
+                'stock' => 30,
+                'featured' => true,
+            ],
 
-            // Clothing - Men's
-            ['category' => 'mens-wear', 'name' => 'Classic Oxford Shirt', 'price' => 59.99, 'compare' => null, 'stock' => 50, 'featured' => false],
-            ['category' => 'mens-wear', 'name' => 'Slim Fit Chinos', 'price' => 79.99, 'compare' => 99.99, 'stock' => 40, 'featured' => true],
-            ['category' => 'mens-wear', 'name' => 'Leather Jacket', 'price' => 299.99, 'compare' => null, 'stock' => 15, 'featured' => true],
-
-            // Clothing - Women's
-            ['category' => 'womens-wear', 'name' => 'Floral Summer Dress', 'price' => 89.99, 'compare' => 119.99, 'stock' => 35, 'featured' => true],
-            ['category' => 'womens-wear', 'name' => 'High-Waist Jeans', 'price' => 69.99, 'compare' => null, 'stock' => 45, 'featured' => false],
-            ['category' => 'womens-wear', 'name' => 'Cashmere Sweater', 'price' => 149.99, 'compare' => 189.99, 'stock' => 25, 'featured' => false],
-
-            // Home - Furniture
-            ['category' => 'furniture', 'name' => 'Modern Sofa Set', 'price' => 1299.99, 'compare' => 1599.99, 'stock' => 8, 'featured' => true],
-            ['category' => 'furniture', 'name' => 'Ergonomic Office Chair', 'price' => 349.99, 'compare' => null, 'stock' => 30, 'featured' => true],
-            ['category' => 'furniture', 'name' => 'Wooden Coffee Table', 'price' => 199.99, 'compare' => 249.99, 'stock' => 20, 'featured' => false],
-
-            // Home - Kitchen
-            ['category' => 'kitchen', 'name' => 'Smart Coffee Maker', 'price' => 129.99, 'compare' => null, 'stock' => 40, 'featured' => false],
-            ['category' => 'kitchen', 'name' => 'Air Fryer XL', 'price' => 99.99, 'compare' => 129.99, 'stock' => 55, 'featured' => true],
-            ['category' => 'kitchen', 'name' => 'Knife Set 12-Piece', 'price' => 79.99, 'compare' => null, 'stock' => 35, 'featured' => false],
-
-            // Sports - Fitness
-            ['category' => 'fitness', 'name' => 'Smart Fitness Watch', 'price' => 199.99, 'compare' => 249.99, 'stock' => 60, 'featured' => true],
-            ['category' => 'fitness', 'name' => 'Yoga Mat Premium', 'price' => 49.99, 'compare' => null, 'stock' => 80, 'featured' => false],
-            ['category' => 'fitness', 'name' => 'Adjustable Dumbbells', 'price' => 299.99, 'compare' => 349.99, 'stock' => 25, 'featured' => false],
-
-            // Health & Beauty - Skincare
-            ['category' => 'skincare', 'name' => 'Anti-Aging Serum', 'price' => 89.99, 'compare' => null, 'stock' => 45, 'featured' => true],
-            ['category' => 'skincare', 'name' => 'Hydrating Face Cream', 'price' => 39.99, 'compare' => 49.99, 'stock' => 70, 'featured' => false],
-            ['category' => 'skincare', 'name' => 'Vitamin C Set', 'price' => 59.99, 'compare' => null, 'stock' => 55, 'featured' => false],
-
-            // Books - Fiction
-            ['category' => 'fiction', 'name' => 'The Silent Echo', 'price' => 24.99, 'compare' => null, 'stock' => 100, 'featured' => false],
-            ['category' => 'fiction', 'name' => 'Midnight in Paris', 'price' => 19.99, 'compare' => 24.99, 'stock' => 85, 'featured' => true],
+            // Skincare (5 products)
+            [
+                'category' => 'skincare',
+                'name' => 'La Roche-Posay Effaclar Duo',
+                'short' => 'Dual action acne treatment for oily and blemish-prone skin.',
+                'price' => 28.00,
+                'compare' => null,
+                'stock' => 75,
+                'featured' => false,
+            ],
+            [
+                'category' => 'skincare',
+                'name' => 'CeraVe Moisturizing Cream',
+                'short' => 'Rich cream with ceramides and hyaluronic acid for 24hr hydration.',
+                'price' => 19.00,
+                'compare' => 25.00,
+                'stock' => 110,
+                'featured' => true,
+            ],
+            [
+                'category' => 'skincare',
+                'name' => 'The Ordinary Niacinamide 10%',
+                'short' => 'Serum for reducing blemishes and balancing sebum.',
+                'price' => 12.00,
+                'compare' => null,
+                'stock' => 95,
+                'featured' => false,
+            ],
+            [
+                'category' => 'skincare',
+                'name' => 'Dead Sea Mud Mask',
+                'short' => 'Authentic Jordan Dead Sea mud for deep pore cleansing.',
+                'price' => 24.00,
+                'compare' => 32.00,
+                'stock' => 60,
+                'featured' => true,
+            ],
+            [
+                'category' => 'skincare',
+                'name' => 'Bioderma Sensibio H2O Micellar',
+                'short' => 'Gentle makeup remover for sensitive skin, 500ml.',
+                'price' => 22.00,
+                'compare' => null,
+                'stock' => 85,
+                'featured' => false,
+            ],
         ];
 
         foreach ($products as $productData) {
@@ -76,39 +260,57 @@ class ProductSeeder extends Seeder
                 'category_id' => $category->id,
                 'name' => $productData['name'],
                 'slug' => Str::slug($productData['name']),
-                'description' => $this->generateDescription($productData['name']),
-                'short_description' => "High-quality {$productData['name']} - perfect for your needs.",
+                'description' => $this->generateDescription($productData['name'], $productData['short']),
+                'short_description' => $productData['short'],
                 'price' => $productData['price'],
                 'compare_price' => $productData['compare'],
-                'sku' => strtoupper(Str::random(2) . '-' . rand(1000, 9999)),
+                'sku' => $this->generateSku($category->slug),
                 'stock' => $productData['stock'],
+                'low_stock_threshold' => $productData['low_threshold'] ?? null,
                 'is_active' => true,
                 'is_featured' => $productData['featured'],
             ]);
 
-            // Create product images (using placeholders)
-            for ($i = 1; $i <= 3; $i++) {
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => "products/placeholder-{$i}.jpg",
-                    'alt_text' => "{$product->name} - Image {$i}",
-                    'sort_order' => $i - 1,
-                    'is_primary' => $i === 1,
-                ]);
-            }
+            // Create product image using product slug
+            ProductImage::create([
+                'product_id' => $product->id,
+                'path' => "products/{$product->slug}.webp",
+                'alt_text' => $product->name,
+                'sort_order' => 0,
+                'is_primary' => true,
+            ]);
         }
     }
 
-    private function generateDescription(string $name): string
+    private function generateSku(string $categorySlug): string
     {
-        return "Introducing the {$name} - a premium product designed with quality and functionality in mind. "
-            . "This exceptional item combines modern design with practical features to meet your everyday needs. "
-            . "Crafted with attention to detail, it represents the perfect balance of style and performance. "
-            . "\n\nFeatures:\n"
-            . "- Premium quality materials\n"
-            . "- Modern, sleek design\n"
-            . "- Durable construction\n"
-            . "- Easy to use and maintain\n"
-            . "\nPerfect for both personal use and as a thoughtful gift.";
+        $prefix = match ($categorySlug) {
+            'smartphones' => 'PHN',
+            'laptops' => 'LAP',
+            'accessories' => 'ACC',
+            'skincare' => 'SKN',
+            default => 'PRD',
+        };
+
+        return $prefix . '-' . strtoupper(Str::random(2)) . rand(1000, 9999);
+    }
+
+    private function generateDescription(string $name, string $shortDesc): string
+    {
+        return "Introducing the {$name}.\n\n"
+            . "{$shortDesc}\n\n"
+            . "Key Features:\n"
+            . "• Premium quality materials and construction\n"
+            . "• Designed for durability and long-lasting performance\n"
+            . "• Modern design that fits your lifestyle\n"
+            . "• Excellent value for money\n\n"
+            . "Why Choose This Product?\n"
+            . "We carefully select our products to ensure you receive only the best quality items. "
+            . "This product has been tested and approved to meet our high standards.\n\n"
+            . "Shipping & Returns:\n"
+            . "• Free delivery within Amman for orders over 50 JOD\n"
+            . "• Nationwide delivery across Jordan within 2-5 business days\n"
+            . "• 14-day hassle-free return policy\n"
+            . "• Original receipt required for returns";
     }
 }

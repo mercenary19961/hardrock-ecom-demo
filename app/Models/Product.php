@@ -22,6 +22,7 @@ class Product extends Model
         'compare_price',
         'sku',
         'stock',
+        'low_stock_threshold',
         'is_active',
         'is_featured',
     ];
@@ -120,6 +121,18 @@ class Product extends Model
         }
 
         return (int) round((($this->compare_price - $this->price) / $this->compare_price) * 100);
+    }
+
+    public function getEffectiveLowStockThreshold(): int
+    {
+        return $this->low_stock_threshold
+            ?? $this->category?->low_stock_threshold
+            ?? 10;
+    }
+
+    public function isLowStock(): bool
+    {
+        return $this->stock > 0 && $this->stock <= $this->getEffectiveLowStockThreshold();
     }
 
     public function getPrimaryImageUrl(): ?string
