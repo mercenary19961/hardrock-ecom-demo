@@ -25,15 +25,14 @@ class CheckoutService
 
             // Calculate totals
             $subtotal = $cart->subtotal;
-            $tax = round($subtotal * 0.1, 2); // 10% tax
-            $total = $subtotal + $tax;
+            $total = $subtotal;
 
             // Create order
             $order = Order::create([
                 'user_id' => $user?->id,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
-                'tax' => $tax,
+                'tax' => 0,
                 'total' => $total,
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],

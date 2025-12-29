@@ -15,7 +15,7 @@ interface Props {
     breadcrumbs: Breadcrumb[];
 }
 
-export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     const { addToCart, loading } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
@@ -35,7 +35,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
     };
 
     return (
-        <ShopLayout>
+        <>
             <Head title={product.name} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -61,11 +61,17 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                     {/* Images */}
                     <div>
                         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
-                            <img
-                                src={images[selectedImage] ? getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order) : '/images/placeholder.jpg'}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                            />
+                            {images[selectedImage] ? (
+                                <img
+                                    src={getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order)}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="text-gray-400">No image available</span>
+                                </div>
+                            )}
                         </div>
                         {images.length > 1 && (
                             <div className="flex gap-2 overflow-x-auto">
@@ -92,14 +98,16 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
 
                     {/* Info */}
                     <div>
-                        <div className="mb-4">
-                            <Link
-                                href={`/category/${product.category?.slug}`}
-                                className="text-sm text-gray-500 hover:text-gray-900"
-                            >
-                                {product.category?.name}
-                            </Link>
-                        </div>
+                        {product.category && (
+                            <div className="mb-4">
+                                <Link
+                                    href={`/category/${product.category.slug}`}
+                                    className="text-sm text-gray-500 hover:text-gray-900"
+                                >
+                                    {product.category.name}
+                                </Link>
+                            </div>
+                        )}
 
                         <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
 
@@ -187,6 +195,18 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                     </section>
                 )}
             </div>
+        </>
+    );
+}
+
+export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+    return (
+        <ShopLayout>
+            <ProductContent
+                product={product}
+                relatedProducts={relatedProducts}
+                breadcrumbs={breadcrumbs}
+            />
         </ShopLayout>
     );
 }

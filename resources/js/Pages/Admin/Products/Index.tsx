@@ -3,9 +3,190 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Product, Category, PaginatedData } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+
+// Product Detail Modal Component
+function ProductDetailModal({ product, onClose }: { product: Product | null; onClose: () => void }) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        setCurrentImageIndex(0);
+    }, [product]);
+
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
+
+    if (!product) return null;
+
+    const images = product.images && product.images.length > 0 ? product.images : [];
+    const currentImage = images[currentImageIndex]?.url || product.primary_image?.url;
+
+    const getStockStatus = () => {
+        if (product.stock === 0) return { label: 'Out of Stock', variant: 'danger' as const };
+        const threshold = product.effective_low_stock_threshold ?? 10;
+        if (product.stock <= threshold) return { label: 'Low Stock', variant: 'warning' as const };
+        return { label: 'In Stock', variant: 'success' as const };
+    };
+
+    const stockStatus = getStockStatus();
+
+    return (
+        <div className="fixed inset-0 z-50 overflow-y-auto" onClick={onClose}>
+            <div className="fixed inset-0 bg-black/50" />
+            <div className="relative min-h-screen flex items-center justify-center p-4">
+                <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 py-4 border-b">
+                        <h2 className="text-lg font-semibold text-gray-900">Product Details</h2>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <X className="h-5 w-5 text-gray-500" />
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+                            {/* Image Section */}
+                            <div className="space-y-4">
+                                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                                    {currentImage ? (
+                                        <img
+                                            src={currentImage}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <ImageIcon className="h-20 w-20 text-gray-300" />
+                                        </div>
+                                    )}
+                                </div>
+                                {/* Image Thumbnails */}
+                                {images.length > 1 && (
+                                    <div className="flex gap-2 overflow-x-auto pb-2">
+                                        {images.map((img, index) => (
+                                            <button
+                                                key={img.id}
+                                                onClick={() => setCurrentImageIndex(index)}
+                                                className={`w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
+                                                    currentImageIndex === index ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
+                                                }`}
+                                            >
+                                                <img
+                                                    src={img.url}
+                                                    alt={`${product.name} ${index + 1}`}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Info Section */}
+                            <div className="space-y-6">
+                                {/* Title & Status */}
+                                <div>
+                                    <div className="flex items-start justify-between gap-4 mb-2">
+                                        <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+                                        <Badge variant={product.is_active ? 'success' : 'default'}>
+                                            {product.is_active ? 'Active' : 'Inactive'}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-gray-500">SKU: {product.sku}</p>
+                                </div>
+
+                                {/* Price */}
+                                <div className="flex items-baseline gap-3">
+                                    <span className="text-2xl font-bold text-gray-900">{formatPrice(product.price)}</span>
+                                    {product.compare_price && (
+                                        <span className="text-lg text-gray-400 line-through">{formatPrice(product.compare_price)}</span>
+                                    )}
+                                    {product.compare_price && (
+                                        <Badge variant="danger">
+                                            -{Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}%
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                {/* Details Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+                                            <Layers className="h-4 w-4" />
+                                            <span>Category</span>
+                                        </div>
+                                        <p className="font-medium text-gray-900">{product.category?.name || 'Uncategorized'}</p>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+                                            <Package className="h-4 w-4" />
+                                            <span>Stock</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-gray-900">{product.stock} units</span>
+                                            <Badge variant={stockStatus.variant}>{stockStatus.label}</Badge>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+                                            <Info className="h-4 w-4" />
+                                            <span>Low Stock Threshold</span>
+                                        </div>
+                                        <p className="font-medium text-gray-900">
+                                            {product.effective_low_stock_threshold ?? 10} units
+                                            {!product.low_stock_threshold && <span className="text-gray-400 text-xs ml-1">(default)</span>}
+                                        </p>
+                                    </div>
+                                    {product.is_featured && (
+                                        <div className="bg-yellow-50 rounded-lg p-3">
+                                            <div className="flex items-center gap-2 text-yellow-600 text-sm mb-1">
+                                                <Tag className="h-4 w-4" />
+                                                <span>Featured</span>
+                                            </div>
+                                            <p className="font-medium text-yellow-700">This product is featured</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Description */}
+                                {product.description && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-gray-500 mb-2">Description</h4>
+                                        <p className="text-gray-700 text-sm whitespace-pre-wrap">{product.description}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+                        <Button variant="outline" onClick={onClose}>
+                            Close
+                        </Button>
+                        <Link href={`/admin/products/${product.id}/edit`}>
+                            <Button>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Product
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 interface Props {
     products: PaginatedData<Product>;
@@ -38,6 +219,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
         }
         return 'table';
     });
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
@@ -205,7 +387,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                 <div className={`${viewMode === 'grid' ? 'block' : 'block sm:hidden'}`}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {products.data.map((product) => (
-                            <Card key={product.id} className="overflow-hidden group">
+                            <Card key={product.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedProduct(product)}>
                                 {/* Product Image */}
                                 <div className="aspect-square bg-gray-100 relative">
                                     {product.primary_image?.url ? (
@@ -309,7 +491,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-right pr-12 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
@@ -319,7 +501,10 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                     <tr key={product.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                                                <button
+                                                    onClick={() => setSelectedProduct(product)}
+                                                    className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden hover:ring-2 hover:ring-gray-300 transition-all"
+                                                >
                                                     {product.primary_image?.url ? (
                                                         <img
                                                             src={product.primary_image.url}
@@ -331,12 +516,15 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                             <ImageIcon className="h-5 w-5 text-gray-300" />
                                                         </div>
                                                     )}
-                                                </div>
+                                                </button>
                                                 <div className="min-w-0">
                                                     <div className="relative group/name">
-                                                        <div className="font-medium text-gray-900 truncate max-w-[100px] lg:max-w-[120px] xl:max-w-[200px] cursor-default">
+                                                        <button
+                                                            onClick={() => setSelectedProduct(product)}
+                                                            className="font-medium text-gray-900 truncate max-w-[100px] lg:max-w-[120px] xl:max-w-[200px] hover:text-blue-600 text-left"
+                                                        >
                                                             {product.name}
-                                                        </div>
+                                                        </button>
                                                         {/* Tooltip */}
                                                         <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-gray-900 text-white text-sm rounded shadow-lg opacity-0 invisible group-hover/name:opacity-100 group-hover/name:visible transition-opacity z-20 whitespace-nowrap max-w-[300px]">
                                                             {product.name}
@@ -371,10 +559,18 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                 {product.is_active ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="pr-4 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-0 sm:gap-0 md:gap-1 lg:gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedProduct(product)}
+                                                    title="View details"
+                                                >
+                                                    <Eye className="h-4 w-4 text-gray-500" />
+                                                </Button>
                                                 <Link href={`/admin/products/${product.id}/edit`} preserveScroll>
-                                                    <Button variant="ghost" size="sm">
+                                                    <Button variant="ghost" size="sm" title="Edit">
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                 </Link>
@@ -382,6 +578,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDelete(product)}
+                                                    title="Delete"
                                                 >
                                                     <Trash2 className="h-4 w-4 text-red-500" />
                                                 </Button>
@@ -496,6 +693,12 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                     </div>
                 </div>
             </div>
+
+            {/* Product Detail Modal */}
+            <ProductDetailModal
+                product={selectedProduct}
+                onClose={() => setSelectedProduct(null)}
+            />
         </AdminLayout>
     );
 }

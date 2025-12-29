@@ -18,18 +18,22 @@ class ProductController extends Controller
 
         $product->load(['category', 'images']);
 
-        $relatedProducts = Product::with(['images'])
-            ->where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->active()
-            ->inStock()
-            ->take(4)
-            ->get();
+        $relatedProducts = [];
+        if ($product->category_id) {
+            $relatedProducts = Product::with(['images'])
+                ->where('category_id', $product->category_id)
+                ->where('id', '!=', $product->id)
+                ->active()
+                ->inStock()
+                ->take(4)
+                ->get();
+        }
 
-        $breadcrumbs = [
-            ['name' => $product->category->name, 'slug' => $product->category->slug],
-            ['name' => $product->name, 'slug' => $product->slug],
-        ];
+        $breadcrumbs = [];
+        if ($product->category) {
+            $breadcrumbs[] = ['name' => $product->category->name, 'slug' => $product->category->slug];
+        }
+        $breadcrumbs[] = ['name' => $product->name, 'slug' => $product->slug];
 
         return Inertia::render('Shop/Product', [
             'product' => $product,

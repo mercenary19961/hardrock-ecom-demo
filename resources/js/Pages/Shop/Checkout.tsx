@@ -37,8 +37,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
         post('/checkout');
     };
 
-    const tax = cart.subtotal * 0.1;
-    const total = cart.subtotal + tax;
+    const total = cart.subtotal;
 
     return (
         <ShopLayout>
@@ -227,11 +226,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             <span>{formatPrice(cart.subtotal)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Tax (10%)</span>
-                                            <span>{formatPrice(tax)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Shipping</span>
+                                            <span className="text-gray-600">Delivery</span>
                                             <span className="text-green-600">Free</span>
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-semibold">
