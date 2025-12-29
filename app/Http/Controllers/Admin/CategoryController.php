@@ -18,15 +18,30 @@ class CategoryController extends Controller
     {
         $query = Category::withCount('products');
 
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $categories = $query->ordered()->paginate(15)->withQueryString();
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
+            ? (int) $request->per_page
+            : 15;
+
+        $categories = $query->ordered()->paginate($perPage)->withQueryString();
+
+        // Get counts for status filters
+        $statusCounts = [
+            'active' => Category::where('is_active', true)->count(),
+            'inactive' => Category::where('is_active', false)->count(),
+        ];
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'status', 'per_page']),
+            'statusCounts' => $statusCounts,
         ]);
     }
 

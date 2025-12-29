@@ -57,13 +57,15 @@ export default function CreateProduct({ categories }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
                                     Category
                                 </label>
                                 <select
+                                    id="category_id"
+                                    name="category_id"
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                     required
                                 >
                                     <option value="">Select a category</option>
@@ -95,27 +97,31 @@ export default function CreateProduct({ categories }: Props) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="short_description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Short Description
                                 </label>
                                 <textarea
+                                    id="short_description"
+                                    name="short_description"
                                     value={data.short_description}
                                     onChange={(e) => setData('short_description', e.target.value)}
                                     rows={2}
                                     maxLength={500}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                                     Description
                                 </label>
                                 <textarea
+                                    id="description"
+                                    name="description"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={5}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-gray-900 focus:outline-none"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
                                 />
                             </div>
                         </CardContent>
@@ -174,12 +180,17 @@ export default function CreateProduct({ categories }: Props) {
                             <h2 className="text-lg font-semibold">Images</h2>
                         </CardHeader>
                         <CardContent>
+                            <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
+                                Product Images
+                            </label>
                             <input
+                                id="images"
+                                name="images"
                                 type="file"
                                 accept="image/*"
                                 multiple
                                 onChange={handleImageChange}
-                                className="w-full"
+                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                             />
                             <p className="text-sm text-gray-500 mt-1">
                                 Upload up to 5 images. First image will be the primary.
@@ -196,30 +207,34 @@ export default function CreateProduct({ categories }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <label className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
                                     <input
+                                        id="is_active"
+                                        name="is_active"
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="rounded border-gray-300"
+                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                     />
-                                    <span className="text-sm text-gray-700">Active</span>
-                                </label>
-                                <label className="flex items-center gap-2">
+                                    <label htmlFor="is_active" className="text-sm text-gray-700">Active</label>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <input
+                                        id="is_featured"
+                                        name="is_featured"
                                         type="checkbox"
                                         checked={data.is_featured}
                                         onChange={(e) => setData('is_featured', e.target.checked)}
-                                        className="rounded border-gray-300"
+                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                                     />
-                                    <span className="text-sm text-gray-700">Featured</span>
-                                </label>
+                                    <label htmlFor="is_featured" className="text-sm text-gray-700">Featured</label>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <div className="flex gap-4">
-                        <Button type="submit" loading={processing}>
+                        <Button type="submit" disabled={processing}>
                             Create Product
                         </Button>
                         <Link href="/admin/products">

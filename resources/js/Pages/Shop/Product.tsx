@@ -143,8 +143,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                                 />
                                 <Button
                                     onClick={handleAddToCart}
-                                    loading={loading}
-                                    disabled={added}
+                                    disabled={loading || added}
                                     size="lg"
                                     className="flex-1"
                                 >

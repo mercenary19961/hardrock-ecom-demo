@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -13,11 +13,16 @@ export interface SelectProps {
     options: SelectOption[];
     placeholder?: string;
     className?: string;
+    id?: string;
+    name?: string;
+    label?: string;
 }
 
-export function Select({ value, onChange, options, placeholder = 'Select...', className }: SelectProps) {
+export function Select({ value, onChange, options, placeholder = 'Select...', className, id, name, label }: SelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const generatedId = useId();
+    const selectId = id || generatedId;
 
     const selectedOption = options.find(opt => opt.value === value);
 
@@ -47,9 +52,19 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
 
     return (
         <div ref={containerRef} className={cn('relative', className)}>
+            {label && (
+                <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">
+                    {label}
+                </label>
+            )}
+            {/* Hidden input for form submission */}
+            <input type="hidden" id={selectId} name={name} value={value} />
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                aria-labelledby={label ? selectId : undefined}
                 className={cn(
                     'w-full flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-left',
                     'focus:outline-none focus:border-gray-900',

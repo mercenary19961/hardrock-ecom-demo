@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Inter font feature settings */
+html {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Tabular numbers for data alignment in tables */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Apply tabular numbers to table cells with numbers */
+table td {
+    font-variant-numeric: tabular-nums;
+}
+
 /* Override @tailwindcss/forms default blue focus ring */
 [type='text']:focus,
 [type='email']:focus,

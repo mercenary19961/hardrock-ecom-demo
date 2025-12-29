@@ -5,6 +5,7 @@ import { Order, PaginatedData } from '@/types/models';
 import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import { Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePolling } from '@/hooks';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -38,6 +39,9 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
         return 'table';
     });
     const isFirstRender = useRef(true);
+
+    // Auto-refresh data every 30 seconds
+    usePolling({ interval: 30000 });
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -119,33 +123,41 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
 
                 {/* Status Tabs */}
                 <div className="flex flex-wrap gap-2">
-                    {statuses.map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => handleStatusFilter(status)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                (filters.status || 'all') === status
-                                    ? 'bg-gray-900 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                        >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                            {status !== 'all' && statusCounts[status] !== undefined && (
-                                <span className="ml-1 opacity-70">({statusCounts[status] || 0})</span>
-                            )}
-                        </button>
-                    ))}
+                    {statuses.map((status) => {
+                        const totalOrders = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
+                        const count = status === 'all' ? totalOrders : statusCounts[status];
+                        return (
+                            <button
+                                key={status}
+                                onClick={() => handleStatusFilter(status)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                    (filters.status || 'all') === status
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                {count !== undefined && (
+                                    <span className="ml-1 opacity-70">({count})</span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Search */}
                 <Card>
                     <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <div className="relative flex-1">
+                            <label htmlFor="orders-search" className="sr-only">Search orders</label>
                             <input
+                                id="orders-search"
+                                name="search"
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search by order #, name, or email..."
+                                autoComplete="off"
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -188,7 +200,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                             <div className="text-xs text-gray-500">
                                                 {formatDateTime(order.created_at)}
                                             </div>
-                                            <div className="font-semibold text-gray-900">
+                                            <div className="font-semibold text-gray-900 tabular-nums">
                                                 {formatPrice(order.total)}
                                             </div>
                                         </div>
@@ -248,7 +260,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                         <td className="hidden lg:table-cell px-6 py-4 text-gray-500">
                                             {formatDateTime(order.created_at)}
                                         </td>
-                                        <td className="px-6 py-4 font-medium">
+                                        <td className="px-6 py-4 font-medium tabular-nums">
                                             {formatPrice(order.total)}
                                         </td>
                                         <td className="px-6 py-4">
@@ -354,8 +366,10 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500">Show:</span>
+                            <label htmlFor="orders-per-page" className="text-sm text-gray-500">Show:</label>
                             <select
+                                id="orders-per-page"
+                                name="per_page"
                                 value={perPage}
                                 onChange={(e) => handlePerPageChange(e.target.value)}
                                 className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-gray-900 outline-none min-w-[80px]"

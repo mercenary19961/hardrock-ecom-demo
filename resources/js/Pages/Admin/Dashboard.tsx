@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, Badge } from '@/Components/ui';
 import { DashboardStats, Order, Product } from '@/types/models';
-import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
+import { formatPrice, getStatusColor } from '@/lib/utils';
 import {
     Package,
     FolderTree,
@@ -12,6 +12,7 @@ import {
     Clock,
     AlertTriangle,
 } from 'lucide-react';
+import { usePolling } from '@/hooks';
 
 interface Props {
     stats: DashboardStats;
@@ -21,6 +22,8 @@ interface Props {
 }
 
 export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStockProducts }: Props) {
+    // Auto-refresh data every 30 seconds
+    usePolling({ interval: 30000 });
     const statCards = [
         {
             name: 'Total Products',
