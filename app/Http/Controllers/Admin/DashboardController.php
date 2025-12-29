@@ -33,8 +33,9 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        $lowStockProducts = Product::where('stock', '<=', 10)
+        $lowStockProducts = Product::with('category')
             ->where('stock', '>', 0)
+            ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)')
             ->orderBy('stock')
             ->take(5)
             ->get();

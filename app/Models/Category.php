@@ -20,12 +20,14 @@ class Category extends Model
         'parent_id',
         'sort_order',
         'is_active',
+        'low_stock_threshold',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'low_stock_threshold' => 'integer',
         ];
     }
 

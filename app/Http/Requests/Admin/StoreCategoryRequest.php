@@ -21,6 +21,7 @@ class StoreCategoryRequest extends FormRequest
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'low_stock_threshold' => 'nullable|integer|min:1|max:1000',
         ];
     }
 }

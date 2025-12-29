@@ -23,6 +23,7 @@ class StoreProductRequest extends FormRequest
             'compare_price' => 'nullable|numeric|min:0|gt:price',
             'sku' => 'nullable|string|max:100|unique:products,sku',
             'stock' => 'required|integer|min:0',
+            'low_stock_threshold' => 'nullable|integer|min:1|max:1000',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'images' => 'nullable|array|max:5',

@@ -36,7 +36,8 @@ class ProductController extends Controller
             } elseif ($request->status === 'out_of_stock') {
                 $query->where('stock', 0);
             } elseif ($request->status === 'low_stock') {
-                $query->where('stock', '>', 0)->where('stock', '<=', 10);
+                $query->where('stock', '>', 0)
+                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)');
             }
         }
 
@@ -45,6 +46,12 @@ class ProductController extends Controller
             : 15;
 
         $products = $query->latest()->paginate($perPage)->withQueryString();
+
+        // Add effective threshold to each product
+        $products->getCollection()->transform(function ($product) {
+            $product->effective_low_stock_threshold = $product->getEffectiveLowStockThreshold();
+            return $product;
+        });
 
         $categories = Category::ordered()->get(['id', 'name']);
 
@@ -91,8 +98,8 @@ class ProductController extends Controller
 
     public function edit(Product $product): Response
     {
-        $product->load('images');
-        $categories = Category::ordered()->get(['id', 'name', 'parent_id']);
+        $product->load(['images', 'category']);
+        $categories = Category::ordered()->get(['id', 'name', 'parent_id', 'low_stock_threshold']);
 
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,

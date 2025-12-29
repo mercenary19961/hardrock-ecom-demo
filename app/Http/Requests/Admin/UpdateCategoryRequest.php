@@ -31,6 +31,7 @@ class UpdateCategoryRequest extends FormRequest
             ],
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            'low_stock_threshold' => 'nullable|integer|min:1|max:1000',
         ];
     }
 }

@@ -16,6 +16,7 @@ export default function CreateCategory({ parentCategories }: Props) {
         parent_id: '',
         sort_order: 0,
         is_active: true,
+        low_stock_threshold: 10,
         image: null as File | null,
     });
 
@@ -105,6 +106,21 @@ export default function CreateCategory({ parentCategories }: Props) {
                                 onChange={(e) => setData('sort_order', parseInt(e.target.value) || 0)}
                                 error={errors.sort_order}
                             />
+
+                            <div>
+                                <Input
+                                    label="Low Stock Threshold"
+                                    type="number"
+                                    value={data.low_stock_threshold}
+                                    onChange={(e) => setData('low_stock_threshold', parseInt(e.target.value) || 10)}
+                                    error={errors.low_stock_threshold}
+                                    min={1}
+                                    max={1000}
+                                />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Products in this category will be marked as "low stock" when their quantity falls to or below this number.
+                                </p>
+                            </div>
 
                             <div>
                                 <label htmlFor="cat_image" className="block text-sm font-medium text-gray-700 mb-1">

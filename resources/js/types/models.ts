@@ -17,6 +17,7 @@ export interface Category {
     parent_id: number | null;
     sort_order: number;
     is_active: boolean;
+    low_stock_threshold: number;
     products_count?: number;
     children?: Category[];
     parent?: Category;
@@ -45,11 +46,13 @@ export interface Product {
     compare_price: number | null;
     sku: string;
     stock: number;
+    low_stock_threshold: number | null;
     is_active: boolean;
     is_featured: boolean;
     category?: Category;
     images?: ProductImage[];
     primary_image?: ProductImage;
+    effective_low_stock_threshold?: number;
     created_at: string;
     updated_at: string;
 }

@@ -18,6 +18,8 @@ class ProductImage extends Model
         'is_primary',
     ];
 
+    protected $appends = ['url'];
+
     protected function casts(): array
     {
         return [
@@ -46,15 +48,17 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        // Use placeholder images from picsum.photos for demo
-        if (str_starts_with($this->path, 'products/placeholder')) {
-            $productId = $this->product_id ?? 1;
-            $imageNumber = $this->sort_order + 1;
-            // Use product_id and sort_order as seed for consistent images
-            $seed = ($productId * 10) + $imageNumber;
-            return "https://picsum.photos/seed/{$seed}/800/800";
+        $storagePath = storage_path('app/public/' . $this->path);
+
+        // If file exists in storage, return the actual URL
+        if (file_exists($storagePath)) {
+            return asset('storage/' . $this->path);
         }
 
-        return asset('storage/' . $this->path);
+        // Fallback to picsum.photos for demo/placeholder images
+        $productId = $this->product_id ?? 1;
+        $imageNumber = $this->sort_order + 1;
+        $seed = ($productId * 10) + $imageNumber;
+        return "https://picsum.photos/seed/{$seed}/800/800";
     }
 }

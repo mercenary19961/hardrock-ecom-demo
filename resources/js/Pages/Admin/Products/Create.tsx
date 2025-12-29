@@ -19,6 +19,7 @@ export default function CreateProduct({ categories }: Props) {
         compare_price: '',
         sku: '',
         stock: 0,
+        low_stock_threshold: '',
         is_active: true,
         is_featured: false,
         images: [] as File[],
@@ -171,6 +172,22 @@ export default function CreateProduct({ categories }: Props) {
                                     error={errors.stock}
                                     required
                                 />
+                            </div>
+
+                            <div>
+                                <Input
+                                    label="Low Stock Threshold (optional)"
+                                    type="number"
+                                    min="1"
+                                    max="1000"
+                                    value={data.low_stock_threshold}
+                                    onChange={(e) => setData('low_stock_threshold', e.target.value)}
+                                    error={errors.low_stock_threshold}
+                                    placeholder="Inherit from category"
+                                />
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Leave empty to use the category's threshold. Set a value to override for this product only.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
