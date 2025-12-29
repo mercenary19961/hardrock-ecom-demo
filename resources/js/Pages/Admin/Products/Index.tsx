@@ -25,7 +25,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['5', '10', '15', '25', '50', '100'];
 
 export default function ProductsIndex({ products, categories, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
@@ -182,6 +182,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                 { value: '', label: 'All Status' },
                                 { value: 'active', label: 'Active' },
                                 { value: 'inactive', label: 'Inactive' },
+                                { value: 'low_stock', label: 'Low Stock' },
                                 { value: 'out_of_stock', label: 'Out of Stock' },
                             ]}
                         />

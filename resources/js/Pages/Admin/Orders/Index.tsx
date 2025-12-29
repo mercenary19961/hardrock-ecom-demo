@@ -14,7 +14,7 @@ interface Props {
 }
 
 const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['5', '10', '15', '25', '50', '100'];
 
 // Debounce hook for search
 function useDebounce<T>(value: T, delay: number): T {

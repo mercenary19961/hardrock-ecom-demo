@@ -148,7 +148,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     Low Stock Products
                                 </h2>
                                 <Link
-                                    href="/admin/products?status=out_of_stock"
+                                    href="/admin/products?status=low_stock"
                                     className="text-sm text-gray-600 hover:text-gray-900"
                                 >
                                     View all

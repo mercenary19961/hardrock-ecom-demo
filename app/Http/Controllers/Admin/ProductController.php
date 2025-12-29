@@ -35,6 +35,8 @@ class ProductController extends Controller
                 $query->where('is_active', false);
             } elseif ($request->status === 'out_of_stock') {
                 $query->where('stock', 0);
+            } elseif ($request->status === 'low_stock') {
+                $query->where('stock', '>', 0)->where('stock', '<=', 10);
             }
         }
 
