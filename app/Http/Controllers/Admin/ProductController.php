@@ -25,7 +25,11 @@ class ProductController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $categoryId = $request->category;
+            // Get child category IDs if this is a parent category
+            $childIds = Category::where('parent_id', $categoryId)->pluck('id')->toArray();
+            $categoryIds = array_merge([$categoryId], $childIds);
+            $query->whereIn('category_id', $categoryIds);
         }
 
         if ($request->filled('status')) {

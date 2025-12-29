@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Shop;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,14 +17,21 @@ class CategoryController extends Controller
             abort(404);
         }
 
-        $query = $category->products()
-            ->with(['images'])
+        // Get category IDs including children for parent categories
+        $childIds = $category->children()->pluck('id')->toArray();
+        $categoryIds = array_merge([$category->id], $childIds);
+
+        $query = Product::with(['images'])
+            ->whereIn('category_id', $categoryIds)
             ->active()
             ->inStock();
 
         // Sorting
         $sort = $request->get('sort', 'newest');
         $query = match ($sort) {
+            'sale' => $query->whereNotNull('compare_price')
+                ->whereColumn('compare_price', '>', 'price')
+                ->orderByRaw('(compare_price - price) / compare_price DESC'),
             'price_low' => $query->orderBy('price', 'asc'),
             'price_high' => $query->orderBy('price', 'desc'),
             'name' => $query->orderBy('name', 'asc'),

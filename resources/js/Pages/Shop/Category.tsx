@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
+import { Select } from '@/Components/ui';
 import { Product, Category as CategoryType, Breadcrumb, PaginatedData } from '@/types/models';
 import { ChevronRight } from 'lucide-react';
 
@@ -67,16 +68,18 @@ export default function Category({ category, products, subcategories, breadcrumb
                     <p className="text-gray-600">
                         {products.total} {products.total === 1 ? 'product' : 'products'}
                     </p>
-                    <select
+                    <Select
                         value={sort}
-                        onChange={(e) => handleSortChange(e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gray-900 focus:outline-none"
-                    >
-                        <option value="newest">Newest</option>
-                        <option value="price_low">Price: Low to High</option>
-                        <option value="price_high">Price: High to Low</option>
-                        <option value="name">Name</option>
-                    </select>
+                        onChange={handleSortChange}
+                        className="w-44"
+                        options={[
+                            { value: 'newest', label: 'Newest' },
+                            { value: 'sale', label: 'On Sale' },
+                            { value: 'price_low', label: 'Price: Low to High' },
+                            { value: 'price_high', label: 'Price: High to Low' },
+                            { value: 'name', label: 'Name' },
+                        ]}
+                    />
                 </div>
 
                 {/* Products Grid */}

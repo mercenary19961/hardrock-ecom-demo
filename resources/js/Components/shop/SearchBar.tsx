@@ -24,7 +24,7 @@ export function SearchBar({ initialQuery = '', placeholder = 'Search products...
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:outline-none text-sm"
+                className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 focus:border-gray-900 outline-none text-sm"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         </form>

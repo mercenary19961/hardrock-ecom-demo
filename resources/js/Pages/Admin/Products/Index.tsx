@@ -362,15 +362,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                             )}
                                         </td>
                                         <td className="hidden lg:table-cell px-6 py-4">
-                                            <Badge
-                                                variant={
-                                                    product.stock === 0
-                                                        ? 'danger'
-                                                        : product.stock <= 10
-                                                        ? 'warning'
-                                                        : 'success'
-                                                }
-                                            >
+                                            <Badge variant={getStockBadgeVariant(product)}>
                                                 {product.stock}
                                             </Badge>
                                         </td>
