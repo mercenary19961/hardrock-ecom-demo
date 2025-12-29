@@ -24,7 +24,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['5', '10', '15', '25', '50', '100'];
 
 export default function CategoriesIndex({ categories, filters, statusCounts }: Props) {
     const [search, setSearch] = useState(filters.search || '');
