@@ -155,6 +155,23 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
+        // Check if product is in any pending/processing orders
+        $activeOrderStatuses = ['pending', 'processing', 'shipped'];
+        $hasActiveOrders = $product->orderItems()
+            ->whereHas('order', function ($query) use ($activeOrderStatuses) {
+                $query->whereIn('status', $activeOrderStatuses);
+            })
+            ->exists();
+
+        if ($hasActiveOrders) {
+            return back()->withErrors(['product' => 'Cannot delete product with active orders (pending, processing, or shipped).']);
+        }
+
+        // Check if product is in any customer carts
+        if ($product->cartItems()->exists()) {
+            return back()->withErrors(['product' => 'Cannot delete product that is in customer carts. Remove from carts first or wait for checkout.']);
+        }
+
         // Delete all product images
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->path);
