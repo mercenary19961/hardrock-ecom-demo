@@ -26,7 +26,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {hasDiscount && (
-                    <Badge variant="danger" className="absolute top-3 left-3">
+                    <Badge variant="danger" className="absolute top-2 left-2 sm:top-3 sm:left-3 text-xs sm:text-sm">
                         -{getDiscountPercentage(product.price, product.compare_price!)}%
                     </Badge>
                 )}
@@ -36,17 +36,17 @@ export function ProductCard({ product }: ProductCardProps) {
                     </div>
                 )}
             </div>
-            <div className="p-4">
-                <p className="text-xs text-gray-500 mb-1">{product.category?.name}</p>
-                <h3 className="font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
+            <div className="p-2 sm:p-4">
+                <p className="text-xs text-gray-500 mb-1 hidden sm:block">{product.category?.name}</p>
+                <h3 className="text-sm sm:text-base font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
                     {product.name}
                 </h3>
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="text-lg font-bold text-gray-900">
+                <div className="mt-1 sm:mt-2 flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+                    <span className="text-sm sm:text-lg font-bold text-gray-900">
                         {formatPrice(product.price)}
                     </span>
                     {hasDiscount && (
-                        <span className="text-sm text-gray-400 line-through">
+                        <span className="text-xs sm:text-sm text-gray-400 line-through">
                             {formatPrice(product.compare_price!)}
                         </span>
                     )}
