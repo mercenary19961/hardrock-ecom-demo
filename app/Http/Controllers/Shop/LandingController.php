@@ -65,6 +65,18 @@ class LandingController extends Controller
             $filters['below_100'] = true;
         }
 
+        // Quick price range filters
+        if ($request->filled('price_range')) {
+            $priceRangeFilter = $request->get('price_range');
+            match ($priceRangeFilter) {
+                'under_25' => $query->where('price', '<=', 25),
+                '25_to_50' => $query->where('price', '>', 25)->where('price', '<=', 50),
+                'over_50' => $query->where('price', '>', 50),
+                default => null,
+            };
+            $filters['price_range'] = $priceRangeFilter;
+        }
+
         // Min/Max price filters
         if ($request->filled('min_price')) {
             $minPrice = (float) $request->get('min_price');
@@ -100,6 +112,26 @@ class LandingController extends Controller
             $filters['in_stock'] = true;
         }
 
+        // Has any discount filter (quick filter)
+        if ($request->boolean('has_discount')) {
+            $query->whereNotNull('compare_price')
+                ->whereColumn('compare_price', '>', 'price');
+            $filters['has_discount'] = true;
+        }
+
+        // Rating filter (4 stars and up)
+        if ($request->boolean('top_rated')) {
+            $query->where('average_rating', '>=', 4);
+            $filters['top_rated'] = true;
+        }
+
+        // Popular filter (most purchased)
+        if ($request->boolean('popular')) {
+            $query->where('times_purchased', '>', 0)
+                ->orderBy('times_purchased', 'desc');
+            $filters['popular'] = true;
+        }
+
         // Sorting
         $sort = $request->get('sort', 'newest');
         $query = match ($sort) {
@@ -109,6 +141,8 @@ class LandingController extends Controller
             'price_low' => $query->orderBy('price', 'asc'),
             'price_high' => $query->orderBy('price', 'desc'),
             'name' => $query->orderBy('name', 'asc'),
+            'popular' => $query->orderBy('times_purchased', 'desc'),
+            'top_rated' => $query->orderBy('average_rating', 'desc'),
             default => $query->orderBy('created_at', 'desc'),
         };
 

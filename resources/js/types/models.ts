@@ -49,6 +49,10 @@ export interface Product {
     low_stock_threshold: number | null;
     is_active: boolean;
     is_featured: boolean;
+    times_purchased: number;
+    average_rating: number;
+    rating_count: number;
+    view_count: number;
     category?: Category;
     images?: ProductImage[];
     primary_image?: ProductImage;

@@ -7,7 +7,45 @@ import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { Product as ProductType, Breadcrumb } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { ChevronRight, ShoppingCart, Check, Bell } from 'lucide-react';
+import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
+
+function StarRating({ rating, count }: { rating: number; count: number }) {
+    if (count === 0) return null;
+
+    const getStarFill = (starPosition: number) => {
+        if (rating >= starPosition) return 'full';
+        if (rating >= starPosition - 0.5) return 'half';
+        return 'empty';
+    };
+
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => {
+                    const fill = getStarFill(star);
+                    return (
+                        <div key={star} className="relative h-5 w-5">
+                            {/* Background empty star */}
+                            <Star className="absolute inset-0 h-full w-full fill-gray-200 text-gray-200" />
+                            {/* Filled portion */}
+                            {fill !== 'empty' && (
+                                <div
+                                    className="absolute inset-0 overflow-hidden"
+                                    style={{ width: fill === 'half' ? '50%' : '100%' }}
+                                >
+                                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <span className="text-sm text-gray-600">
+                {rating.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
+            </span>
+        </div>
+    );
+}
 
 interface Props {
     product: ProductType;
@@ -123,7 +161,13 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             </div>
                         )}
 
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+
+                        {product.rating_count > 0 && (
+                            <div className="mb-4">
+                                <StarRating rating={product.average_rating} count={product.rating_count} />
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-4 mb-6">
                             <span className="text-3xl font-bold text-gray-900">

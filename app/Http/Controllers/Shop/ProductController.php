@@ -16,6 +16,9 @@ class ProductController extends Controller
             abort(404);
         }
 
+        // Increment view count
+        $product->increment('view_count');
+
         $product->load(['category', 'images']);
 
         $relatedProducts = [];

@@ -68,8 +68,9 @@ class CheckoutService
                     'subtotal' => $item->subtotal,
                 ]);
 
-                // Decrease stock
+                // Decrease stock and increment times_purchased
                 $item->product->decrement('stock', $item->quantity);
+                $item->product->increment('times_purchased', $item->quantity);
             }
 
             // Clear cart

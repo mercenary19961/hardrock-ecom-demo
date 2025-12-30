@@ -21,6 +21,10 @@ interface Props {
         new_arrivals?: boolean;
         below_100?: boolean;
         min_discount?: number;
+        price_range?: string;
+        has_discount?: boolean;
+        top_rated?: boolean;
+        popular?: boolean;
     };
     priceRange: {
         min: number;
@@ -119,7 +123,55 @@ export default function Category({ category, products, subcategories, sort, filt
         { id: 'availability' as FilterCategory, label: 'Availability', icon: Package },
     ];
 
-    const currentSortLabel = sortOptions.find(o => o.value === sort)?.label || 'Sort';
+    const quickFilters = [
+        { id: 'under_25', label: 'Up to 25 JOD', param: 'price_range', value: 'under_25' },
+        { id: '25_to_50', label: '25 - 50 JOD', param: 'price_range', value: '25_to_50' },
+        { id: 'over_50', label: '50+ JOD', param: 'price_range', value: 'over_50' },
+        { id: 'has_discount', label: 'On Sale', param: 'has_discount', value: '1' },
+        { id: 'top_rated', label: '4+ Stars', param: 'top_rated', value: '1' },
+        { id: 'popular', label: 'Popular', param: 'popular', value: '1' },
+    ];
+
+    const isQuickFilterActive = (filterId: string) => {
+        switch (filterId) {
+            case 'under_25':
+            case '25_to_50':
+            case 'over_50':
+                return filters.price_range === filterId;
+            case 'has_discount':
+                return filters.has_discount === true;
+            case 'top_rated':
+                return filters.top_rated === true;
+            case 'popular':
+                return filters.popular === true;
+            default:
+                return false;
+        }
+    };
+
+    const toggleQuickFilter = (filter: typeof quickFilters[0]) => {
+        const isActive = isQuickFilterActive(filter.id);
+        const params: Record<string, string> = { sort, ...buildFilterParams() };
+
+        // Clear any existing price_range if toggling a price filter
+        if (filter.param === 'price_range') {
+            delete params.price_range;
+        }
+
+        if (isActive) {
+            // Remove the filter
+            delete params[filter.param];
+        } else {
+            // Add the filter (and remove conflicting ones)
+            if (filter.param === 'price_range') {
+                // Remove below_100 if setting price_range
+                delete params.below_100;
+            }
+            params[filter.param] = filter.value;
+        }
+
+        router.get(`/category/${category.slug}`, params, { preserveState: true, preserveScroll: true });
+    };
 
     const buildFilterParams = () => {
         const params: Record<string, string> = {};
@@ -129,6 +181,11 @@ export default function Category({ category, products, subcategories, sort, filt
         if (localFilters.new_arrivals) params.new_arrivals = '1';
         if (localFilters.below_100) params.below_100 = '1';
         if (localFilters.min_discount > 0) params.min_discount = localFilters.min_discount.toString();
+        // Include quick filters from server state
+        if (filters.price_range) params.price_range = filters.price_range;
+        if (filters.has_discount) params.has_discount = '1';
+        if (filters.top_rated) params.top_rated = '1';
+        if (filters.popular) params.popular = '1';
         return params;
     };
 
@@ -169,7 +226,8 @@ export default function Category({ category, products, subcategories, sort, filt
     };
 
     const hasActiveFilters = filters.min_price || filters.max_price || filters.in_stock ||
-        filters.new_arrivals || filters.below_100 || (filters.min_discount && filters.min_discount > 0);
+        filters.new_arrivals || filters.below_100 || (filters.min_discount && filters.min_discount > 0) ||
+        filters.price_range || filters.has_discount || filters.top_rated || filters.popular;
 
     const activeFilterCount = [
         filters.min_price,
@@ -178,6 +236,10 @@ export default function Category({ category, products, subcategories, sort, filt
         filters.new_arrivals,
         filters.below_100,
         filters.min_discount && filters.min_discount > 0,
+        filters.price_range,
+        filters.has_discount,
+        filters.top_rated,
+        filters.popular,
     ].filter(Boolean).length;
 
     // Filter sidebar content (shared between desktop and mobile)
@@ -347,41 +409,61 @@ export default function Category({ category, products, subcategories, sort, filt
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Mobile Filter & Sort Buttons */}
-                        <div className="flex items-center justify-between gap-2 mb-6">
-                            <div className="lg:hidden flex items-center gap-2">
-                                <button
-                                    onClick={() => setShowMobileFilters(true)}
-                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                >
-                                    <Filter className="h-4 w-4" />
-                                    Filters
-                                    {activeFilterCount > 0 && (
-                                        <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
-                                            {activeFilterCount}
-                                        </span>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => setShowMobileSort(true)}
-                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                >
-                                    <ArrowUpDown className="h-4 w-4" />
-                                    <span className="max-w-[100px] truncate">{currentSortLabel}</span>
-                                </button>
-                            </div>
+                        {/* Mobile Filter & Sort Buttons + Quick Filters Row */}
+                        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                            {/* Filter Button */}
+                            <button
+                                onClick={() => setShowMobileFilters(true)}
+                                className="lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                <Filter className="h-4 w-4" />
+                                Filters
+                                {activeFilterCount > 0 && (
+                                    <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                        {activeFilterCount}
+                                    </span>
+                                )}
+                            </button>
 
-                            <div className="hidden lg:flex items-center gap-4 ml-auto">
-                                <span className="text-sm text-gray-500">
-                                    {products.total} {products.total === 1 ? 'product' : 'products'}
-                                </span>
-                                <Select
-                                    value={sort}
-                                    onChange={handleSortChange}
-                                    className="w-44"
-                                    options={sortOptions}
-                                />
-                            </div>
+                            {/* Sort Button */}
+                            <button
+                                onClick={() => setShowMobileSort(true)}
+                                className="lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                <ArrowUpDown className="h-3.5 w-3.5" />
+                                Sort
+                            </button>
+
+                            {/* Quick Filter Chips */}
+                            {quickFilters.map((filter) => {
+                                const isActive = isQuickFilterActive(filter.id);
+                                return (
+                                    <button
+                                        key={filter.id}
+                                        onClick={() => toggleQuickFilter(filter)}
+                                        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-gray-900 text-white'
+                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Desktop Sort */}
+                        <div className="hidden lg:flex items-center gap-4 mb-6">
+                            <span className="text-sm text-gray-500">
+                                {products.total} {products.total === 1 ? 'product' : 'products'}
+                            </span>
+                            <Select
+                                value={sort}
+                                onChange={handleSortChange}
+                                className="w-44"
+                                options={sortOptions}
+                            />
                         </div>
 
                         {/* Active Filters Summary */}
