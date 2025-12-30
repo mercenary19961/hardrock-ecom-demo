@@ -4,6 +4,7 @@ import { Product } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { Badge } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 interface ProductCardProps {
     product: Product;
@@ -48,8 +49,9 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 export function ProductCard({ product }: ProductCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
-    const [isWishlisted, setIsWishlisted] = useState(false);
+    const { isInWishlist, toggleWishlist } = useWishlist();
 
+    const isWishlisted = isInWishlist(product.id);
     const images = product.images || [];
     const hasMultipleImages = images.length > 1;
 
@@ -75,8 +77,7 @@ export function ProductCard({ product }: ProductCardProps) {
     const handleWishlistClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsWishlisted(!isWishlisted);
-        // TODO: Implement actual wishlist functionality
+        toggleWishlist(product);
     };
 
     return (

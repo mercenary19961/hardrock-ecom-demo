@@ -10,11 +10,13 @@ import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
 
 function StarRating({ rating, count }: { rating: number; count: number }) {
-    if (count === 0) return null;
+    if (count === 0 || rating == null) return null;
+
+    const ratingValue = Number(rating) || 0;
 
     const getStarFill = (starPosition: number) => {
-        if (rating >= starPosition) return 'full';
-        if (rating >= starPosition - 0.5) return 'half';
+        if (ratingValue >= starPosition) return 'full';
+        if (ratingValue >= starPosition - 0.5) return 'half';
         return 'empty';
     };
 
@@ -41,7 +43,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
                 })}
             </div>
             <span className="text-sm text-gray-600">
-                {rating.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
+                {ratingValue.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
             </span>
         </div>
     );

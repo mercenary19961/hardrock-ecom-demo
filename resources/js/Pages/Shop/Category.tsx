@@ -254,6 +254,41 @@ export default function Category({ category, products, subcategories, sort, filt
         setShowMobileFilters(false);
     };
 
+    const removeFilter = (filterKey: string) => {
+        const params: Record<string, string> = { sort };
+
+        // Build params from all current filters except the one being removed
+        if (filters.min_price && filterKey !== 'min_price') params.min_price = filters.min_price.toString();
+        if (filters.max_price && filterKey !== 'max_price') params.max_price = filters.max_price.toString();
+        if (filters.in_stock && filterKey !== 'in_stock') params.in_stock = '1';
+        if (filters.new_arrivals && filterKey !== 'new_arrivals') params.new_arrivals = '1';
+        if (filters.below_100 && filterKey !== 'below_100') params.below_100 = '1';
+        if (filters.min_discount && filters.min_discount > 0 && filterKey !== 'min_discount') params.min_discount = filters.min_discount.toString();
+        if (filters.price_range && filterKey !== 'price_range') params.price_range = filters.price_range;
+        if (filters.has_discount && filterKey !== 'has_discount') params.has_discount = '1';
+        if (filters.top_rated && filterKey !== 'top_rated') params.top_rated = '1';
+        if (filters.popular && filterKey !== 'popular') params.popular = '1';
+
+        // Update local state for the removed filter
+        if (filterKey === 'min_price') {
+            setLocalFilters(prev => ({ ...prev, min_price: '' }));
+            setSliderMin(priceRange.min);
+        } else if (filterKey === 'max_price') {
+            setLocalFilters(prev => ({ ...prev, max_price: '' }));
+            setSliderMax(priceRange.max);
+        } else if (filterKey === 'in_stock') {
+            setLocalFilters(prev => ({ ...prev, in_stock: false }));
+        } else if (filterKey === 'new_arrivals') {
+            setLocalFilters(prev => ({ ...prev, new_arrivals: false }));
+        } else if (filterKey === 'below_100') {
+            setLocalFilters(prev => ({ ...prev, below_100: false }));
+        } else if (filterKey === 'min_discount') {
+            setLocalFilters(prev => ({ ...prev, min_discount: 0 }));
+        }
+
+        router.get(`/category/${category.slug}`, params, { preserveState: true, preserveScroll: true });
+    };
+
     const hasActiveFilters = filters.min_price || filters.max_price || filters.in_stock ||
         filters.new_arrivals || filters.below_100 || (filters.min_discount && filters.min_discount > 0) ||
         filters.price_range || filters.has_discount || filters.top_rated || filters.popular;
@@ -337,7 +372,6 @@ export default function Category({ category, products, subcategories, sort, filt
 
             {/* Hero Banner */}
             <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-5"></div>
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent"></div>
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
@@ -516,7 +550,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.new_arrivals && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         New Arrivals
-                                        <button onClick={() => applyFilters({ new_arrivals: false })} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('new_arrivals')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -524,7 +558,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.below_100 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         Below 100 JOD
-                                        <button onClick={() => applyFilters({ below_100: false })} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('below_100')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -532,7 +566,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.min_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         Min: {formatPrice(filters.min_price)}
-                                        <button onClick={() => { setLocalFilters({...localFilters, min_price: ''}); applyFilters({ min_price: '' }); }} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('min_price')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -540,7 +574,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.max_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         Max: {formatPrice(filters.max_price)}
-                                        <button onClick={() => { setLocalFilters({...localFilters, max_price: ''}); applyFilters({ max_price: '' }); }} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('max_price')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -548,7 +582,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.min_discount && filters.min_discount > 0 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         {filters.min_discount}%+ Off
-                                        <button onClick={() => applyFilters({ min_discount: 0 })} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('min_discount')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -556,7 +590,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {filters.in_stock && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                         In Stock Only
-                                        <button onClick={() => applyFilters({ in_stock: false })} className="ml-1 hover:text-gray-900">
+                                        <button onClick={() => removeFilter('in_stock')} className="ml-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>

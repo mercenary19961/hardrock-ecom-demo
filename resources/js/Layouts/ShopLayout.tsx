@@ -1,8 +1,10 @@
 import { useState, ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { ShoppingCart, User, Menu, X, Search, ChevronDown } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
+import { WishlistProvider, useWishlist } from '@/contexts/WishlistContext';
 import { CartDrawer } from '@/Components/shop/CartDrawer';
+import { WishlistDrawer } from '@/Components/shop/WishlistDrawer';
 import { SearchBar } from '@/Components/shop/SearchBar';
 import { Category, User as UserType } from '@/types/models';
 
@@ -12,8 +14,10 @@ interface ShopLayoutProps {
 
 function ShopLayoutContent({ children }: ShopLayoutProps) {
     const { cart } = useCart();
+    const { items: wishlistItems } = useWishlist();
     const { auth, categories } = usePage<{ auth: { user: UserType | null }; categories?: Category[] }>().props;
     const [cartOpen, setCartOpen] = useState(false);
+    const [wishlistOpen, setWishlistOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
@@ -52,6 +56,19 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             <div className="hidden md:block">
                                 <SearchBar />
                             </div>
+
+                            {/* Wishlist */}
+                            <button
+                                onClick={() => setWishlistOpen(true)}
+                                className="relative p-2 text-gray-700 hover:text-gray-900"
+                            >
+                                <Heart className="h-6 w-6" />
+                                {wishlistItems.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center">
+                                        {wishlistItems.length}
+                                    </span>
+                                )}
+                            </button>
 
                             {/* Cart */}
                             <button
@@ -226,6 +243,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
             {/* Cart Drawer */}
             <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+            {/* Wishlist Drawer */}
+            <WishlistDrawer isOpen={wishlistOpen} onClose={() => setWishlistOpen(false)} />
         </div>
     );
 }
@@ -233,7 +253,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 export default function ShopLayout({ children }: ShopLayoutProps) {
     return (
         <CartProvider>
-            <ShopLayoutContent>{children}</ShopLayoutContent>
+            <WishlistProvider>
+                <ShopLayoutContent>{children}</ShopLayoutContent>
+            </WishlistProvider>
         </CartProvider>
     );
 }

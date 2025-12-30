@@ -82,11 +82,10 @@ export interface Cart {
 }
 
 export interface Address {
+    area: string;
     street: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
+    building: string;
+    delivery_notes?: string;
 }
 
 export interface OrderItem {

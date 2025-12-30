@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/Components/ui/Button';
 
 interface DualRangeSliderProps {
     min: number;
@@ -20,190 +21,87 @@ export function DualRangeSlider({
     maxValue,
     onChange,
     onChangeEnd,
-    step = 1,
-    formatValue = (v) => v.toString(),
     className,
 }: DualRangeSliderProps) {
-    const trackRef = useRef<HTMLDivElement>(null);
-    const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
-    const [localMin, setLocalMin] = useState(minValue);
-    const [localMax, setLocalMax] = useState(maxValue);
+    const [localMin, setLocalMin] = useState(minValue.toString());
+    const [localMax, setLocalMax] = useState(maxValue.toString());
 
-    // Sync local state with props when not dragging
+    // Sync with props
     useEffect(() => {
-        if (!isDragging) {
-            setLocalMin(minValue);
-            setLocalMax(maxValue);
-        }
-    }, [minValue, maxValue, isDragging]);
+        setLocalMin(minValue.toString());
+        setLocalMax(maxValue.toString());
+    }, [minValue, maxValue]);
 
-    const getPercentage = (value: number) => {
-        return ((value - min) / (max - min)) * 100;
+    const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLocalMin(e.target.value);
     };
 
-    const getValueFromPosition = useCallback((clientX: number) => {
-        if (!trackRef.current) return min;
-
-        const rect = trackRef.current.getBoundingClientRect();
-        const percentage = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        const rawValue = min + percentage * (max - min);
-        const steppedValue = Math.round(rawValue / step) * step;
-        return Math.max(min, Math.min(max, steppedValue));
-    }, [min, max, step]);
-
-    const handleMouseDown = (handle: 'min' | 'max') => (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(handle);
+    const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLocalMax(e.target.value);
     };
 
-    const handleTouchStart = (handle: 'min' | 'max') => (e: React.TouchEvent) => {
-        e.stopPropagation();
-        setIsDragging(handle);
+    const handleApply = () => {
+        let newMin = parseInt(localMin) || min;
+        let newMax = parseInt(localMax) || max;
+
+        // Clamp values
+        newMin = Math.max(min, Math.min(newMin, max));
+        newMax = Math.max(min, Math.min(newMax, max));
+
+        // Ensure min <= max
+        if (newMin > newMax) {
+            [newMin, newMax] = [newMax, newMin];
+        }
+
+        setLocalMin(newMin.toString());
+        setLocalMax(newMax.toString());
+        onChange(newMin, newMax);
+        onChangeEnd?.(newMin, newMax);
     };
 
-    const handleMove = useCallback((clientX: number) => {
-        if (!isDragging) return;
-
-        const newValue = getValueFromPosition(clientX);
-
-        if (isDragging === 'min') {
-            const clampedValue = Math.min(newValue, localMax - step);
-            setLocalMin(clampedValue);
-            onChange(clampedValue, localMax);
-        } else {
-            const clampedValue = Math.max(newValue, localMin + step);
-            setLocalMax(clampedValue);
-            onChange(localMin, clampedValue);
-        }
-    }, [isDragging, localMin, localMax, step, onChange, getValueFromPosition]);
-
-    const handleEnd = useCallback(() => {
-        if (isDragging && onChangeEnd) {
-            onChangeEnd(localMin, localMax);
-        }
-        setIsDragging(null);
-    }, [isDragging, localMin, localMax, onChangeEnd]);
-
-    useEffect(() => {
-        if (!isDragging) return;
-
-        const handleMouseMove = (e: MouseEvent) => {
-            e.preventDefault();
-            handleMove(e.clientX);
-        };
-
-        const handleTouchMove = (e: TouchEvent) => {
-            if (e.touches.length > 0) {
-                handleMove(e.touches[0].clientX);
-            }
-        };
-
-        const handleMouseUp = () => handleEnd();
-        const handleTouchEnd = () => handleEnd();
-
-        // Use passive: false to prevent scroll while dragging
-        document.addEventListener('mousemove', handleMouseMove, { passive: false });
-        document.addEventListener('mouseup', handleMouseUp);
-        document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        document.addEventListener('touchend', handleTouchEnd);
-
-        // Prevent text selection while dragging
-        document.body.style.userSelect = 'none';
-
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleTouchEnd);
-            document.body.style.userSelect = '';
-        };
-    }, [isDragging, handleMove, handleEnd]);
-
-    const handleTrackClick = (e: React.MouseEvent) => {
-        if (isDragging) return;
-
-        const clickValue = getValueFromPosition(e.clientX);
-        const distToMin = Math.abs(clickValue - localMin);
-        const distToMax = Math.abs(clickValue - localMax);
-
-        if (distToMin < distToMax && clickValue < localMax - step) {
-            setLocalMin(clickValue);
-            onChange(clickValue, localMax);
-            onChangeEnd?.(clickValue, localMax);
-        } else if (clickValue > localMin + step) {
-            setLocalMax(clickValue);
-            onChange(localMin, clickValue);
-            onChangeEnd?.(localMin, clickValue);
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleApply();
         }
     };
-
-    const minPercent = getPercentage(localMin);
-    const maxPercent = getPercentage(localMax);
 
     return (
         <div className={cn('space-y-3', className)}>
-            {/* Value display */}
-            <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-900">{formatValue(localMin)}</span>
+            <div className="flex items-center gap-2">
+                <div className="flex-1">
+                    <input
+                        type="number"
+                        value={localMin}
+                        onChange={handleMinChange}
+                        onKeyDown={handleKeyDown}
+                        min={min}
+                        max={max}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                        placeholder="Min"
+                    />
+                </div>
                 <span className="text-gray-400">—</span>
-                <span className="font-medium text-gray-900">{formatValue(localMax)}</span>
+                <div className="flex-1">
+                    <input
+                        type="number"
+                        value={localMax}
+                        onChange={handleMaxChange}
+                        onKeyDown={handleKeyDown}
+                        min={min}
+                        max={max}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                        placeholder="Max"
+                    />
+                </div>
             </div>
-
-            {/* Slider track */}
-            <div
-                ref={trackRef}
-                className="relative h-8 flex items-center cursor-pointer select-none"
-                onClick={handleTrackClick}
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleApply}
+                className="w-full"
             >
-                {/* Background track */}
-                <div className="absolute inset-x-0 h-1 bg-gray-200 rounded-full" />
-
-                {/* Active range */}
-                <div
-                    className="absolute h-1 bg-gray-400 rounded-full"
-                    style={{
-                        left: `${minPercent}%`,
-                        width: `${maxPercent - minPercent}%`,
-                    }}
-                />
-
-                {/* Min handle */}
-                <div
-                    className={cn(
-                        'absolute w-5 h-5 bg-white border-2 border-gray-400 rounded-full shadow-md cursor-grab transform -translate-x-1/2 transition-shadow z-10',
-                        isDragging === 'min' && 'cursor-grabbing ring-2 ring-gray-400/30 border-gray-500 scale-110',
-                        'hover:ring-2 hover:ring-gray-400/30 hover:border-gray-500'
-                    )}
-                    style={{ left: `${minPercent}%` }}
-                    onMouseDown={handleMouseDown('min')}
-                    onTouchStart={handleTouchStart('min')}
-                    role="slider"
-                    aria-label="Minimum price"
-                    aria-valuemin={min}
-                    aria-valuemax={max}
-                    aria-valuenow={localMin}
-                    tabIndex={0}
-                />
-
-                {/* Max handle */}
-                <div
-                    className={cn(
-                        'absolute w-5 h-5 bg-white border-2 border-gray-400 rounded-full shadow-md cursor-grab transform -translate-x-1/2 transition-shadow z-10',
-                        isDragging === 'max' && 'cursor-grabbing ring-2 ring-gray-400/30 border-gray-500 scale-110',
-                        'hover:ring-2 hover:ring-gray-400/30 hover:border-gray-500'
-                    )}
-                    style={{ left: `${maxPercent}%` }}
-                    onMouseDown={handleMouseDown('max')}
-                    onTouchStart={handleTouchStart('max')}
-                    role="slider"
-                    aria-label="Maximum price"
-                    aria-valuemin={min}
-                    aria-valuemax={max}
-                    aria-valuenow={localMax}
-                    tabIndex={0}
-                />
-            </div>
+                Apply
+            </Button>
         </div>
     );
 }

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
@@ -13,23 +12,14 @@ interface Props {
 }
 
 export default function Checkout({ cart, stockErrors, user }: Props) {
-    const [billingSame, setBillingSame] = useState(true);
-
     const { data, setData, post, processing, errors } = useForm({
         customer_name: user?.name || '',
         customer_email: user?.email || '',
         customer_phone: '',
-        shipping_street: '',
-        shipping_city: '',
-        shipping_state: '',
-        shipping_postal_code: '',
-        shipping_country: 'Jordan',
-        billing_same: true,
-        billing_street: '',
-        billing_city: '',
-        billing_state: '',
-        billing_postal_code: '',
-        billing_country: 'Jordan',
+        delivery_area: '',
+        delivery_street: '',
+        delivery_building: '',
+        delivery_notes: '',
         notes: '',
     });
 
@@ -72,130 +62,111 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input
+                                            id="customer_name"
+                                            name="customer_name"
                                             label="Full Name"
                                             value={data.customer_name}
                                             onChange={(e) => setData('customer_name', e.target.value)}
                                             error={errors.customer_name}
+                                            placeholder="e.g., Ahmad Mohammad"
+                                            autoComplete="name"
                                             required
                                         />
                                         <Input
+                                            id="customer_email"
+                                            name="customer_email"
                                             label="Email"
                                             type="email"
                                             value={data.customer_email}
                                             onChange={(e) => setData('customer_email', e.target.value)}
                                             error={errors.customer_email}
+                                            placeholder="e.g., ahmad@example.com"
+                                            autoComplete="email"
                                             required
                                         />
                                     </div>
                                     <Input
-                                        label="Phone (optional)"
+                                        id="customer_phone"
+                                        name="customer_phone"
+                                        label="Phone Number"
                                         type="tel"
                                         value={data.customer_phone}
                                         onChange={(e) => setData('customer_phone', e.target.value)}
                                         error={errors.customer_phone}
+                                        placeholder="e.g., 079 123 4567"
+                                        autoComplete="tel"
+                                        required
                                     />
                                 </CardContent>
                             </Card>
 
-                            {/* Shipping */}
+                            {/* Delivery Address */}
                             <Card>
                                 <CardHeader>
-                                    <h2 className="text-lg font-semibold">Shipping Address</h2>
+                                    <h2 className="text-lg font-semibold">Delivery Address</h2>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <Input
-                                        label="Street Address"
-                                        value={data.shipping_street}
-                                        onChange={(e) => setData('shipping_street', e.target.value)}
-                                        error={errors.shipping_street}
+                                        id="delivery_area"
+                                        name="delivery_area"
+                                        label="Area / Neighborhood"
+                                        value={data.delivery_area}
+                                        onChange={(e) => setData('delivery_area', e.target.value)}
+                                        error={errors.delivery_area}
+                                        placeholder="e.g., Khalda, Abdoun, Sweifieh"
+                                        autoComplete="address-level2"
                                         required
                                     />
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="City"
-                                            value={data.shipping_city}
-                                            onChange={(e) => setData('shipping_city', e.target.value)}
-                                            error={errors.shipping_city}
-                                            required
-                                        />
-                                        <Input
-                                            label="State/Province"
-                                            value={data.shipping_state}
-                                            onChange={(e) => setData('shipping_state', e.target.value)}
-                                            error={errors.shipping_state}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="Postal Code"
-                                            value={data.shipping_postal_code}
-                                            onChange={(e) => setData('shipping_postal_code', e.target.value)}
-                                            error={errors.shipping_postal_code}
-                                            required
-                                        />
-                                        <Input
-                                            label="Country"
-                                            value={data.shipping_country}
-                                            onChange={(e) => setData('shipping_country', e.target.value)}
-                                            error={errors.shipping_country}
-                                            required
+                                    <Input
+                                        id="delivery_street"
+                                        name="delivery_street"
+                                        label="Street Name"
+                                        value={data.delivery_street}
+                                        onChange={(e) => setData('delivery_street', e.target.value)}
+                                        error={errors.delivery_street}
+                                        placeholder="e.g., King Abdullah II Street"
+                                        autoComplete="street-address"
+                                        required
+                                    />
+                                    <Input
+                                        id="delivery_building"
+                                        name="delivery_building"
+                                        label="Building / Floor / Apartment"
+                                        value={data.delivery_building}
+                                        onChange={(e) => setData('delivery_building', e.target.value)}
+                                        error={errors.delivery_building}
+                                        placeholder="e.g., Building 15, Floor 3, Apt 5"
+                                        autoComplete="address-line2"
+                                        required
+                                    />
+                                    <div>
+                                        <label htmlFor="delivery_notes" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Delivery Instructions (optional)
+                                        </label>
+                                        <textarea
+                                            id="delivery_notes"
+                                            name="delivery_notes"
+                                            value={data.delivery_notes}
+                                            onChange={(e) => setData('delivery_notes', e.target.value)}
+                                            rows={2}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none text-sm"
+                                            placeholder="e.g., Ring the doorbell twice, leave at the door, etc."
                                         />
                                     </div>
                                 </CardContent>
-                            </Card>
-
-                            {/* Billing */}
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-lg font-semibold">Billing Address</h2>
-                                        <label className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={billingSame}
-                                                onChange={(e) => {
-                                                    setBillingSame(e.target.checked);
-                                                    setData('billing_same', e.target.checked);
-                                                }}
-                                                className="rounded border-gray-300"
-                                            />
-                                            <span className="text-sm text-gray-600">Same as shipping</span>
-                                        </label>
-                                    </div>
-                                </CardHeader>
-                                {!billingSame && (
-                                    <CardContent className="space-y-4">
-                                        <Input
-                                            label="Street Address"
-                                            value={data.billing_street}
-                                            onChange={(e) => setData('billing_street', e.target.value)}
-                                            error={errors.billing_street}
-                                        />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <Input
-                                                label="City"
-                                                value={data.billing_city}
-                                                onChange={(e) => setData('billing_city', e.target.value)}
-                                                error={errors.billing_city}
-                                            />
-                                            <Input
-                                                label="Postal Code"
-                                                value={data.billing_postal_code}
-                                                onChange={(e) => setData('billing_postal_code', e.target.value)}
-                                                error={errors.billing_postal_code}
-                                            />
-                                        </div>
-                                    </CardContent>
-                                )}
                             </Card>
 
                             {/* Notes */}
                             <Card>
                                 <CardHeader>
-                                    <h2 className="text-lg font-semibold">Order Notes (optional)</h2>
+                                    <label htmlFor="order_notes" className="text-lg font-semibold">
+                                        Order Notes (optional)
+                                    </label>
                                 </CardHeader>
                                 <CardContent>
                                     <textarea
+                                        id="order_notes"
+                                        name="notes"
                                         value={data.notes}
                                         onChange={(e) => setData('notes', e.target.value)}
                                         rows={3}

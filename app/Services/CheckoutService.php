@@ -36,23 +36,14 @@ class CheckoutService
                 'total' => $total,
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],
-                'customer_phone' => $data['customer_phone'] ?? null,
+                'customer_phone' => $data['customer_phone'],
                 'shipping_address' => [
-                    'street' => $data['shipping_street'],
-                    'city' => $data['shipping_city'],
-                    'state' => $data['shipping_state'] ?? '',
-                    'postal_code' => $data['shipping_postal_code'],
-                    'country' => $data['shipping_country'],
+                    'area' => $data['delivery_area'],
+                    'street' => $data['delivery_street'],
+                    'building' => $data['delivery_building'],
+                    'delivery_notes' => $data['delivery_notes'] ?? '',
                 ],
-                'billing_address' => isset($data['billing_same']) && $data['billing_same']
-                    ? null
-                    : [
-                        'street' => $data['billing_street'] ?? '',
-                        'city' => $data['billing_city'] ?? '',
-                        'state' => $data['billing_state'] ?? '',
-                        'postal_code' => $data['billing_postal_code'] ?? '',
-                        'country' => $data['billing_country'] ?? '',
-                    ],
+                'billing_address' => null,
                 'notes' => $data['notes'] ?? null,
             ]);
 
