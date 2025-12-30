@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
@@ -19,55 +19,94 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
     const [cartOpen, setCartOpen] = useState(false);
     const [wishlistOpen, setWishlistOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [wishlistPulse, setWishlistPulse] = useState(false);
+    const [showCategoryNav, setShowCategoryNav] = useState(true);
+    const lastScrollY = useRef(0);
+
+    // Pulse animation every 20 seconds when wishlist has items
+    useEffect(() => {
+        if (wishlistItems.length === 0) return;
+
+        const triggerPulse = () => {
+            setWishlistPulse(true);
+            setTimeout(() => setWishlistPulse(false), 1000);
+        };
+
+        // Initial pulse after mount
+        const initialTimeout = setTimeout(triggerPulse, 2000);
+
+        // Recurring pulse every 20 seconds
+        const interval = setInterval(triggerPulse, 20000);
+
+        return () => {
+            clearTimeout(initialTimeout);
+            clearInterval(interval);
+        };
+    }, [wishlistItems.length]);
+
+    // Show/hide category nav based on scroll direction
+    useEffect(() => {
+        const SCROLL_THRESHOLD = 10;
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            const scrollDiff = currentScrollY - lastScrollY.current;
+
+            if (currentScrollY < 50) {
+                // Always show when near top
+                setShowCategoryNav(true);
+            } else if (scrollDiff < -SCROLL_THRESHOLD) {
+                // Scrolling up past threshold - show
+                setShowCategoryNav(true);
+            } else if (scrollDiff > SCROLL_THRESHOLD) {
+                // Scrolling down past threshold - hide
+                setShowCategoryNav(false);
+            }
+
+            // Only update last position if we passed the threshold
+            if (Math.abs(scrollDiff) > SCROLL_THRESHOLD) {
+                lastScrollY.current = currentScrollY;
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+                    <div className="flex items-center gap-4 h-16">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center">
+                        <Link href="/" className="flex items-center flex-shrink-0">
                             <span className="text-xl font-bold text-gray-900">HardRock</span>
                             <span className="ml-1 text-sm text-gray-500">Demo</span>
                         </Link>
 
-                        {/* Desktop Navigation */}
-                        <nav className="hidden md:flex items-center space-x-8">
-                            <Link
-                                href="/"
-                                className="text-gray-700 hover:text-gray-900 font-medium"
-                            >
-                                Home
-                            </Link>
-                            {categories?.slice(0, 5).map((category) => (
-                                <Link
-                                    key={category.id}
-                                    href={`/category/${category.slug}`}
-                                    className="text-gray-700 hover:text-gray-900 font-medium"
-                                >
-                                    {category.name}
-                                </Link>
-                            ))}
-                        </nav>
+                        {/* Search Bar - Full Width */}
+                        <div className="hidden md:block flex-1 max-w-2xl">
+                            <SearchBar />
+                        </div>
 
-                        {/* Search & Actions */}
-                        <div className="flex items-center space-x-4">
-                            <div className="hidden md:block">
-                                <SearchBar />
-                            </div>
-
+                        {/* Actions */}
+                        <div className="flex items-center space-x-2 ml-auto">
                             {/* Wishlist */}
                             <button
                                 onClick={() => setWishlistOpen(true)}
-                                className="relative p-2 text-gray-700 hover:text-gray-900"
+                                className={`relative p-2 text-gray-700 hover:text-gray-900 transition-transform duration-300 ${
+                                    wishlistPulse ? 'scale-125' : 'scale-100'
+                                }`}
                             >
-                                <Heart className="h-6 w-6" />
-                                {wishlistItems.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center">
-                                        {wishlistItems.length}
-                                    </span>
-                                )}
+                                <div className="relative h-6 w-6">
+                                    <Heart className="h-6 w-6 absolute inset-0" />
+                                    {wishlistItems.length > 0 && (
+                                        <div className="absolute inset-0 overflow-hidden w-1/2">
+                                            <Heart className="h-6 w-6 fill-gray-900 text-gray-900" />
+                                        </div>
+                                    )}
+                                </div>
                             </button>
 
                             {/* Cart */}
@@ -156,12 +195,6 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 <SearchBar />
                             </div>
                             <nav className="space-y-2">
-                                <Link
-                                    href="/"
-                                    className="block py-2 text-gray-700 hover:text-gray-900"
-                                >
-                                    Home
-                                </Link>
                                 {categories?.map((category) => (
                                     <Link
                                         key={category.id}
@@ -175,7 +208,29 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                         </div>
                     )}
                 </div>
+
             </header>
+
+            {/* Secondary Category Navigation */}
+            <div
+                className={`hidden md:block bg-white border-b sticky z-30 transition-all duration-300 ease-out ${
+                    showCategoryNav ? 'top-16 opacity-100' : '-top-10 opacity-0'
+                }`}
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <nav className="flex items-center justify-center gap-8 h-10">
+                        {categories?.map((category) => (
+                            <Link
+                                key={category.id}
+                                href={`/category/${category.slug}`}
+                                className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap"
+                            >
+                                {category.name}
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+            </div>
 
             {/* Main Content */}
             <main>{children}</main>
