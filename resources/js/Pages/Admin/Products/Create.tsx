@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
+import { Button, Input, Card, CardHeader, CardContent, Select } from '@/Components/ui';
 import { Category } from '@/types/models';
 import { ArrowLeft } from 'lucide-react';
 
@@ -58,24 +58,19 @@ export default function CreateProduct({ categories }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Category
-                                </label>
-                                <select
+                                <Select
+                                    label="Category"
                                     id="category_id"
                                     name="category_id"
                                     value={data.category_id}
-                                    onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
-                                    required
-                                >
-                                    <option value="">Select a category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
-                                            {cat.parent_id ? '— ' : ''}{cat.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(value) => setData('category_id', value)}
+                                    placeholder="Select a category"
+                                    options={categories.map((cat) => ({
+                                        value: cat.id.toString(),
+                                        label: cat.name,
+                                        isChild: !!cat.parent_id,
+                                    }))}
+                                />
                                 {errors.category_id && (
                                     <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>
                                 )}

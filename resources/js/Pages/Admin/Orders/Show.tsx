@@ -150,20 +150,31 @@ export default function OrderShow({ order }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
-                                    {statuses.map((status) => (
-                                        <button
-                                            key={status}
-                                            onClick={() => handleStatusUpdate(status)}
-                                            disabled={order.status === status}
-                                            className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors ${
-                                                order.status === status
-                                                    ? 'bg-gray-900 text-white cursor-default'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                            }`}
-                                        >
-                                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                                        </button>
-                                    ))}
+                                    {statuses.map((status) => {
+                                        const isActive = order.status === status;
+                                        const activeColors: Record<string, string> = {
+                                            pending: 'bg-yellow-500 text-white',
+                                            processing: 'bg-blue-500 text-white',
+                                            shipped: 'bg-purple-500 text-white',
+                                            delivered: 'bg-green-500 text-white',
+                                            cancelled: 'bg-red-500 text-white',
+                                        };
+
+                                        return (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleStatusUpdate(status)}
+                                                disabled={isActive}
+                                                className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                    isActive
+                                                        ? (activeColors[status] || 'bg-gray-900 text-white') + ' cursor-default'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>

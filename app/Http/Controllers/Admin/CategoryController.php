@@ -105,9 +105,14 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
+        // Check if category has child categories
+        if ($category->children()->exists()) {
+            return back()->withErrors(['category' => 'Cannot delete category with subcategories. Delete the subcategories first.']);
+        }
+
         // Check if category has products
         if ($category->products()->exists()) {
-            return back()->withErrors(['category' => 'Cannot delete category with products.']);
+            return back()->withErrors(['category' => 'Cannot delete category with products. Move or delete the products first.']);
         }
 
         // Delete image

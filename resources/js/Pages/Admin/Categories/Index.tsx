@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
@@ -196,8 +196,10 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 {categories.data.map((category) => (
                                     <tr key={category.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="font-medium text-gray-900">
-                                                {category.parent_id && '— '}
+                                            <div className="flex items-center font-medium text-gray-900">
+                                                {category.parent_id && (
+                                                    <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                                                )}
                                                 {category.name}
                                             </div>
                                         </td>

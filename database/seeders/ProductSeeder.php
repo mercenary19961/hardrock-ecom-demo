@@ -22,6 +22,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 25,
                 'featured' => true,
+                'times_purchased' => 156,
+                'average_rating' => 4.8,
+                'rating_count' => 89,
+                'view_count' => 2340,
             ],
             [
                 'category' => 'smartphones',
@@ -31,6 +35,10 @@ class ProductSeeder extends Seeder
                 'compare' => 1449.00,
                 'stock' => 18,
                 'featured' => true,
+                'times_purchased' => 203,
+                'average_rating' => 4.7,
+                'rating_count' => 124,
+                'view_count' => 3150,
             ],
             [
                 'category' => 'smartphones',
@@ -40,6 +48,10 @@ class ProductSeeder extends Seeder
                 'compare' => 899.00,
                 'stock' => 35,
                 'featured' => false,
+                'times_purchased' => 87,
+                'average_rating' => 3.5,
+                'rating_count' => 56,
+                'view_count' => 1890,
             ],
             [
                 'category' => 'smartphones',
@@ -49,6 +61,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 12,
                 'featured' => false,
+                'times_purchased' => 34,
+                'average_rating' => 3.0,
+                'rating_count' => 23,
+                'view_count' => 980,
             ],
             [
                 'category' => 'smartphones',
@@ -58,6 +74,10 @@ class ProductSeeder extends Seeder
                 'compare' => 649.00,
                 'stock' => 42,
                 'featured' => false,
+                'times_purchased' => 112,
+                'average_rating' => 4.5,
+                'rating_count' => 67,
+                'view_count' => 1560,
             ],
             [
                 'category' => 'smartphones',
@@ -67,6 +87,10 @@ class ProductSeeder extends Seeder
                 'compare' => 1099.00,
                 'stock' => 20,
                 'featured' => true,
+                'times_purchased' => 145,
+                'average_rating' => 4.6,
+                'rating_count' => 98,
+                'view_count' => 2780,
             ],
             [
                 'category' => 'smartphones',
@@ -76,6 +100,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 28,
                 'featured' => false,
+                'times_purchased' => 78,
+                'average_rating' => 4.5,
+                'rating_count' => 45,
+                'view_count' => 1340,
             ],
 
             // Electronics - Laptops (7 products)
@@ -88,6 +116,10 @@ class ProductSeeder extends Seeder
                 'stock' => 8,
                 'featured' => true,
                 'low_threshold' => 5,
+                'times_purchased' => 89,
+                'average_rating' => 4.9,
+                'rating_count' => 67,
+                'view_count' => 2890,
             ],
             [
                 'category' => 'laptops',
@@ -97,6 +129,10 @@ class ProductSeeder extends Seeder
                 'compare' => 1799.00,
                 'stock' => 15,
                 'featured' => true,
+                'times_purchased' => 67,
+                'average_rating' => 4.6,
+                'rating_count' => 43,
+                'view_count' => 1980,
             ],
             [
                 'category' => 'laptops',
@@ -106,6 +142,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 10,
                 'featured' => false,
+                'times_purchased' => 45,
+                'average_rating' => 4.7,
+                'rating_count' => 34,
+                'view_count' => 2340,
             ],
             [
                 'category' => 'laptops',
@@ -116,6 +156,10 @@ class ProductSeeder extends Seeder
                 'stock' => 6,
                 'featured' => false,
                 'low_threshold' => 5,
+                'times_purchased' => 38,
+                'average_rating' => 4.8,
+                'rating_count' => 29,
+                'view_count' => 1120,
             ],
             [
                 'category' => 'laptops',
@@ -125,6 +169,10 @@ class ProductSeeder extends Seeder
                 'compare' => 649.00,
                 'stock' => 45,
                 'featured' => false,
+                'times_purchased' => 234,
+                'average_rating' => 3.5,
+                'rating_count' => 156,
+                'view_count' => 4560,
             ],
             [
                 'category' => 'laptops',
@@ -134,6 +182,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 12,
                 'featured' => false,
+                'times_purchased' => 52,
+                'average_rating' => 4.4,
+                'rating_count' => 38,
+                'view_count' => 1670,
             ],
             [
                 'category' => 'laptops',
@@ -143,6 +195,10 @@ class ProductSeeder extends Seeder
                 'compare' => 999.00,
                 'stock' => 22,
                 'featured' => false,
+                'times_purchased' => 76,
+                'average_rating' => 4.3,
+                'rating_count' => 51,
+                'view_count' => 1890,
             ],
 
             // Electronics - Accessories (6 products)
@@ -154,6 +210,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 65,
                 'featured' => true,
+                'times_purchased' => 312,
+                'average_rating' => 4.8,
+                'rating_count' => 234,
+                'view_count' => 5670,
             ],
             [
                 'category' => 'accessories',
@@ -163,6 +223,10 @@ class ProductSeeder extends Seeder
                 'compare' => 39.00,
                 'stock' => 150,
                 'featured' => false,
+                'times_purchased' => 567,
+                'average_rating' => 4.5,
+                'rating_count' => 312,
+                'view_count' => 3450,
             ],
             [
                 'category' => 'accessories',
@@ -172,6 +236,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 85,
                 'featured' => false,
+                'times_purchased' => 289,
+                'average_rating' => 4.6,
+                'rating_count' => 198,
+                'view_count' => 2890,
             ],
             [
                 'category' => 'accessories',
@@ -181,6 +249,10 @@ class ProductSeeder extends Seeder
                 'compare' => 119.00,
                 'stock' => 40,
                 'featured' => true,
+                'times_purchased' => 178,
+                'average_rating' => 4.9,
+                'rating_count' => 145,
+                'view_count' => 3120,
             ],
             [
                 'category' => 'accessories',
@@ -190,6 +262,10 @@ class ProductSeeder extends Seeder
                 'compare' => 149.00,
                 'stock' => 55,
                 'featured' => false,
+                'times_purchased' => 156,
+                'average_rating' => 4.4,
+                'rating_count' => 112,
+                'view_count' => 2340,
             ],
             [
                 'category' => 'accessories',
@@ -199,6 +275,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 30,
                 'featured' => true,
+                'times_purchased' => 134,
+                'average_rating' => 4.7,
+                'rating_count' => 89,
+                'view_count' => 3890,
             ],
 
             // Skincare (5 products)
@@ -210,6 +290,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 75,
                 'featured' => false,
+                'times_purchased' => 198,
+                'average_rating' => 4.5,
+                'rating_count' => 134,
+                'view_count' => 2780,
             ],
             [
                 'category' => 'skincare',
@@ -219,6 +303,10 @@ class ProductSeeder extends Seeder
                 'compare' => 25.00,
                 'stock' => 110,
                 'featured' => true,
+                'times_purchased' => 456,
+                'average_rating' => 4.8,
+                'rating_count' => 298,
+                'view_count' => 6780,
             ],
             [
                 'category' => 'skincare',
@@ -228,6 +316,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 95,
                 'featured' => false,
+                'times_purchased' => 534,
+                'average_rating' => 4.6,
+                'rating_count' => 367,
+                'view_count' => 5430,
             ],
             [
                 'category' => 'skincare',
@@ -237,6 +329,10 @@ class ProductSeeder extends Seeder
                 'compare' => 32.00,
                 'stock' => 60,
                 'featured' => true,
+                'times_purchased' => 267,
+                'average_rating' => 4.7,
+                'rating_count' => 189,
+                'view_count' => 3450,
             ],
             [
                 'category' => 'skincare',
@@ -246,6 +342,10 @@ class ProductSeeder extends Seeder
                 'compare' => null,
                 'stock' => 85,
                 'featured' => false,
+                'times_purchased' => 312,
+                'average_rating' => 4.6,
+                'rating_count' => 234,
+                'view_count' => 2980,
             ],
         ];
 
@@ -269,6 +369,10 @@ class ProductSeeder extends Seeder
                 'low_stock_threshold' => $productData['low_threshold'] ?? null,
                 'is_active' => true,
                 'is_featured' => $productData['featured'],
+                'times_purchased' => $productData['times_purchased'] ?? 0,
+                'average_rating' => $productData['average_rating'] ?? 0,
+                'rating_count' => $productData['rating_count'] ?? 0,
+                'view_count' => $productData['view_count'] ?? 0,
             ]);
 
             // Create product image using product slug
@@ -297,20 +401,6 @@ class ProductSeeder extends Seeder
 
     private function generateDescription(string $name, string $shortDesc): string
     {
-        return "Introducing the {$name}.\n\n"
-            . "{$shortDesc}\n\n"
-            . "Key Features:\n"
-            . "• Premium quality materials and construction\n"
-            . "• Designed for durability and long-lasting performance\n"
-            . "• Modern design that fits your lifestyle\n"
-            . "• Excellent value for money\n\n"
-            . "Why Choose This Product?\n"
-            . "We carefully select our products to ensure you receive only the best quality items. "
-            . "This product has been tested and approved to meet our high standards.\n\n"
-            . "Shipping & Returns:\n"
-            . "• Free delivery within Amman for orders over 50 JOD\n"
-            . "• Nationwide delivery across Jordan within 2-5 business days\n"
-            . "• 14-day hassle-free return policy\n"
-            . "• Original receipt required for returns";
+        return "{$shortDesc}";
     }
 }

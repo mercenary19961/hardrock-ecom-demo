@@ -7,7 +7,47 @@ import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { Product as ProductType, Breadcrumb } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { ChevronRight, ShoppingCart, Check } from 'lucide-react';
+import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
+
+function StarRating({ rating, count }: { rating: number; count: number }) {
+    if (count === 0 || rating == null) return null;
+
+    const ratingValue = Number(rating) || 0;
+
+    const getStarFill = (starPosition: number) => {
+        if (ratingValue >= starPosition) return 'full';
+        if (ratingValue >= starPosition - 0.5) return 'half';
+        return 'empty';
+    };
+
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => {
+                    const fill = getStarFill(star);
+                    return (
+                        <div key={star} className="relative h-5 w-5">
+                            {/* Background empty star */}
+                            <Star className="absolute inset-0 h-full w-full fill-gray-200 text-gray-200" />
+                            {/* Filled portion */}
+                            {fill !== 'empty' && (
+                                <div
+                                    className="absolute inset-0 overflow-hidden"
+                                    style={{ width: fill === 'half' ? '50%' : '100%' }}
+                                >
+                                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            <span className="text-sm text-gray-600">
+                {ratingValue.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
+            </span>
+        </div>
+    );
+}
 
 interface Props {
     product: ProductType;
@@ -15,11 +55,25 @@ interface Props {
     breadcrumbs: Breadcrumb[];
 }
 
-export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     const { addToCart, loading } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
+
+    // Check localStorage for previously requested notifications
+    const storageKey = `notify_product_${product.id}`;
+    const [notifyRequested, setNotifyRequested] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(storageKey) === 'true';
+        }
+        return false;
+    });
+
+    const handleNotifyRequest = () => {
+        setNotifyRequested(true);
+        localStorage.setItem(storageKey, 'true');
+    };
 
     const images = product.images || [];
     const hasDiscount = product.compare_price && product.compare_price > product.price;
@@ -35,7 +89,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
     };
 
     return (
-        <ShopLayout>
+        <>
             <Head title={product.name} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -61,11 +115,17 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                     {/* Images */}
                     <div>
                         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
-                            <img
-                                src={images[selectedImage] ? getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order) : '/images/placeholder.jpg'}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                            />
+                            {images[selectedImage] ? (
+                                <img
+                                    src={getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order)}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <span className="text-gray-400">No image available</span>
+                                </div>
+                            )}
                         </div>
                         {images.length > 1 && (
                             <div className="flex gap-2 overflow-x-auto">
@@ -92,16 +152,24 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
 
                     {/* Info */}
                     <div>
-                        <div className="mb-4">
-                            <Link
-                                href={`/category/${product.category?.slug}`}
-                                className="text-sm text-gray-500 hover:text-gray-900"
-                            >
-                                {product.category?.name}
-                            </Link>
-                        </div>
+                        {product.category && (
+                            <div className="mb-4">
+                                <Link
+                                    href={`/category/${product.category.slug}`}
+                                    className="text-sm text-gray-500 hover:text-gray-900"
+                                >
+                                    {product.category.name}
+                                </Link>
+                            </div>
+                        )}
 
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+
+                        {product.rating_count > 0 && (
+                            <div className="mb-4">
+                                <StarRating rating={product.average_rating} count={product.rating_count} />
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-4 mb-6">
                             <span className="text-3xl font-bold text-gray-900">
@@ -121,9 +189,7 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
 
                         <div className="mb-6">
                             {product.stock > 0 ? (
-                                <Badge variant="success">
-                                    In Stock ({product.stock} available)
-                                </Badge>
+                                <Badge variant="success">In Stock</Badge>
                             ) : (
                                 <Badge variant="danger">Out of Stock</Badge>
                             )}
@@ -133,8 +199,8 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                             <p className="text-gray-600 mb-6">{product.short_description}</p>
                         )}
 
-                        {/* Add to Cart */}
-                        {product.stock > 0 && (
+                        {/* Add to Cart or Notify Me */}
+                        {product.stock > 0 ? (
                             <div className="flex items-center gap-4 mb-8">
                                 <QuantitySelector
                                     quantity={quantity}
@@ -160,12 +226,34 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                                     )}
                                 </Button>
                             </div>
+                        ) : (
+                            <div className="mb-8">
+                                <Button
+                                    onClick={handleNotifyRequest}
+                                    disabled={notifyRequested}
+                                    variant="outline"
+                                    size="lg"
+                                    className="w-full"
+                                >
+                                    {notifyRequested ? (
+                                        <>
+                                            <Check className="mr-2 h-5 w-5" />
+                                            Request Submitted
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Bell className="mr-2 h-5 w-5" />
+                                            Notify Me When Available
+                                        </>
+                                    )}
+                                </Button>
+                                {notifyRequested && (
+                                    <p className="text-sm text-gray-500 mt-2 text-center">
+                                        We'll let you know when this product is back in stock.
+                                    </p>
+                                )}
+                            </div>
                         )}
-
-                        {/* SKU */}
-                        <p className="text-sm text-gray-500">
-                            SKU: {product.sku}
-                        </p>
 
                         {/* Description */}
                         {product.description && (
@@ -187,6 +275,18 @@ export default function Product({ product, relatedProducts, breadcrumbs }: Props
                     </section>
                 )}
             </div>
+        </>
+    );
+}
+
+export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+    return (
+        <ShopLayout>
+            <ProductContent
+                product={product}
+                relatedProducts={relatedProducts}
+                breadcrumbs={breadcrumbs}
+            />
         </ShopLayout>
     );
 }

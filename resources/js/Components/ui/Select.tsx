@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useId } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, CornerDownRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectOption {
     value: string;
     label: string;
+    isChild?: boolean;
 }
 
 export interface SelectProps {
@@ -72,7 +73,10 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                     isOpen && 'border-gray-900'
                 )}
             >
-                <span className={cn('truncate', !selectedOption && 'text-gray-500')}>
+                <span className={cn('flex items-center truncate', !selectedOption && 'text-gray-500')}>
+                    {selectedOption?.isChild && (
+                        <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                    )}
                     {selectedOption?.label || placeholder}
                 </span>
                 <ChevronDown className={cn('h-4 w-4 text-gray-500 flex-shrink-0 transition-transform', isOpen && 'rotate-180')} />
@@ -94,7 +98,12 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                                 option.value === value && 'bg-gray-50 font-medium'
                             )}
                         >
-                            <span className="truncate">{option.label}</span>
+                            <span className="flex items-center truncate">
+                                {option.isChild && (
+                                    <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                                )}
+                                {option.label}
+                            </span>
                             {option.value === value && (
                                 <Check className="h-4 w-4 text-gray-900 flex-shrink-0" />
                             )}

@@ -51,12 +51,21 @@ export default function OrderConfirmation({ order }: Props) {
                         </div>
 
                         <div className="border-t pt-6">
-                            <h3 className="font-semibold mb-4">Shipping Address</h3>
+                            <h3 className="font-semibold mb-4">Delivery Address</h3>
                             <p className="text-gray-600">
                                 {order.customer_name}<br />
+                                {order.customer_phone && <>{order.customer_phone}<br /></>}
+                                {order.shipping_address.area}<br />
                                 {order.shipping_address.street}<br />
-                                {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}<br />
-                                {order.shipping_address.country}
+                                {order.shipping_address.building}
+                                {order.shipping_address.delivery_notes && (
+                                    <>
+                                        <br />
+                                        <span className="text-gray-500 text-sm">
+                                            Note: {order.shipping_address.delivery_notes}
+                                        </span>
+                                    </>
+                                )}
                             </p>
                         </div>
                     </CardContent>

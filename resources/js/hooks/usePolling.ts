@@ -33,8 +33,6 @@ export function usePolling(options: UsePollingOptions = {}) {
         }
 
         router.reload({
-            preserveScroll: true,
-            preserveState: true,
             only: [], // Empty array reloads all props
         });
     }, [onlyWhenVisible]);

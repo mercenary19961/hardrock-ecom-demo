@@ -25,6 +25,10 @@ class Product extends Model
         'low_stock_threshold',
         'is_active',
         'is_featured',
+        'times_purchased',
+        'average_rating',
+        'rating_count',
+        'view_count',
     ];
 
     protected function casts(): array
@@ -32,6 +36,7 @@ class Product extends Model
         return [
             'price' => 'decimal:2',
             'compare_price' => 'decimal:2',
+            'average_rating' => 'decimal:1',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
         ];

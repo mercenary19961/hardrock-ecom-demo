@@ -25,7 +25,11 @@ class ProductController extends Controller
         }
 
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $categoryId = $request->category;
+            // Get child category IDs if this is a parent category
+            $childIds = Category::where('parent_id', $categoryId)->pluck('id')->toArray();
+            $categoryIds = array_merge([$categoryId], $childIds);
+            $query->whereIn('category_id', $categoryIds);
         }
 
         if ($request->filled('status')) {
@@ -151,6 +155,23 @@ class ProductController extends Controller
 
     public function destroy(Product $product): RedirectResponse
     {
+        // Check if product is in any pending/processing orders
+        $activeOrderStatuses = ['pending', 'processing', 'shipped'];
+        $hasActiveOrders = $product->orderItems()
+            ->whereHas('order', function ($query) use ($activeOrderStatuses) {
+                $query->whereIn('status', $activeOrderStatuses);
+            })
+            ->exists();
+
+        if ($hasActiveOrders) {
+            return back()->withErrors(['product' => 'Cannot delete product with active orders (pending, processing, or shipped).']);
+        }
+
+        // Check if product is in any customer carts
+        if ($product->cartItems()->exists()) {
+            return back()->withErrors(['product' => 'Cannot delete product that is in customer carts. Remove from carts first or wait for checkout.']);
+        }
+
         // Delete all product images
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->path);

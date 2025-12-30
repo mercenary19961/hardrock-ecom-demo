@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Shop\CartController;
-use App\Http\Controllers\Shop\CategoryController;
 use App\Http\Controllers\Shop\CheckoutController;
 use App\Http\Controllers\Shop\HomeController;
+use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Models\User;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 // Shop routes
 Route::name('shop.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
-    Route::get('/category/{category:slug}', [CategoryController::class, 'show'])->name('category');
+    Route::get('/category/{category:slug}', [LandingController::class, 'show'])->name('category');
     Route::get('/product/{product:slug}', [ProductController::class, 'show'])->name('product');
     Route::get('/search', [ProductController::class, 'search'])->name('search');
 
