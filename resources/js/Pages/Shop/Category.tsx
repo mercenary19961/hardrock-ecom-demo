@@ -7,7 +7,7 @@ import { Product, Category as CategoryType, PaginatedData } from '@/types/models
 import { ChevronRight, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
-type FilterCategory = 'sort' | 'new_arrivals' | 'price' | 'discount' | 'availability';
+type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability';
 
 interface Props {
     category: CategoryType;
@@ -81,7 +81,8 @@ function FilterCheckbox({ label, checked, onChange, count }: {
 
 export default function Category({ category, products, subcategories, sort, filters, priceRange }: Props) {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
-    const [selectedFilterCategory, setSelectedFilterCategory] = useState<FilterCategory>('sort');
+    const [showMobileSort, setShowMobileSort] = useState(false);
+    const [selectedFilterCategory, setSelectedFilterCategory] = useState<FilterCategory>('new_arrivals');
     const [localFilters, setLocalFilters] = useState({
         min_price: filters.min_price?.toString() || '',
         max_price: filters.max_price?.toString() || '',
@@ -112,12 +113,13 @@ export default function Category({ category, products, subcategories, sort, filt
     ];
 
     const filterCategories = [
-        { id: 'sort' as FilterCategory, label: 'Sort By', icon: ArrowUpDown },
         { id: 'new_arrivals' as FilterCategory, label: 'New Arrivals', icon: Clock },
         { id: 'price' as FilterCategory, label: 'Price', icon: Wallet },
         { id: 'discount' as FilterCategory, label: 'Discount', icon: Tag },
         { id: 'availability' as FilterCategory, label: 'Availability', icon: Package },
     ];
+
+    const currentSortLabel = sortOptions.find(o => o.value === sort)?.label || 'Sort';
 
     const buildFilterParams = () => {
         const params: Record<string, string> = {};
@@ -142,14 +144,15 @@ export default function Category({ category, products, subcategories, sort, filt
         if (updatedFilters.below_100) params.below_100 = '1';
         if (updatedFilters.min_discount > 0) params.min_discount = updatedFilters.min_discount.toString();
 
-        router.get(`/category/${category.slug}`, params, { preserveState: true });
+        router.get(`/category/${category.slug}`, params, { preserveState: true, preserveScroll: true });
     };
 
     const handleSortChange = (newSort: string) => {
         router.get(`/category/${category.slug}`, {
             sort: newSort,
             ...buildFilterParams()
-        }, { preserveState: true });
+        }, { preserveState: true, preserveScroll: true });
+        setShowMobileSort(false);
     };
 
     const clearFilters = () => {
@@ -161,7 +164,7 @@ export default function Category({ category, products, subcategories, sort, filt
             below_100: false,
             min_discount: 0,
         });
-        router.get(`/category/${category.slug}`, { sort }, { preserveState: true });
+        router.get(`/category/${category.slug}`, { sort }, { preserveState: true, preserveScroll: true });
         setShowMobileFilters(false);
     };
 
@@ -344,20 +347,29 @@ export default function Category({ category, products, subcategories, sort, filt
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Mobile Filter Button & Sort */}
-                        <div className="flex items-center justify-between gap-4 mb-6">
-                            <button
-                                onClick={() => setShowMobileFilters(true)}
-                                className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                <Filter className="h-4 w-4" />
-                                Filters
-                                {activeFilterCount > 0 && (
-                                    <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
-                            </button>
+                        {/* Mobile Filter & Sort Buttons */}
+                        <div className="flex items-center justify-between gap-2 mb-6">
+                            <div className="lg:hidden flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowMobileFilters(true)}
+                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Filter className="h-4 w-4" />
+                                    Filters
+                                    {activeFilterCount > 0 && (
+                                        <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setShowMobileSort(true)}
+                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <ArrowUpDown className="h-4 w-4" />
+                                    <span className="max-w-[100px] truncate">{currentSortLabel}</span>
+                                </button>
+                            </div>
 
                             <div className="hidden lg:flex items-center gap-4 ml-auto">
                                 <span className="text-sm text-gray-500">
@@ -492,7 +504,7 @@ export default function Category({ category, products, subcategories, sort, filt
                     <div className="absolute bottom-0 left-0 right-0 top-16 bg-white rounded-t-2xl shadow-xl flex flex-col animate-slide-up">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b">
-                            <h2 className="font-semibold text-gray-900 text-lg">Filters & Sort</h2>
+                            <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
                             <button onClick={() => setShowMobileFilters(false)} className="p-2 hover:bg-gray-100 rounded-full">
                                 <X className="h-5 w-5" />
                             </button>
@@ -524,26 +536,6 @@ export default function Category({ category, products, subcategories, sort, filt
 
                             {/* Right panel - Filter options */}
                             <div className="w-3/5 overflow-y-auto p-4">
-                                {/* Sort By Options */}
-                                {selectedFilterCategory === 'sort' && (
-                                    <div className="space-y-1">
-                                        {sortOptions.map((option) => (
-                                            <button
-                                                key={option.value}
-                                                onClick={() => handleSortChange(option.value)}
-                                                className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
-                                                    sort === option.value
-                                                        ? 'bg-gray-900 text-white'
-                                                        : 'text-gray-700 hover:bg-gray-100'
-                                                }`}
-                                            >
-                                                <span>{option.label}</span>
-                                                {sort === option.value && <Check className="h-4 w-4" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
                                 {/* New Arrivals Options */}
                                 {selectedFilterCategory === 'new_arrivals' && (
                                     <div className="space-y-1">
@@ -700,6 +692,40 @@ export default function Category({ category, products, subcategories, sort, filt
                             >
                                 Show {products.total} {products.total === 1 ? 'Result' : 'Results'}
                             </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobile Sort Bottom Sheet */}
+            {showMobileSort && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    <div className="absolute inset-0 bg-black/50" onClick={() => setShowMobileSort(false)} />
+                    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-slide-up">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b">
+                            <h2 className="font-semibold text-gray-900 text-lg">Sort By</h2>
+                            <button onClick={() => setShowMobileSort(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {/* Sort Options */}
+                        <div className="p-4 space-y-1">
+                            {sortOptions.map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => handleSortChange(option.value)}
+                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-colors ${
+                                        sort === option.value
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <span>{option.label}</span>
+                                    {sort === option.value && <Check className="h-4 w-4" />}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
