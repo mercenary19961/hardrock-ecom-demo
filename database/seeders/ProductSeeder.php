@@ -297,20 +297,6 @@ class ProductSeeder extends Seeder
 
     private function generateDescription(string $name, string $shortDesc): string
     {
-        return "Introducing the {$name}.\n\n"
-            . "{$shortDesc}\n\n"
-            . "Key Features:\n"
-            . "• Premium quality materials and construction\n"
-            . "• Designed for durability and long-lasting performance\n"
-            . "• Modern design that fits your lifestyle\n"
-            . "• Excellent value for money\n\n"
-            . "Why Choose This Product?\n"
-            . "We carefully select our products to ensure you receive only the best quality items. "
-            . "This product has been tested and approved to meet our high standards.\n\n"
-            . "Shipping & Returns:\n"
-            . "• Free delivery within Amman for orders over 50 JOD\n"
-            . "• Nationwide delivery across Jordan within 2-5 business days\n"
-            . "• 14-day hassle-free return policy\n"
-            . "• Original receipt required for returns";
+        return "{$shortDesc}";
     }
 }

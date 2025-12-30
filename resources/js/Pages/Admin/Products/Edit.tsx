@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
+import { Button, Input, Card, CardHeader, CardContent, Select } from '@/Components/ui';
 import { Category, Product } from '@/types/models';
 import { ArrowLeft, X } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
@@ -69,25 +69,18 @@ export default function EditProduct({ product, categories }: Props) {
                             <h2 className="text-lg font-semibold">Basic Information</h2>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div>
-                                <label htmlFor="edit_category_id" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Category
-                                </label>
-                                <select
-                                    id="edit_category_id"
-                                    name="category_id"
-                                    value={data.category_id}
-                                    onChange={(e) => setData('category_id', e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
-                                    required
-                                >
-                                    {categories.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>
-                                            {cat.parent_id ? '— ' : ''}{cat.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                label="Category"
+                                id="edit_category_id"
+                                name="category_id"
+                                value={data.category_id}
+                                onChange={(value) => setData('category_id', value)}
+                                options={categories.map((cat) => ({
+                                    value: cat.id.toString(),
+                                    label: cat.name,
+                                    isChild: !!cat.parent_id,
+                                }))}
+                            />
 
                             <Input
                                 label="Name"

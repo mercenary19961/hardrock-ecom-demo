@@ -63,7 +63,8 @@ function ProductDetailModal({ product, onClose }: { product: Product | null; onC
                                         <img
                                             src={currentImage}
                                             alt={product.name}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-contain"
+                                            style={{ imageRendering: 'auto' }}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
@@ -85,7 +86,7 @@ function ProductDetailModal({ product, onClose }: { product: Product | null; onC
                                                 <img
                                                     src={img.url}
                                                     alt={`${product.name} ${index + 1}`}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-contain"
                                                 />
                                             </button>
                                         ))}
@@ -394,7 +395,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                         <img
                                             src={product.primary_image.url}
                                             alt={product.name}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full object-contain"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
@@ -509,7 +510,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                         <img
                                                             src={product.primary_image.url}
                                                             alt={product.name}
-                                                            className="w-full h-full object-cover"
+                                                            className="w-full h-full object-contain"
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
