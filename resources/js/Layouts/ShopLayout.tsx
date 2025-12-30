@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { ShoppingCart, User, Menu, X, ChevronDown, Heart } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, ChevronDown, Heart, Globe } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { WishlistProvider, useWishlist } from '@/contexts/WishlistContext';
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { CartDrawer } from '@/Components/shop/CartDrawer';
 import { WishlistDrawer } from '@/Components/shop/WishlistDrawer';
 import { SearchBar } from '@/Components/shop/SearchBar';
@@ -15,6 +16,7 @@ interface ShopLayoutProps {
 function ShopLayoutContent({ children }: ShopLayoutProps) {
     const { cart } = useCart();
     const { items: wishlistItems } = useWishlist();
+    const { language, setLanguage } = useLanguage();
     const { auth, categories } = usePage<{ auth: { user: UserType | null }; categories?: Category[] }>().props;
     const [cartOpen, setCartOpen] = useState(false);
     const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -174,6 +176,16 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 </Link>
                             )}
 
+                            {/* Language Toggle */}
+                            <button
+                                onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+                                className="flex items-center gap-1 p-2 text-gray-700 hover:text-gray-900 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+                            >
+                                <Globe className="h-4 w-4" />
+                                <span>{language === 'en' ? 'AR' : 'EN'}</span>
+                            </button>
+
                             {/* Mobile menu button */}
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -307,10 +319,12 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
     return (
-        <CartProvider>
-            <WishlistProvider>
-                <ShopLayoutContent>{children}</ShopLayoutContent>
-            </WishlistProvider>
-        </CartProvider>
+        <LanguageProvider>
+            <CartProvider>
+                <WishlistProvider>
+                    <ShopLayoutContent>{children}</ShopLayoutContent>
+                </WishlistProvider>
+            </CartProvider>
+        </LanguageProvider>
     );
 }
