@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
-import { Select, Button, Input } from '@/Components/ui';
+import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
 import { ChevronRight, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
@@ -86,6 +86,7 @@ function FilterCheckbox({ label, checked, onChange, count }: {
 export default function Category({ category, products, subcategories, sort, filters, priceRange }: Props) {
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
+    const [showDesktopSort, setShowDesktopSort] = useState(false);
     const [selectedFilterCategory, setSelectedFilterCategory] = useState<FilterCategory>('new_arrivals');
     const [localFilters, setLocalFilters] = useState({
         min_price: filters.min_price?.toString() || '',
@@ -95,6 +96,10 @@ export default function Category({ category, products, subcategories, sort, filt
         below_100: filters.below_100 || false,
         min_discount: filters.min_discount || 0,
     });
+
+    // Slider state for price range
+    const [sliderMin, setSliderMin] = useState(filters.min_price || priceRange.min);
+    const [sliderMax, setSliderMax] = useState(filters.max_price || priceRange.max);
 
     const discountOptions = [
         { value: 10, label: '10%+ Off' },
@@ -212,6 +217,28 @@ export default function Category({ category, products, subcategories, sort, filt
         setShowMobileSort(false);
     };
 
+    const handleSliderChange = (min: number, max: number) => {
+        setSliderMin(min);
+        setSliderMax(max);
+    };
+
+    const handleSliderChangeEnd = (min: number, max: number) => {
+        const params: Record<string, string> = { sort };
+        // Only add price params if they differ from the full range
+        if (min > priceRange.min) params.min_price = min.toString();
+        if (max < priceRange.max) params.max_price = max.toString();
+        if (localFilters.in_stock) params.in_stock = '1';
+        if (localFilters.new_arrivals) params.new_arrivals = '1';
+        if (localFilters.min_discount > 0) params.min_discount = localFilters.min_discount.toString();
+        // Include quick filters from server state
+        if (filters.price_range) params.price_range = filters.price_range;
+        if (filters.has_discount) params.has_discount = '1';
+        if (filters.top_rated) params.top_rated = '1';
+        if (filters.popular) params.popular = '1';
+
+        router.get(`/category/${category.slug}`, params, { preserveState: true, preserveScroll: true });
+    };
+
     const clearFilters = () => {
         setLocalFilters({
             min_price: '',
@@ -221,6 +248,8 @@ export default function Category({ category, products, subcategories, sort, filt
             below_100: false,
             min_discount: 0,
         });
+        setSliderMin(priceRange.min);
+        setSliderMax(priceRange.max);
         router.get(`/category/${category.slug}`, { sort }, { preserveState: true, preserveScroll: true });
         setShowMobileFilters(false);
     };
@@ -256,46 +285,16 @@ export default function Category({ category, products, subcategories, sort, filt
 
             {/* Price */}
             <FilterSection title="Price" icon={Wallet}>
-                <div className="space-y-3">
-                    <FilterCheckbox
-                        label="Below 100 JOD"
-                        checked={localFilters.below_100}
-                        onChange={(checked) => applyFilters({ below_100: checked })}
-                    />
-                    <div className="pt-2 border-t border-gray-100">
-                        <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Min</label>
-                                <Input
-                                    type="number"
-                                    value={localFilters.min_price}
-                                    onChange={(e) => setLocalFilters({ ...localFilters, min_price: e.target.value })}
-                                    placeholder="0"
-                                    min={0}
-                                    className="text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-500 mb-1">Max</label>
-                                <Input
-                                    type="number"
-                                    value={localFilters.max_price}
-                                    onChange={(e) => setLocalFilters({ ...localFilters, max_price: e.target.value })}
-                                    placeholder={priceRange.max.toString()}
-                                    min={0}
-                                    className="text-sm"
-                                />
-                            </div>
-                        </div>
-                        <Button
-                            onClick={() => applyFilters()}
-                            size="sm"
-                            className="w-full mt-2"
-                        >
-                            Apply Price
-                        </Button>
-                    </div>
-                </div>
+                <DualRangeSlider
+                    min={priceRange.min}
+                    max={priceRange.max}
+                    minValue={sliderMin}
+                    maxValue={sliderMax}
+                    onChange={handleSliderChange}
+                    onChangeEnd={handleSliderChangeEnd}
+                    step={1}
+                    formatValue={(v) => formatPrice(v)}
+                />
             </FilterSection>
 
             {/* Discount */}
@@ -409,12 +408,12 @@ export default function Category({ category, products, subcategories, sort, filt
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Mobile Filter & Sort Buttons + Quick Filters Row */}
-                        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* Mobile Filter & Sort Buttons */}
+                        <div className="flex items-center gap-2 mb-4 lg:hidden overflow-x-auto pb-2 scrollbar-hide">
                             {/* Filter Button */}
                             <button
                                 onClick={() => setShowMobileFilters(true)}
-                                className="lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 <Filter className="h-4 w-4" />
                                 Filters
@@ -428,13 +427,13 @@ export default function Category({ category, products, subcategories, sort, filt
                             {/* Sort Button */}
                             <button
                                 onClick={() => setShowMobileSort(true)}
-                                className="lg:hidden flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 <ArrowUpDown className="h-3.5 w-3.5" />
                                 Sort
                             </button>
 
-                            {/* Quick Filter Chips */}
+                            {/* Quick Filter Chips - Mobile */}
                             {quickFilters.map((filter) => {
                                 const isActive = isQuickFilterActive(filter.id);
                                 return (
@@ -453,17 +452,62 @@ export default function Category({ category, products, subcategories, sort, filt
                             })}
                         </div>
 
-                        {/* Desktop Sort */}
-                        <div className="hidden lg:flex items-center gap-4 mb-6">
-                            <span className="text-sm text-gray-500">
+                        {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
+                        <div className="hidden lg:flex items-center gap-3 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                            <span className="text-sm text-gray-500 flex-shrink-0">
                                 {products.total} {products.total === 1 ? 'product' : 'products'}
                             </span>
-                            <Select
-                                value={sort}
-                                onChange={handleSortChange}
-                                className="w-44"
-                                options={sortOptions}
-                            />
+                            {/* Custom Sort Dropdown */}
+                            <div className="relative flex-shrink-0">
+                                <button
+                                    onClick={() => setShowDesktopSort(!showDesktopSort)}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                    <span className="text-gray-500">Sort:</span>
+                                    <span>{sortOptions.find(opt => opt.value === sort)?.label}</span>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${showDesktopSort ? 'rotate-180' : ''}`} />
+                                </button>
+                                {showDesktopSort && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowDesktopSort(false)} />
+                                        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[180px]">
+                                            {sortOptions.map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    onClick={() => {
+                                                        handleSortChange(option.value);
+                                                        setShowDesktopSort(false);
+                                                    }}
+                                                    className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                                                        sort === option.value
+                                                            ? 'bg-gray-100 text-gray-900 font-medium'
+                                                            : 'text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <span>{option.label}</span>
+                                                    {sort === option.value && <Check className="h-4 w-4" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            {quickFilters.map((filter) => {
+                                const isActive = isQuickFilterActive(filter.id);
+                                return (
+                                    <button
+                                        key={filter.id}
+                                        onClick={() => toggleQuickFilter(filter)}
+                                        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-gray-900 text-white'
+                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         {/* Active Filters Summary */}
@@ -649,51 +693,17 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {/* Price Options */}
                                 {selectedFilterCategory === 'price' && (
                                     <div className="space-y-4">
-                                        <button
-                                            onClick={() => applyFilters({ below_100: !localFilters.below_100 })}
-                                            className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
-                                                localFilters.below_100
-                                                    ? 'bg-gray-900 text-white'
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                            }`}
-                                        >
-                                            <span>Below 100 JOD</span>
-                                            {localFilters.below_100 && <Check className="h-4 w-4" />}
-                                        </button>
-                                        <div className="border-t pt-4">
-                                            <p className="text-xs text-gray-500 mb-2">Custom Range</p>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1">Min</label>
-                                                    <Input
-                                                        type="number"
-                                                        value={localFilters.min_price}
-                                                        onChange={(e) => setLocalFilters({ ...localFilters, min_price: e.target.value })}
-                                                        placeholder="0"
-                                                        min={0}
-                                                        className="text-sm"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-gray-500 mb-1">Max</label>
-                                                    <Input
-                                                        type="number"
-                                                        value={localFilters.max_price}
-                                                        onChange={(e) => setLocalFilters({ ...localFilters, max_price: e.target.value })}
-                                                        placeholder={priceRange.max.toString()}
-                                                        min={0}
-                                                        className="text-sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <Button
-                                                onClick={() => applyFilters()}
-                                                size="sm"
-                                                className="w-full mt-2"
-                                            >
-                                                Apply
-                                            </Button>
-                                        </div>
+                                        <p className="text-xs text-gray-500 mb-2">Price Range</p>
+                                        <DualRangeSlider
+                                            min={priceRange.min}
+                                            max={priceRange.max}
+                                            minValue={sliderMin}
+                                            maxValue={sliderMax}
+                                            onChange={handleSliderChange}
+                                            onChangeEnd={handleSliderChangeEnd}
+                                            step={1}
+                                            formatValue={(v) => formatPrice(v)}
+                                        />
                                     </div>
                                 )}
 
