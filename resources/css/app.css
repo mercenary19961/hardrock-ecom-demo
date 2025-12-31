@@ -52,8 +52,10 @@ select:focus {
 }
 
 /* RTL Support */
-[dir="rtl"] {
-    font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+[dir="rtl"],
+[dir="rtl"] .font-sans,
+[dir="rtl"] body {
+    font-family: 'Rubik', sans-serif !important;
 }
 
 /* RTL-specific spacing utilities */

@@ -58,4 +58,11 @@ i18n.on('languageChanged', (lng) => {
     }
 });
 
+// Set initial document direction on load
+if (typeof document !== 'undefined') {
+    const savedLang = getSavedLanguage();
+    document.documentElement.lang = savedLang;
+    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+}
+
 export default i18n;
