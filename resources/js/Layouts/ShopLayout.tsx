@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ShoppingCart, User, Menu, X, ChevronDown, Heart, Globe } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { WishlistProvider, useWishlist } from '@/contexts/WishlistContext';
-import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useLocalized } from '@/hooks/useLocalized';
 import { CartDrawer } from '@/Components/shop/CartDrawer';
 import { WishlistDrawer } from '@/Components/shop/WishlistDrawer';
@@ -327,12 +327,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
     return (
-        <LanguageProvider>
-            <CartProvider>
-                <WishlistProvider>
-                    <ShopLayoutContent>{children}</ShopLayoutContent>
-                </WishlistProvider>
-            </CartProvider>
-        </LanguageProvider>
+        <CartProvider>
+            <WishlistProvider>
+                <ShopLayoutContent>{children}</ShopLayoutContent>
+            </WishlistProvider>
+        </CartProvider>
     );
 }
