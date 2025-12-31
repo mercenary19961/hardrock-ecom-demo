@@ -17,7 +17,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'iPhone 15 Pro Max 256GB',
+                'name_ar' => 'آيفون 15 برو ماكس 256 جيجابايت',
                 'short' => 'Apple\'s flagship with A17 Pro chip, titanium design, and 48MP camera system.',
+                'short_ar' => 'الرائد من أبل مع شريحة A17 Pro وتصميم تيتانيوم وكاميرا 48 ميجابكسل.',
                 'price' => 1399.00,
                 'compare' => null,
                 'stock' => 25,
@@ -30,7 +32,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'Samsung Galaxy S24 Ultra',
+                'name_ar' => 'سامسونج جالكسي S24 الترا',
                 'short' => 'AI-powered Galaxy with S Pen, 200MP camera, and Snapdragon 8 Gen 3.',
+                'short_ar' => 'جالكسي مدعوم بالذكاء الاصطناعي مع قلم S وكاميرا 200 ميجابكسل ومعالج سناب دراجون 8 الجيل الثالث.',
                 'price' => 1299.00,
                 'compare' => 1449.00,
                 'stock' => 18,
@@ -43,7 +47,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'Xiaomi 14 Pro',
+                'name_ar' => 'شاومي 14 برو',
                 'short' => 'Leica optics, Snapdragon 8 Gen 3, and 120W HyperCharge.',
+                'short_ar' => 'بصريات لايكا ومعالج سناب دراجون 8 الجيل الثالث وشحن سريع 120 واط.',
                 'price' => 799.00,
                 'compare' => 899.00,
                 'stock' => 35,
@@ -56,7 +62,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'HUAWEI Mate 60 Pro',
+                'name_ar' => 'هواوي ميت 60 برو',
                 'short' => 'Satellite calling, Kirin 9000S chip, and variable aperture camera.',
+                'short_ar' => 'اتصال بالأقمار الصناعية ومعالج كيرين 9000S وكاميرا بفتحة عدسة متغيرة.',
                 'price' => 999.00,
                 'compare' => null,
                 'stock' => 12,
@@ -69,7 +77,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'OPPO Reno 11 Pro',
+                'name_ar' => 'أوبو رينو 11 برو',
                 'short' => 'Portrait expert with Hasselblad color science and 80W fast charging.',
+                'short_ar' => 'خبير البورتريه مع تقنية ألوان هاسيلبلاد وشحن سريع 80 واط.',
                 'price' => 549.00,
                 'compare' => 649.00,
                 'stock' => 42,
@@ -82,7 +92,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'Google Pixel 8 Pro',
+                'name_ar' => 'جوجل بكسل 8 برو',
                 'short' => 'Best-in-class AI photography with Tensor G3 chip and 7 years of updates.',
+                'short_ar' => 'أفضل تصوير بالذكاء الاصطناعي مع معالج تينسور G3 و7 سنوات من التحديثات.',
                 'price' => 999.00,
                 'compare' => 1099.00,
                 'stock' => 20,
@@ -95,7 +107,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'smartphones',
                 'name' => 'OnePlus 12',
+                'name_ar' => 'ون بلس 12',
                 'short' => 'Flagship killer with Snapdragon 8 Gen 3 and 100W SUPERVOOC charging.',
+                'short_ar' => 'قاتل الهواتف الرائدة مع سناب دراجون 8 الجيل الثالث وشحن سوبر فوك 100 واط.',
                 'price' => 799.00,
                 'compare' => null,
                 'stock' => 28,
@@ -110,7 +124,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'MacBook Pro 14" M3 Pro',
+                'name_ar' => 'ماك بوك برو 14 بوصة M3 برو',
                 'short' => 'Apple silicon powerhouse with Liquid Retina XDR display and 18-hour battery.',
+                'short_ar' => 'قوة معالج أبل سيليكون مع شاشة ليكويد ريتينا XDR وبطارية 18 ساعة.',
                 'price' => 1999.00,
                 'compare' => null,
                 'stock' => 8,
@@ -124,7 +140,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'Dell XPS 15 (2024)',
+                'name_ar' => 'ديل XPS 15 (2024)',
                 'short' => 'Intel Core Ultra, OLED display, and premium aluminum build.',
+                'short_ar' => 'معالج إنتل كور ألترا وشاشة OLED وهيكل ألمنيوم فاخر.',
                 'price' => 1599.00,
                 'compare' => 1799.00,
                 'stock' => 15,
@@ -137,7 +155,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'ASUS ROG Strix G16',
+                'name_ar' => 'أسوس روج ستريكس G16',
                 'short' => 'RTX 4070 gaming laptop with 165Hz display and RGB lighting.',
+                'short_ar' => 'لابتوب ألعاب RTX 4070 مع شاشة 165Hz وإضاءة RGB.',
                 'price' => 1449.00,
                 'compare' => null,
                 'stock' => 10,
@@ -150,7 +170,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'Lenovo ThinkPad X1 Carbon Gen 11',
+                'name_ar' => 'لينوفو ثينك باد X1 كاربون الجيل 11',
                 'short' => 'Business ultrabook with Intel vPro, 4G LTE, and legendary keyboard.',
+                'short_ar' => 'ألترابوك للأعمال مع إنتل vPro و4G LTE ولوحة مفاتيح أسطورية.',
                 'price' => 1699.00,
                 'compare' => 1899.00,
                 'stock' => 6,
@@ -164,7 +186,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'HP Pavilion 15',
+                'name_ar' => 'إتش بي بافيليون 15',
                 'short' => 'Affordable everyday laptop with Intel Core i5 and 512GB SSD.',
+                'short_ar' => 'لابتوب يومي بسعر مناسب مع معالج إنتل كور i5 و512 جيجابايت SSD.',
                 'price' => 549.00,
                 'compare' => 649.00,
                 'stock' => 45,
@@ -177,7 +201,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'Microsoft Surface Laptop 5',
+                'name_ar' => 'مايكروسوفت سيرفس لابتوب 5',
                 'short' => 'Sleek design with PixelSense touchscreen and all-day battery life.',
+                'short_ar' => 'تصميم أنيق مع شاشة لمس بكسل سينس وبطارية تدوم طوال اليوم.',
                 'price' => 1299.00,
                 'compare' => null,
                 'stock' => 12,
@@ -190,7 +216,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'laptops',
                 'name' => 'Acer Swift Go 14',
+                'name_ar' => 'أيسر سويفت جو 14',
                 'short' => 'Ultra-portable with Intel Core Ultra and stunning 2.8K OLED display.',
+                'short_ar' => 'خفيف جداً مع معالج إنتل كور ألترا وشاشة OLED مذهلة بدقة 2.8K.',
                 'price' => 899.00,
                 'compare' => 999.00,
                 'stock' => 22,
@@ -205,7 +233,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'Apple AirPods Pro 2nd Gen',
+                'name_ar' => 'أبل إيربودز برو الجيل الثاني',
                 'short' => 'Active noise cancellation, spatial audio, and USB-C charging case.',
+                'short_ar' => 'إلغاء الضوضاء النشط والصوت المكاني وعلبة شحن USB-C.',
                 'price' => 249.00,
                 'compare' => null,
                 'stock' => 65,
@@ -218,7 +248,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'Samsung 25W USB-C Charger',
+                'name_ar' => 'شاحن سامسونج 25 واط USB-C',
                 'short' => 'Super fast charging adapter compatible with Galaxy devices.',
+                'short_ar' => 'محول شحن سريع جداً متوافق مع أجهزة جالكسي.',
                 'price' => 29.00,
                 'compare' => 39.00,
                 'stock' => 150,
@@ -231,7 +263,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'Anker PowerCore 20000mAh',
+                'name_ar' => 'أنكر باور كور 20000 مللي أمبير',
                 'short' => 'High-capacity power bank with dual USB ports and fast charging.',
+                'short_ar' => 'بطارية خارجية عالية السعة مع منفذين USB وشحن سريع.',
                 'price' => 59.00,
                 'compare' => null,
                 'stock' => 85,
@@ -244,7 +278,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'Logitech MX Master 3S',
+                'name_ar' => 'لوجيتك MX ماستر 3S',
                 'short' => 'Quiet clicks, 8K DPI sensor, and MagSpeed electromagnetic scrolling.',
+                'short_ar' => 'نقرات هادئة ومستشعر 8K DPI وتمرير كهرومغناطيسي MagSpeed.',
                 'price' => 99.00,
                 'compare' => 119.00,
                 'stock' => 40,
@@ -257,7 +293,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'JBL Tune 760NC Headphones',
+                'name_ar' => 'سماعات JBL تيون 760NC',
                 'short' => 'Wireless over-ear headphones with active noise cancelling and 50hr battery.',
+                'short_ar' => 'سماعات لاسلكية فوق الأذن مع إلغاء الضوضاء النشط وبطارية 50 ساعة.',
                 'price' => 119.00,
                 'compare' => 149.00,
                 'stock' => 55,
@@ -270,7 +308,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'accessories',
                 'name' => 'Apple Watch Series 9',
+                'name_ar' => 'أبل واتش سيريز 9',
                 'short' => 'Advanced health features with double tap gesture and brighter display.',
+                'short_ar' => 'ميزات صحية متقدمة مع إيماءة النقر المزدوج وشاشة أكثر سطوعاً.',
                 'price' => 429.00,
                 'compare' => null,
                 'stock' => 30,
@@ -285,7 +325,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'skincare',
                 'name' => 'La Roche-Posay Effaclar Duo',
+                'name_ar' => 'لاروش بوزيه إيفاكلار ديو',
                 'short' => 'Dual action acne treatment for oily and blemish-prone skin.',
+                'short_ar' => 'علاج مزدوج الفعالية لحب الشباب للبشرة الدهنية والمعرضة للشوائب.',
                 'price' => 28.00,
                 'compare' => null,
                 'stock' => 75,
@@ -298,7 +340,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'skincare',
                 'name' => 'CeraVe Moisturizing Cream',
+                'name_ar' => 'كريم سيرافي المرطب',
                 'short' => 'Rich cream with ceramides and hyaluronic acid for 24hr hydration.',
+                'short_ar' => 'كريم غني بالسيراميد وحمض الهيالورونيك لترطيب 24 ساعة.',
                 'price' => 19.00,
                 'compare' => 25.00,
                 'stock' => 110,
@@ -311,7 +355,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'skincare',
                 'name' => 'The Ordinary Niacinamide 10%',
+                'name_ar' => 'ذا أورديناري نياسيناميد 10%',
                 'short' => 'Serum for reducing blemishes and balancing sebum.',
+                'short_ar' => 'سيروم لتقليل الشوائب وموازنة الدهون.',
                 'price' => 12.00,
                 'compare' => null,
                 'stock' => 95,
@@ -324,7 +370,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'skincare',
                 'name' => 'Dead Sea Mud Mask',
+                'name_ar' => 'قناع طين البحر الميت',
                 'short' => 'Authentic Jordan Dead Sea mud for deep pore cleansing.',
+                'short_ar' => 'طين البحر الميت الأردني الأصلي لتنظيف المسام بعمق.',
                 'price' => 24.00,
                 'compare' => 32.00,
                 'stock' => 60,
@@ -337,7 +385,9 @@ class ProductSeeder extends Seeder
             [
                 'category' => 'skincare',
                 'name' => 'Bioderma Sensibio H2O Micellar',
+                'name_ar' => 'بيوديرما سينسيبيو H2O ميسيلار',
                 'short' => 'Gentle makeup remover for sensitive skin, 500ml.',
+                'short_ar' => 'مزيل مكياج لطيف للبشرة الحساسة، 500 مل.',
                 'price' => 22.00,
                 'compare' => null,
                 'stock' => 85,
@@ -359,9 +409,12 @@ class ProductSeeder extends Seeder
             $product = Product::create([
                 'category_id' => $category->id,
                 'name' => $productData['name'],
+                'name_ar' => $productData['name_ar'],
                 'slug' => Str::slug($productData['name']),
                 'description' => $this->generateDescription($productData['name'], $productData['short']),
+                'description_ar' => $productData['short_ar'],
                 'short_description' => $productData['short'],
+                'short_description_ar' => $productData['short_ar'],
                 'price' => $productData['price'],
                 'compare_price' => $productData['compare'],
                 'sku' => $this->generateSku($category->slug),

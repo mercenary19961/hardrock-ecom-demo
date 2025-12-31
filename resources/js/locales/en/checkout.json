@@ -1,0 +1,28 @@
+{
+    "title": "Checkout",
+    "contactInfo": "Contact Information",
+    "deliveryAddress": "Delivery Address",
+    "orderNotes": "Order Notes (optional)",
+    "placeOrder": "Place Order",
+    "processing": "Processing...",
+    "form": {
+        "name": "Full Name",
+        "email": "Email",
+        "phone": "Phone Number",
+        "area": "Area / Neighborhood",
+        "street": "Street Name",
+        "building": "Building / Floor / Apartment",
+        "deliveryNotes": "Delivery Instructions (optional)",
+        "notes": "Any special instructions for your order..."
+    },
+    "orderSummary": "Order Summary",
+    "deliveryFee": "Delivery",
+    "free": "Free",
+    "tax": "Tax",
+    "orderConfirmed": "Order Confirmed!",
+    "thankYou": "Thank you for your order. We've received your order and will process it shortly.",
+    "orderNumber": "Order Number",
+    "date": "Date",
+    "viewAllOrders": "View All Orders",
+    "demoNotice": "This is a demo order. No actual products will be shipped."
+}

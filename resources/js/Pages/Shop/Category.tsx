@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
 import { ChevronRight, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { useLocalized } from '@/hooks/useLocalized';
 
 type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability';
 
@@ -84,6 +86,8 @@ function FilterCheckbox({ label, checked, onChange, count }: {
 }
 
 export default function Category({ category, products, subcategories, sort, filters, priceRange }: Props) {
+    const { t } = useTranslation();
+    const { getCategoryName, getCategoryDescription } = useLocalized();
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
@@ -102,39 +106,39 @@ export default function Category({ category, products, subcategories, sort, filt
     const [sliderMax, setSliderMax] = useState(filters.max_price || priceRange.max);
 
     const discountOptions = [
-        { value: 10, label: '10%+ Off' },
-        { value: 20, label: '20%+ Off' },
-        { value: 30, label: '30%+ Off' },
-        { value: 40, label: '40%+ Off' },
-        { value: 50, label: '50%+ Off' },
-        { value: 60, label: '60%+ Off' },
-        { value: 70, label: '70%+ Off' },
-        { value: 80, label: '80%+ Off' },
-        { value: 90, label: '90%+ Off' },
+        { value: 10, label: t('shop:filterLabels.discountOff', { percent: 10 }) },
+        { value: 20, label: t('shop:filterLabels.discountOff', { percent: 20 }) },
+        { value: 30, label: t('shop:filterLabels.discountOff', { percent: 30 }) },
+        { value: 40, label: t('shop:filterLabels.discountOff', { percent: 40 }) },
+        { value: 50, label: t('shop:filterLabels.discountOff', { percent: 50 }) },
+        { value: 60, label: t('shop:filterLabels.discountOff', { percent: 60 }) },
+        { value: 70, label: t('shop:filterLabels.discountOff', { percent: 70 }) },
+        { value: 80, label: t('shop:filterLabels.discountOff', { percent: 80 }) },
+        { value: 90, label: t('shop:filterLabels.discountOff', { percent: 90 }) },
     ];
 
     const sortOptions = [
-        { value: 'newest', label: 'Newest Arrivals' },
-        { value: 'sale', label: 'Best Deals' },
-        { value: 'price_low', label: 'Price: Low to High' },
-        { value: 'price_high', label: 'Price: High to Low' },
-        { value: 'name', label: 'Name: A to Z' },
+        { value: 'newest', label: t('shop:sortOptions.newest') },
+        { value: 'sale', label: t('shop:sortOptions.sale') },
+        { value: 'price_low', label: t('shop:sortOptions.priceLow') },
+        { value: 'price_high', label: t('shop:sortOptions.priceHigh') },
+        { value: 'name', label: t('shop:sortOptions.name') },
     ];
 
     const filterCategories = [
-        { id: 'new_arrivals' as FilterCategory, label: 'New Arrivals', icon: Clock },
-        { id: 'price' as FilterCategory, label: 'Price', icon: Wallet },
-        { id: 'discount' as FilterCategory, label: 'Discount', icon: Tag },
-        { id: 'availability' as FilterCategory, label: 'Availability', icon: Package },
+        { id: 'new_arrivals' as FilterCategory, label: t('shop:filterCategories.newArrivals'), icon: Clock },
+        { id: 'price' as FilterCategory, label: t('shop:filterCategories.price'), icon: Wallet },
+        { id: 'discount' as FilterCategory, label: t('shop:filterCategories.discount'), icon: Tag },
+        { id: 'availability' as FilterCategory, label: t('shop:filterCategories.availability'), icon: Package },
     ];
 
     const quickFilters = [
-        { id: 'under_25', label: 'Up to 25 JOD', param: 'price_range', value: 'under_25' },
-        { id: '25_to_50', label: '25 - 50 JOD', param: 'price_range', value: '25_to_50' },
-        { id: 'over_50', label: '50+ JOD', param: 'price_range', value: 'over_50' },
-        { id: 'has_discount', label: 'On Sale', param: 'has_discount', value: '1' },
-        { id: 'top_rated', label: '4+ Stars', param: 'top_rated', value: '1' },
-        { id: 'popular', label: 'Popular', param: 'popular', value: '1' },
+        { id: 'under_25', label: t('shop:quickFilters.under25'), param: 'price_range', value: 'under_25' },
+        { id: '25_to_50', label: t('shop:quickFilters.25to50'), param: 'price_range', value: '25_to_50' },
+        { id: 'over_50', label: t('shop:quickFilters.over50'), param: 'price_range', value: 'over_50' },
+        { id: 'has_discount', label: t('shop:quickFilters.onSale'), param: 'has_discount', value: '1' },
+        { id: 'top_rated', label: t('shop:quickFilters.topRated'), param: 'top_rated', value: '1' },
+        { id: 'popular', label: t('shop:quickFilters.popular'), param: 'popular', value: '1' },
     ];
 
     const isQuickFilterActive = (filterId: string) => {
@@ -310,16 +314,16 @@ export default function Category({ category, products, subcategories, sort, filt
     const FilterContent = () => (
         <>
             {/* New Arrivals */}
-            <FilterSection title="New Arrivals" icon={Clock}>
+            <FilterSection title={t('shop:filterCategories.newArrivals')} icon={Clock}>
                 <FilterCheckbox
-                    label="Latest Products"
+                    label={t('shop:filterLabels.latestProducts')}
                     checked={localFilters.new_arrivals}
                     onChange={(checked) => applyFilters({ new_arrivals: checked })}
                 />
             </FilterSection>
 
             {/* Price */}
-            <FilterSection title="Price" icon={Wallet}>
+            <FilterSection title={t('shop:filterCategories.price')} icon={Wallet}>
                 <DualRangeSlider
                     min={priceRange.min}
                     max={priceRange.max}
@@ -333,7 +337,7 @@ export default function Category({ category, products, subcategories, sort, filt
             </FilterSection>
 
             {/* Discount */}
-            <FilterSection title="Discount" icon={Tag}>
+            <FilterSection title={t('shop:filterCategories.discount')} icon={Tag}>
                 <div className="space-y-1">
                     {discountOptions.map((option) => (
                         <FilterCheckbox
@@ -347,9 +351,9 @@ export default function Category({ category, products, subcategories, sort, filt
             </FilterSection>
 
             {/* Availability */}
-            <FilterSection title="Availability" icon={Package}>
+            <FilterSection title={t('shop:filterCategories.availability')} icon={Package}>
                 <FilterCheckbox
-                    label="In Stock Only"
+                    label={t('shop:filterLabels.inStockOnly')}
                     checked={localFilters.in_stock}
                     onChange={(checked) => applyFilters({ in_stock: checked })}
                 />
@@ -359,7 +363,7 @@ export default function Category({ category, products, subcategories, sort, filt
             {hasActiveFilters && (
                 <div className="pt-4">
                     <Button onClick={clearFilters} variant="outline" className="w-full">
-                        Clear All Filters
+                        {t('shop:clearFilters')}
                     </Button>
                 </div>
             )}
@@ -368,7 +372,7 @@ export default function Category({ category, products, subcategories, sort, filt
 
     return (
         <ShopLayout>
-            <Head title={category.name} />
+            <Head title={getCategoryName(category)} />
 
             {/* Hero Banner */}
             <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
@@ -376,21 +380,21 @@ export default function Category({ category, products, subcategories, sort, filt
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-                            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                            <Link href="/" className="hover:text-white transition-colors">{t('shop:hero.home')}</Link>
                             <ChevronRight className="h-4 w-4" />
-                            <span className="text-white">{category.name}</span>
+                            <span className="text-white">{getCategoryName(category)}</span>
                         </div>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                            {category.name}
+                            {getCategoryName(category)}
                         </h1>
-                        {category.description && (
+                        {getCategoryDescription(category) && (
                             <p className="text-lg sm:text-xl text-gray-300 mb-6 leading-relaxed">
-                                {category.description}
+                                {getCategoryDescription(category)}
                             </p>
                         )}
                         {priceRange.min > 0 && priceRange.max > 0 && (
                             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 w-fit">
-                                <span className="text-gray-300">Starting from</span>
+                                <span className="text-gray-300">{t('shop:hero.startingFrom')}</span>
                                 <span className="font-bold">{formatPrice(priceRange.min)}</span>
                             </div>
                         )}
@@ -407,7 +411,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 href={`/category/${category.slug}`}
                                 className="flex-shrink-0 px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-medium"
                             >
-                                All {category.name}
+                                {t('shop:subcategories.all', { category: getCategoryName(category) })}
                             </Link>
                             {subcategories.map((sub) => (
                                 <Link
@@ -415,7 +419,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                     href={`/category/${sub.slug}`}
                                     className="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
                                 >
-                                    {sub.name}
+                                    {getCategoryName(sub)}
                                 </Link>
                             ))}
                         </div>
@@ -429,7 +433,7 @@ export default function Category({ category, products, subcategories, sort, filt
                     <aside className="hidden lg:block w-64 flex-shrink-0">
                         <div className="sticky top-24">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-gray-900">Filters</h2>
+                                <h2 className="font-semibold text-gray-900">{t('shop:filters')}</h2>
                                 {hasActiveFilters && (
                                     <span className="bg-gray-900 text-white text-xs px-2 py-0.5 rounded-full">
                                         {activeFilterCount}
@@ -450,7 +454,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 <Filter className="h-4 w-4" />
-                                Filters
+                                {t('shop:filters')}
                                 {activeFilterCount > 0 && (
                                     <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
                                         {activeFilterCount}
@@ -464,7 +468,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 <ArrowUpDown className="h-3.5 w-3.5" />
-                                Sort
+                                {t('shop:sort')}
                             </button>
 
                             {/* Quick Filter Chips - Mobile */}
@@ -489,7 +493,7 @@ export default function Category({ category, products, subcategories, sort, filt
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
                         <div className="hidden lg:flex items-center gap-3 mb-6 overflow-x-auto pb-2 scrollbar-hide">
                             <span className="text-sm text-gray-500 flex-shrink-0">
-                                {products.total} {products.total === 1 ? 'product' : 'products'}
+                                {products.total} {products.total === 1 ? t('shop:product') : t('shop:products')}
                             </span>
                             {/* Custom Sort Dropdown */}
                             <div className="relative flex-shrink-0">
@@ -497,7 +501,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                     onClick={() => setShowDesktopSort(!showDesktopSort)}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                 >
-                                    <span className="text-gray-500">Sort:</span>
+                                    <span className="text-gray-500">{t('shop:sort')}:</span>
                                     <span>{sortOptions.find(opt => opt.value === sort)?.label}</span>
                                     <ChevronDown className={`h-4 w-4 transition-transform ${showDesktopSort ? 'rotate-180' : ''}`} />
                                 </button>
@@ -549,48 +553,48 @@ export default function Category({ category, products, subcategories, sort, filt
                             <div className="flex flex-wrap items-center gap-2 mb-6">
                                 {filters.new_arrivals && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        New Arrivals
-                                        <button onClick={() => removeFilter('new_arrivals')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.newArrivals')}
+                                        <button onClick={() => removeFilter('new_arrivals')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
                                 )}
                                 {filters.below_100 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        Below 100 JOD
-                                        <button onClick={() => removeFilter('below_100')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.below100')}
+                                        <button onClick={() => removeFilter('below_100')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
                                 )}
                                 {filters.min_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        Min: {formatPrice(filters.min_price)}
-                                        <button onClick={() => removeFilter('min_price')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.min', { price: formatPrice(filters.min_price) })}
+                                        <button onClick={() => removeFilter('min_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
                                 )}
                                 {filters.max_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        Max: {formatPrice(filters.max_price)}
-                                        <button onClick={() => removeFilter('max_price')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.max', { price: formatPrice(filters.max_price) })}
+                                        <button onClick={() => removeFilter('max_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
                                 )}
                                 {filters.min_discount && filters.min_discount > 0 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {filters.min_discount}%+ Off
-                                        <button onClick={() => removeFilter('min_discount')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.discountOff', { percent: filters.min_discount })}
+                                        <button onClick={() => removeFilter('min_discount')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
                                 )}
                                 {filters.in_stock && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        In Stock Only
-                                        <button onClick={() => removeFilter('in_stock')} className="ml-1 hover:text-gray-900">
+                                        {t('shop:activeFilters.inStockOnly')}
+                                        <button onClick={() => removeFilter('in_stock')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -599,7 +603,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                     onClick={clearFilters}
                                     className="text-sm text-gray-500 hover:text-gray-700 underline"
                                 >
-                                    Clear all
+                                    {t('shop:clearAll')}
                                 </button>
                             </div>
                         )}
@@ -607,7 +611,7 @@ export default function Category({ category, products, subcategories, sort, filt
                         {/* Products Grid */}
                         <ProductGrid
                             products={products.data}
-                            emptyMessage="No products match your filters. Try adjusting your criteria."
+                            emptyMessage={t('shop:noProductsMatch')}
                         />
 
                         {/* Pagination */}
@@ -634,9 +638,9 @@ export default function Category({ category, products, subcategories, sort, filt
 
                 {/* Bottom CTA */}
                 <div className="mt-16 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white text-center">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-3">Need Help Choosing?</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-3">{t('shop:cta.needHelp')}</h2>
                     <p className="text-gray-300 mb-6 max-w-xl mx-auto">
-                        Our team is ready to help you find the perfect product. Contact us for personalized recommendations.
+                        {t('shop:cta.helpDescription')}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a
@@ -645,13 +649,13 @@ export default function Category({ category, products, subcategories, sort, filt
                             rel="noopener noreferrer"
                             className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
-                            Chat on WhatsApp
+                            {t('shop:cta.chatWhatsApp')}
                         </a>
                         <Link
                             href="/"
                             className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
-                            Browse All Products
+                            {t('shop:cta.browseAll')}
                         </Link>
                     </div>
                 </div>
@@ -664,7 +668,7 @@ export default function Category({ category, products, subcategories, sort, filt
                     <div className="absolute bottom-0 left-0 right-0 top-16 bg-white rounded-t-2xl shadow-xl flex flex-col animate-slide-up">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b">
-                            <h2 className="font-semibold text-gray-900 text-lg">Filters</h2>
+                            <h2 className="font-semibold text-gray-900 text-lg">{t('shop:filters')}</h2>
                             <button onClick={() => setShowMobileFilters(false)} className="p-2 hover:bg-gray-100 rounded-full">
                                 <X className="h-5 w-5" />
                             </button>
@@ -707,7 +711,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span>Latest Products</span>
+                                            <span>{t('shop:filterLabels.latestProducts')}</span>
                                             {localFilters.new_arrivals && <Check className="h-4 w-4" />}
                                         </button>
                                         <button
@@ -718,7 +722,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span>All Products</span>
+                                            <span>{t('shop:filterLabels.allProducts')}</span>
                                             {!localFilters.new_arrivals && <Check className="h-4 w-4" />}
                                         </button>
                                     </div>
@@ -727,7 +731,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                 {/* Price Options */}
                                 {selectedFilterCategory === 'price' && (
                                     <div className="space-y-4">
-                                        <p className="text-xs text-gray-500 mb-2">Price Range</p>
+                                        <p className="text-xs text-gray-500 mb-2">{t('shop:priceRange')}</p>
                                         <DualRangeSlider
                                             min={priceRange.min}
                                             max={priceRange.max}
@@ -752,7 +756,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span>All Items</span>
+                                            <span>{t('shop:filterLabels.allItems')}</span>
                                             {localFilters.min_discount === 0 && <Check className="h-4 w-4" />}
                                         </button>
                                         {discountOptions.map((option) => (
@@ -783,7 +787,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span>All Items</span>
+                                            <span>{t('shop:filterLabels.allItems')}</span>
                                             {!localFilters.in_stock && <Check className="h-4 w-4" />}
                                         </button>
                                         <button
@@ -794,7 +798,7 @@ export default function Category({ category, products, subcategories, sort, filt
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <span>In Stock Only</span>
+                                            <span>{t('shop:filterLabels.inStockOnly')}</span>
                                             {localFilters.in_stock && <Check className="h-4 w-4" />}
                                         </button>
                                     </div>
@@ -809,14 +813,17 @@ export default function Category({ category, products, subcategories, sort, filt
                                     onClick={clearFilters}
                                     className="text-sm text-gray-500 hover:text-gray-700 underline"
                                 >
-                                    Clear All
+                                    {t('shop:clearFilters')}
                                 </button>
                             )}
                             <Button
                                 onClick={() => setShowMobileFilters(false)}
                                 className={hasActiveFilters ? '' : 'w-full'}
                             >
-                                Show {products.total} {products.total === 1 ? 'Result' : 'Results'}
+                                {products.total === 1
+                                    ? t('shop:showResult', { count: products.total })
+                                    : t('shop:showResults', { count: products.total })
+                                }
                             </Button>
                         </div>
                     </div>
@@ -830,7 +837,7 @@ export default function Category({ category, products, subcategories, sort, filt
                     <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-slide-up">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b">
-                            <h2 className="font-semibold text-gray-900 text-lg">Sort By</h2>
+                            <h2 className="font-semibold text-gray-900 text-lg">{t('shop:sortBy')}</h2>
                             <button onClick={() => setShowMobileSort(false)} className="p-2 hover:bg-gray-100 rounded-full">
                                 <X className="h-5 w-5" />
                             </button>

@@ -1,4 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
+import { useLocalized } from '@/hooks/useLocalized';
 import { Category } from '@/types/models';
 
 interface CategoryNavProps {
@@ -7,6 +9,9 @@ interface CategoryNavProps {
 }
 
 export function CategoryNav({ categories, currentSlug }: CategoryNavProps) {
+    const { t } = useTranslation();
+    const { getCategoryName } = useLocalized();
+
     return (
         <nav className="flex flex-wrap gap-2">
             <Link
@@ -17,7 +22,7 @@ export function CategoryNav({ categories, currentSlug }: CategoryNavProps) {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
-                All
+                {t('common:all')}
             </Link>
             {categories.map((category) => (
                 <Link
@@ -29,9 +34,9 @@ export function CategoryNav({ categories, currentSlug }: CategoryNavProps) {
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                 >
-                    {category.name}
+                    {getCategoryName(category)}
                     {category.products_count !== undefined && (
-                        <span className="ml-1 text-xs opacity-70">({category.products_count})</span>
+                        <span className="ms-1 text-xs opacity-70">({category.products_count})</span>
                     )}
                 </Link>
             ))}

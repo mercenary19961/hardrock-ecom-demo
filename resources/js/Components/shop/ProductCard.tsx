@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { Badge } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useLocalized } from '@/hooks/useLocalized';
 
 interface ProductCardProps {
     product: Product;
@@ -47,6 +49,8 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+    const { t } = useTranslation();
+    const { getProductName, getCategoryName } = useLocalized();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
     const { isInWishlist, toggleWishlist } = useWishlist();
@@ -155,14 +159,16 @@ export function ProductCard({ product }: ProductCardProps) {
                 {/* Out of Stock Overlay */}
                 {product.stock === 0 && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="text-white font-medium">Out of Stock</span>
+                        <span className="text-white font-medium">{t('common:outOfStock')}</span>
                     </div>
                 )}
             </div>
             <div className="p-2 sm:p-4">
-                <p className="text-xs text-gray-500 mb-1 hidden sm:block">{product.category?.name}</p>
+                <p className="text-xs text-gray-500 mb-1 hidden sm:block">
+                    {product.category ? getCategoryName(product.category) : ''}
+                </p>
                 <h3 className="text-sm sm:text-base font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
-                    {product.name}
+                    {getProductName(product)}
                 </h3>
                 {product.rating_count > 0 && (
                     <div className="mt-1">

@@ -96,11 +96,19 @@ export default function OrderShow({ order }: Props) {
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Shipping Address</h3>
+                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Delivery Address</h3>
                                         <p className="text-gray-600">
+                                            {order.shipping_address.area}<br />
                                             {order.shipping_address.street}<br />
-                                            {order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.postal_code}<br />
-                                            {order.shipping_address.country}
+                                            {order.shipping_address.building}
+                                            {order.shipping_address.delivery_notes && (
+                                                <>
+                                                    <br />
+                                                    <span className="text-gray-500 text-sm">
+                                                        Note: {order.shipping_address.delivery_notes}
+                                                    </span>
+                                                </>
+                                            )}
                                         </p>
                                     </div>
                                 </div>

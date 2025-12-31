@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { ShoppingCart, User, Menu, X, ChevronDown, Heart, Globe } from 'lucide-react';
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { WishlistProvider, useWishlist } from '@/contexts/WishlistContext';
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
+import { useLocalized } from '@/hooks/useLocalized';
 import { CartDrawer } from '@/Components/shop/CartDrawer';
 import { WishlistDrawer } from '@/Components/shop/WishlistDrawer';
 import { SearchBar } from '@/Components/shop/SearchBar';
@@ -14,9 +16,11 @@ interface ShopLayoutProps {
 }
 
 function ShopLayoutContent({ children }: ShopLayoutProps) {
+    const { t } = useTranslation();
     const { cart } = useCart();
     const { items: wishlistItems } = useWishlist();
     const { language, setLanguage } = useLanguage();
+    const { getCategoryName } = useLocalized();
     const { auth, categories } = usePage<{ auth: { user: UserType | null }; categories?: Category[] }>().props;
     const [cartOpen, setCartOpen] = useState(false);
     const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -141,20 +145,20 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                                     href="/admin"
                                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                 >
-                                                    Admin Panel
+                                                    {t('nav:adminPanel')}
                                                 </Link>
                                             )}
                                             <Link
                                                 href="/orders"
                                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
-                                                My Orders
+                                                {t('nav:orders')}
                                             </Link>
                                             <Link
                                                 href="/profile"
                                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
-                                                Profile
+                                                {t('nav:profile')}
                                             </Link>
                                             <Link
                                                 href="/logout"
@@ -162,7 +166,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                                 as="button"
                                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                             >
-                                                Logout
+                                                {t('nav:logout')}
                                             </Link>
                                         </div>
                                     </div>
@@ -172,7 +176,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                     href="/login"
                                     className="text-gray-700 hover:text-gray-900 font-medium"
                                 >
-                                    Login
+                                    {t('nav:login')}
                                 </Link>
                             )}
 
@@ -213,7 +217,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         href={`/category/${category.slug}`}
                                         className="block py-2 text-gray-700 hover:text-gray-900"
                                     >
-                                        {category.name}
+                                        {getCategoryName(category)}
                                     </Link>
                                 ))}
                             </nav>
@@ -237,7 +241,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 href={`/category/${category.slug}`}
                                 className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap"
                             >
-                                {category.name}
+                                {getCategoryName(category)}
                             </Link>
                         ))}
                     </nav>
@@ -269,23 +273,27 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             </div>
                         </div>
                         <div>
-                            <h4 className="font-semibold mb-4">Shop</h4>
+                            <h4 className="font-semibold mb-4">{t('nav:shop')}</h4>
                             <ul className="space-y-2 text-gray-400 text-sm">
-                                <li><Link href="/" className="hover:text-white">All Products</Link></li>
-                                <li><Link href="/category/electronics" className="hover:text-white">Electronics</Link></li>
-                                <li><Link href="/category/skincare" className="hover:text-white">Skincare</Link></li>
+                                <li><Link href="/" className="hover:text-white">{t('nav:allProducts')}</Link></li>
+                                {categories?.map((category) => (
+                                    <li key={category.id}>
+                                        <Link href={`/category/${category.slug}`} className="hover:text-white">
+                                            {getCategoryName(category)}
+                                        </Link>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-semibold mb-4">Account</h4>
+                            <h4 className="font-semibold mb-4">{t('nav:account')}</h4>
                             <ul className="space-y-2 text-gray-400 text-sm">
-                                <li><Link href="/login" className="hover:text-white">Login</Link></li>
-                                <li><Link href="/register" className="hover:text-white">Register</Link></li>
-                                <li><Link href="/orders" className="hover:text-white">Order History</Link></li>
+                                <li><Link href="/login" className="hover:text-white">{t('nav:login')}</Link></li>
+                                <li><Link href="/orders" className="hover:text-white">{t('nav:orderHistory')}</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-semibold mb-4">Contact</h4>
+                            <h4 className="font-semibold mb-4">{t('nav:contact')}</h4>
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 <li className="flex items-center gap-2">
                                     <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -303,7 +311,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                         </div>
                     </div>
                     <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-                        <p>&copy; {new Date().getFullYear()} HardRock. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} HardRock. {t('common:allRightsReserved')}</p>
                     </div>
                 </div>
             </footer>

@@ -11,8 +11,10 @@ export interface User {
 export interface Category {
     id: number;
     name: string;
+    name_ar: string | null;
     slug: string;
     description: string | null;
+    description_ar: string | null;
     image: string | null;
     parent_id: number | null;
     sort_order: number;
@@ -39,9 +41,12 @@ export interface Product {
     id: number;
     category_id: number;
     name: string;
+    name_ar: string | null;
     slug: string;
     description: string | null;
+    description_ar: string | null;
     short_description: string | null;
+    short_description_ar: string | null;
     price: number;
     compare_price: number | null;
     sku: string;
