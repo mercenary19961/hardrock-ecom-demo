@@ -179,7 +179,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* Language Toggle */}
                             <button
                                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-                                className="flex items-center gap-1 p-2 text-gray-700 hover:text-gray-900 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-1 p-2 text-gray-700 hover:text-gray-900 font-medium text-sm border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
                                 title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
                             >
                                 <Globe className="h-4 w-4" />
