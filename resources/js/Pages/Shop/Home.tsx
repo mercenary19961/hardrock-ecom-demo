@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { CategoryNav } from '@/Components/shop/CategoryNav';
-import { Button } from '@/Components/ui';
+import { HeroBanner } from '@/Components/shop/HeroBanner';
 import { Product, Category } from '@/types/models';
 import { ArrowRight } from 'lucide-react';
 
@@ -19,32 +19,8 @@ export default function Home({ featuredProducts, categories }: Props) {
         <ShopLayout>
             <Head title={t('common:home')} />
 
-            {/* Hero Section */}
-            <section className="bg-gradient-to-r from-gray-900 to-gray-800 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                    <div className="max-w-2xl">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                            {t('common:welcome')}
-                        </h1>
-                        <p className="text-lg text-gray-300 mb-8">
-                            {t('common:heroDescription')}
-                        </p>
-                        <div className="flex gap-4">
-                            <Link href="/category/electronics">
-                                <Button size="lg">
-                                    {t('common:shopNow')}
-                                    <ArrowRight className="ms-2 h-5 w-5" />
-                                </Button>
-                            </Link>
-                            <Link href="/admin">
-                                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-gray-900">
-                                    {t('common:viewAdmin')}
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* Hero Banner */}
+            <HeroBanner />
 
             {/* Categories */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

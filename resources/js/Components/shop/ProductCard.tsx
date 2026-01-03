@@ -62,7 +62,7 @@ export function ProductCard({ product }: ProductCardProps) {
     const currentImage = images[currentImageIndex] || images[0];
     const imageUrl = currentImage
         ? getImageUrl(currentImage.path, product.id, currentImage.sort_order)
-        : '/images/placeholder.jpg';
+        : getImageUrl(null, product.id, 0);
 
     const hasDiscount = product.compare_price && product.compare_price > product.price;
 

@@ -62,5 +62,10 @@ export function getImageUrl(path: string | null, productId?: number, sortOrder?:
     }
     if (path.startsWith('http')) return path;
 
+    // Images in public/images folder (not storage)
+    if (path.startsWith('products/')) {
+        return `/images/${path}`;
+    }
+
     return `/storage/${path}`;
 }
