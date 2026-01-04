@@ -29,5 +29,8 @@
     "featuredProducts": "المنتجات المميزة",
     "demoStore": "هذا متجر تجريبي",
     "demoDescription": "مبني باستخدام Laravel 12 و Inertia.js و React 18 و TypeScript و Tailwind CSS. سجل دخول كمسؤول لاستكشاف لوحة التحكم الكاملة.",
-    "all": "الكل"
+    "all": "الكل",
+    "onSale": "تخفيضات",
+    "hotDeals": "عروض حصرية",
+    "featured": "مميز"
 }

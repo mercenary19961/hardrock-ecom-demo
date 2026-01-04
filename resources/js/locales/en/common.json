@@ -29,5 +29,8 @@
     "featuredProducts": "Featured Products",
     "demoStore": "This is a Demo Store",
     "demoDescription": "Built with Laravel 12, Inertia.js, React 18, TypeScript, and Tailwind CSS. Login as admin to explore the full admin panel functionality.",
-    "all": "All"
+    "all": "All",
+    "onSale": "On Sale",
+    "hotDeals": "Hot Deals",
+    "featured": "Featured"
 }

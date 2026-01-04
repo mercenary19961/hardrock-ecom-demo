@@ -12,9 +12,12 @@ class HomeController extends Controller
 {
     public function index(): Response
     {
-        $featuredProducts = Product::with(['category', 'images'])
+        // Products on sale (have compare_price > price)
+        $saleProducts = Product::with(['category', 'images'])
             ->active()
-            ->featured()
+            ->whereNotNull('compare_price')
+            ->whereColumn('compare_price', '>', 'price')
+            ->orderByRaw('(compare_price - price) / compare_price DESC') // Order by discount percentage
             ->take(8)
             ->get();
 
@@ -24,9 +27,52 @@ class HomeController extends Controller
             ->withCount('activeProducts')
             ->get();
 
-        return Inertia::render('Shop/Home', [
-            'featuredProducts' => $featuredProducts,
-            'categories' => $categories,
+        // Featured category sections
+        $featuredCategories = $this->getFeaturedCategoryProducts([
+            'electronics',
+            'building-blocks',
+            'skincare',
         ]);
+
+        return Inertia::render('Shop/Home', [
+            'saleProducts' => $saleProducts,
+            'categories' => $categories,
+            'featuredCategories' => $featuredCategories,
+        ]);
+    }
+
+    /**
+     * Get products for featured category sections
+     */
+    private function getFeaturedCategoryProducts(array $slugs): array
+    {
+        $result = [];
+
+        foreach ($slugs as $slug) {
+            $category = Category::where('slug', $slug)->first();
+
+            if ($category) {
+                // Get products from this category and its children
+                $categoryIds = collect([$category->id]);
+
+                // Include child category IDs
+                $childIds = Category::where('parent_id', $category->id)->pluck('id');
+                $categoryIds = $categoryIds->merge($childIds);
+
+                $products = Product::with(['category', 'images'])
+                    ->whereIn('category_id', $categoryIds)
+                    ->active()
+                    ->orderBy('times_purchased', 'desc')
+                    ->take(8)
+                    ->get();
+
+                $result[] = [
+                    'category' => $category,
+                    'products' => $products,
+                ];
+            }
+        }
+
+        return $result;
     }
 }
