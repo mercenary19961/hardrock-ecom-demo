@@ -26,31 +26,30 @@ const slides: Slide[] = [
         desktopImage: '/images/banners/desktop/slide-2-skincare.webp',
         mobileImage: '/images/banners/mobile/slide-2-skincare.webp',
         link: '/category/skincare',
-        alt: 'Glow with Premium Skincare',
-        altAr: 'تألقي مع العناية الفاخرة',
+        alt: 'Premium Skincare Products',
+        altAr: 'منتجات العناية بالبشرة الفاخرة',
     },
     {
         id: 3,
-        desktopImage: '/images/banners/desktop/slide-3-sale.webp',
-        mobileImage: '/images/banners/mobile/slide-3-sale.webp',
-        link: '/search',
-        alt: 'Up to 50% Off',
-        altAr: 'خصم يصل إلى 50%',
+        desktopImage: '/images/banners/desktop/slide-3-kids.webp',
+        mobileImage: '/images/banners/mobile/slide-3-kids.webp',
+        link: '/category/building-blocks',
+        alt: 'Building Blocks & Kids Toys',
+        altAr: 'ألعاب البناء والألعاب التعليمية',
     },
     {
         id: 4,
-        desktopImage: '/images/banners/desktop/slide-4-arrivals.webp',
-        mobileImage: '/images/banners/mobile/slide-4-arrivals.webp',
-        link: '/search?sort=newest',
-        alt: 'Just Arrived',
-        altAr: 'وصل حديثاً',
+        desktopImage: '/images/banners/desktop/slide-4-fashion.webp',
+        mobileImage: '/images/banners/mobile/slide-4-fashion.webp',
+        link: '/category/fashion-accessories',
+        alt: 'Trendy Fashion & Accessories',
+        altAr: 'الموضة والإكسسوارات العصرية',
     },
 ];
 
-// Filter to only show slides that have images available
+// Get all available slides
 const getAvailableSlides = () => {
-    // For now, we only have slide 1
-    return slides.filter(slide => slide.id === 1);
+    return slides;
 };
 
 export function HeroBanner() {
@@ -168,7 +167,7 @@ export function HeroBanner() {
                             className={`w-3 h-3 rounded-full transition-colors ${
                                 index === currentIndex
                                     ? 'bg-gray-900'
-                                    : 'bg-white/70 hover:bg-white'
+                                    : 'bg-brand-purple hover:bg-brand-purple-400'
                             }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />

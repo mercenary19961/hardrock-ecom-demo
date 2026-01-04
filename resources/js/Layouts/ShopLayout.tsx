@@ -87,8 +87,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                     <div className="flex items-center gap-4 h-16">
                         {/* Logo */}
                         <Link href="/" className="flex items-center flex-shrink-0">
-                            <span className="text-xl font-bold text-gray-900">HardRock</span>
-                            <span className="ml-1 text-sm text-gray-500">Demo</span>
+                            <img
+                                src="/images/logo-title.webp"
+                                alt="HardRock"
+                                className="h-8 w-auto"
+                            />
                         </Link>
 
                         {/* Search Bar - Full Width */}

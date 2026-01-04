@@ -146,6 +146,19 @@ class Product extends Model
     public function getPrimaryImageUrl(): ?string
     {
         $image = $this->primaryImage ?? $this->images->first();
-        return $image ? asset('storage/' . $image->path) : null;
+
+        if (!$image) {
+            return null;
+        }
+
+        $path = $image->path;
+
+        // Check if path starts with 'products/' - these are in public/images
+        if (str_starts_with($path, 'products/')) {
+            return asset('images/' . $path);
+        }
+
+        // Otherwise use storage path
+        return asset('storage/' . $path);
     }
 }

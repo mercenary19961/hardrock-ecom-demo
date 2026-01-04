@@ -23,7 +23,16 @@ function CartContent() {
             <Head title="Shopping Cart" />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Continue Shopping
+                    </Link>
+                </div>
 
                 {cart.items.length === 0 ? (
                     <div className="text-center py-16">
@@ -126,13 +135,6 @@ function CartContent() {
                                     </div>
                                 ))}
                             </div>
-                            <Link
-                                href="/"
-                                className="inline-flex items-center text-gray-600 hover:text-gray-900 mt-6 font-medium"
-                            >
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Continue Shopping
-                            </Link>
                         </div>
 
                         {/* Order Summary */}

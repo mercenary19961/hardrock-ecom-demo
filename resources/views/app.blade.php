@@ -6,6 +6,10 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Favicons -->
+        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48px.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96px.png">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />

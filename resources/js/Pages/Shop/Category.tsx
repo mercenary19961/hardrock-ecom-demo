@@ -491,12 +491,12 @@ export default function Category({ category, products, subcategories, sort, filt
                         </div>
 
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
-                        <div className="hidden lg:flex items-center gap-3 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                        <div className="hidden lg:flex items-center gap-3 mb-6">
                             <span className="text-sm text-gray-500 flex-shrink-0">
                                 {products.total} {products.total === 1 ? t('shop:product') : t('shop:products')}
                             </span>
                             {/* Custom Sort Dropdown */}
-                            <div className="relative flex-shrink-0">
+                            <div className="relative flex-shrink-0 z-[120]">
                                 <button
                                     onClick={() => setShowDesktopSort(!showDesktopSort)}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -507,8 +507,8 @@ export default function Category({ category, products, subcategories, sort, filt
                                 </button>
                                 {showDesktopSort && (
                                     <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setShowDesktopSort(false)} />
-                                        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[180px]">
+                                        <div className="fixed inset-0 z-[100]" onClick={() => setShowDesktopSort(false)} />
+                                        <div className="absolute top-full left-0 mt-2 z-[110] bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[200px]">
                                             {sortOptions.map((option) => (
                                                 <button
                                                     key={option.value}
@@ -530,22 +530,24 @@ export default function Category({ category, products, subcategories, sort, filt
                                     </>
                                 )}
                             </div>
-                            {quickFilters.map((filter) => {
-                                const isActive = isQuickFilterActive(filter.id);
-                                return (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => toggleQuickFilter(filter)}
-                                        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                                            isActive
-                                                ? 'bg-gray-900 text-white'
-                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
+                            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+                                {quickFilters.map((filter) => {
+                                    const isActive = isQuickFilterActive(filter.id);
+                                    return (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => toggleQuickFilter(filter)}
+                                            className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                                                isActive
+                                                    ? 'bg-gray-900 text-white'
+                                                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Active Filters Summary */}

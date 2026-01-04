@@ -12,9 +12,10 @@ interface Props {
     products: Product[];
     variant?: 'default' | 'highlight';
     bgColor?: string;
+    accentColor?: 'purple' | 'orange';
 }
 
-export function FeaturedCategorySection({ category, products, variant = 'default', bgColor }: Props) {
+export function FeaturedCategorySection({ category, products, variant = 'default', bgColor, accentColor = 'purple' }: Props) {
     const { t } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
     const { language } = useLanguage();
@@ -22,6 +23,22 @@ export function FeaturedCategorySection({ category, products, variant = 'default
     const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Color configurations based on accent
+    const colorConfig = {
+        purple: {
+            button: 'border-brand-purple-200 text-brand-purple hover:bg-brand-purple-50 hover:border-brand-purple-300',
+            link: 'text-brand-purple hover:text-brand-purple-700',
+            accent: 'from-brand-purple to-brand-purple-600',
+        },
+        orange: {
+            button: 'border-brand-orange-200 text-brand-orange hover:bg-brand-orange-50 hover:border-brand-orange-300',
+            link: 'text-brand-orange hover:text-brand-orange-700',
+            accent: 'from-brand-orange to-brand-orange-600',
+        },
+    };
+
+    const colors = colorConfig[accentColor];
 
     const scroll = (direction: 'left' | 'right') => {
         const container = scrollContainerRef.current;
@@ -77,28 +94,24 @@ export function FeaturedCategorySection({ category, products, variant = 'default
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <div>
+                    <div className="flex items-center gap-3">
                         <h2 className="text-2xl font-bold text-gray-900">
                             {t('common:featured')} {getCategoryName(category)}
                         </h2>
-                        {category.description && (
-                            <p className="mt-1 text-gray-600">
-                                {getCategoryDescription(category)}
-                            </p>
-                        )}
+                        <div className={`hidden sm:block h-1 w-12 bg-gradient-to-r ${colors.accent} rounded-full`} />
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Navigation Buttons */}
                         <button
                             onClick={() => scroll('left')}
-                            className="p-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+                            className={`p-2 rounded-full border transition-colors ${colors.button}`}
                             aria-label="Scroll left"
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </button>
                         <button
                             onClick={() => scroll('right')}
-                            className="p-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+                            className={`p-2 rounded-full border transition-colors ${colors.button}`}
                             aria-label="Scroll right"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -106,13 +119,20 @@ export function FeaturedCategorySection({ category, products, variant = 'default
                         {/* View All Link */}
                         <Link
                             href={`/category/${category.slug}`}
-                            className="hidden sm:flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium transition-colors group ml-2"
+                            className={`hidden sm:flex items-center gap-2 font-medium transition-colors group ml-2 ${colors.link}`}
                         >
                             <span>{t('common:viewAll')}</span>
                             <ArrowIcon className="h-5 w-5 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                         </Link>
                     </div>
                 </div>
+
+                {/* Category Description */}
+                {category.description && (
+                    <p className="text-gray-600 mb-6 -mt-4">
+                        {getCategoryDescription(category)}
+                    </p>
+                )}
 
                 {/* Products Carousel */}
                 <div
@@ -133,7 +153,7 @@ export function FeaturedCategorySection({ category, products, variant = 'default
                 <div className="sm:hidden mt-4 text-center">
                     <Link
                         href={`/category/${category.slug}`}
-                        className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium"
+                        className={`inline-flex items-center gap-2 font-medium ${colors.link}`}
                     >
                         <span>{t('common:viewAll')}</span>
                         <ArrowIcon className="h-5 w-5" />

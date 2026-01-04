@@ -128,15 +128,15 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             )}
                         </div>
                         {images.length > 1 && (
-                            <div className="flex gap-2 overflow-x-auto">
+                            <div className="flex gap-3 overflow-x-auto pb-2">
                                 {images.map((image, index) => (
                                     <button
                                         key={image.id}
                                         onClick={() => setSelectedImage(index)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                                        className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                                             selectedImage === index
                                                 ? 'border-gray-900'
-                                                : 'border-transparent'
+                                                : 'border-gray-200 hover:border-gray-400'
                                         }`}
                                     >
                                         <img
