@@ -174,9 +174,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="text-gray-700 hover:text-gray-900 font-medium"
+                                    className="p-2 text-gray-700 hover:text-gray-900"
+                                    title={t('nav:login')}
                                 >
-                                    {t('nav:login')}
+                                    <User className="h-6 w-6 md:hidden" />
+                                    <span className="hidden md:inline font-medium">{t('nav:login')}</span>
                                 </Link>
                             )}
 
@@ -229,17 +231,17 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
             {/* Secondary Category Navigation */}
             <div
-                className={`hidden md:block bg-white border-b sticky z-30 transition-all duration-300 ease-out ${
+                className={`bg-white border-b sticky z-30 transition-all duration-300 ease-out ${
                     showCategoryNav ? 'top-16 opacity-100' : '-top-10 opacity-0'
                 }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <nav className="flex items-center justify-center gap-8 h-10">
+                    <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-10 overflow-x-auto scrollbar-hide">
                         {categories?.map((category) => (
                             <Link
                                 key={category.id}
                                 href={`/category/${category.slug}`}
-                                className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap"
+                                className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap flex-shrink-0"
                             >
                                 {getCategoryName(category)}
                             </Link>
