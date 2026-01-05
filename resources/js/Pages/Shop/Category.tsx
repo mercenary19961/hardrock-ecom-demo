@@ -419,22 +419,26 @@ export default function Category({ category, products, subcategories, parentCate
 
             {/* Subcategories Section */}
             {subcategories.length > 0 && (
-                <div className="bg-gradient-to-b from-brand-purple-50 to-white border-b border-brand-purple-100">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                        <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="bg-white border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
                             {/* "All" button - links to parent category when viewing subcategory */}
                             <Link
                                 href={`/category/${displayParentCategory.slug}`}
                                 preserveScroll
-                                className={`group flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                                className={`relative flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
                                     !isSubcategory
-                                        ? 'bg-brand-purple text-white'
-                                        : 'bg-white border-2 border-brand-purple-200 text-brand-purple-700 hover:bg-brand-purple hover:text-white hover:border-brand-purple'
+                                        ? 'text-brand-purple'
+                                        : 'text-gray-500 hover:text-gray-900'
                                 }`}
                             >
                                 <span>{t('shop:subcategories.all', { category: getCategoryName(displayParentCategory) })}</span>
                                 {!isSubcategory && (
-                                    <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                    <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                )}
+                                {/* Underline indicator */}
+                                {!isSubcategory && (
+                                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple"></span>
                                 )}
                             </Link>
                             {subcategories.map((sub) => {
@@ -444,15 +448,19 @@ export default function Category({ category, products, subcategories, parentCate
                                         key={sub.id}
                                         href={`/category/${sub.slug}`}
                                         preserveScroll
-                                        className={`group flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                                        className={`relative flex items-center gap-2 px-4 py-4 text-sm font-medium transition-colors whitespace-nowrap ${
                                             isCurrentSubcategory
-                                                ? 'bg-brand-purple text-white'
-                                                : 'bg-white border-2 border-brand-purple-200 text-brand-purple-700 hover:bg-brand-purple hover:text-white hover:border-brand-purple'
+                                                ? 'text-brand-purple'
+                                                : 'text-gray-500 hover:text-gray-900'
                                         }`}
                                     >
                                         <span>{getCategoryName(sub)}</span>
                                         {isCurrentSubcategory && (
-                                            <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                            <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                        )}
+                                        {/* Underline indicator */}
+                                        {isCurrentSubcategory && (
+                                            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-purple"></span>
                                         )}
                                     </Link>
                                 );

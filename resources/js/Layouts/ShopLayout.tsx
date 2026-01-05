@@ -11,8 +11,8 @@ import {
     GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
-import { CartProvider, useCart } from "@/contexts/CartContext";
-import { WishlistProvider, useWishlist } from "@/contexts/WishlistContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocalized } from "@/hooks/useLocalized";
 import { CartDrawer } from "@/Components/shop/CartDrawer";
@@ -471,11 +471,5 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 }
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
-    return (
-        <CartProvider>
-            <WishlistProvider>
-                <ShopLayoutContent>{children}</ShopLayoutContent>
-            </WishlistProvider>
-        </CartProvider>
-    );
+    return <ShopLayoutContent>{children}</ShopLayoutContent>;
 }

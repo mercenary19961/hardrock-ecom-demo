@@ -6,6 +6,8 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { CartProvider } from '@/contexts/CartContext';
+import { WishlistProvider } from '@/contexts/WishlistContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -21,7 +23,11 @@ createInertiaApp({
 
         root.render(
             <LanguageProvider>
-                <App {...props} />
+                <CartProvider>
+                    <WishlistProvider>
+                        <App {...props} />
+                    </WishlistProvider>
+                </CartProvider>
             </LanguageProvider>
         );
     },
