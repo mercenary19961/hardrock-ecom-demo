@@ -58,25 +58,23 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
 
             {/* Sale Products - Brand Orange Theme */}
             {saleProducts && saleProducts.length > 0 && (
-                <section className="relative py-12 overflow-hidden">
-                    {/* Gradient background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-brand-orange-50 via-brand-orange-100/50 to-white" />
+                <section className="relative py-12 overflow-hidden bg-brand-orange">
                     {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-brand-orange/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
                     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-2xl font-bold text-gray-900">{t('common:onSale')}</h2>
-                                <span className="bg-gradient-to-r from-brand-orange to-brand-orange-600 text-white text-sm font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-brand-orange/25">
+                                <h2 className="text-2xl font-bold text-white">{t('common:onSale')}</h2>
+                                <span className="bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5">
                                     <Flame className="h-4 w-4" />
                                     {t('common:hotDeals')}
                                 </span>
                             </div>
                             <Link
                                 href="/search?on_sale=1"
-                                className="text-brand-orange-600 hover:text-brand-orange-700 font-medium flex items-center gap-1 transition-colors"
+                                className="text-brand-purple-100 hover:text-white font-medium flex items-center gap-1 transition-colors"
                             >
                                 {t('common:viewAll')}
                                 <ArrowRight className="h-4 w-4" />

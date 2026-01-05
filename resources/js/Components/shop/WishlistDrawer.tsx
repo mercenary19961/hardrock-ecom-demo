@@ -17,10 +17,23 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
     const { removeFromWishlist } = useWishlist();
     const { addToCart } = useCart();
 
-    const firstImage = product.images && product.images.length > 0 ? product.images[0] : null;
-    const imageUrl = firstImage
-        ? getImageUrl(firstImage.path, product.id, firstImage.sort_order)
-        : '/images/placeholder.jpg';
+    // Get image URL - check primary_image first, then images array
+    const getProductImageUrl = () => {
+        if (product.primary_image?.url) {
+            return product.primary_image.url;
+        }
+        if (product.images && product.images.length > 0) {
+            const firstImage = product.images[0];
+            // Use url property if available, otherwise fallback to getImageUrl
+            if (firstImage.url) {
+                return firstImage.url;
+            }
+            return getImageUrl(firstImage.path, product.id, firstImage.sort_order);
+        }
+        return '/images/placeholder.jpg';
+    };
+
+    const imageUrl = getProductImageUrl();
 
     const handleAddToCart = async () => {
         try {

@@ -16,8 +16,9 @@ class HomeController extends Controller
         $saleProducts = Product::with(['category', 'images'])
             ->active()
             ->whereNotNull('compare_price')
+            ->where('compare_price', '>', 0)
             ->whereColumn('compare_price', '>', 'price')
-            ->orderByRaw('(compare_price - price) / compare_price DESC') // Order by discount percentage
+            ->orderByRaw('((compare_price - price) / compare_price) DESC') // Order by discount percentage (highest first)
             ->take(8)
             ->get();
 

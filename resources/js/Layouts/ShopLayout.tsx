@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { ShoppingCart, User, Menu, X, ChevronDown, Heart, Globe } from 'lucide-react';
+import {
+    ShoppingBagIcon,
+    UserIcon,
+    Bars3Icon,
+    XMarkIcon,
+    ChevronDownIcon,
+    HeartIcon,
+    GlobeAltIcon,
+} from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { CartProvider, useCart } from '@/contexts/CartContext';
 import { WishlistProvider, useWishlist } from '@/contexts/WishlistContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -104,28 +113,25 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* Wishlist */}
                             <button
                                 onClick={() => setWishlistOpen(true)}
-                                className={`relative p-2 text-gray-700 hover:text-gray-900 transition-transform duration-300 ${
+                                className={`relative p-2 text-brand-purple hover:text-brand-purple-700 transition-transform duration-300 ${
                                     wishlistPulse ? 'scale-125' : 'scale-100'
                                 }`}
                             >
-                                <div className="relative h-6 w-6">
-                                    <Heart className="h-6 w-6 absolute inset-0" />
-                                    {wishlistItems.length > 0 && (
-                                        <div className="absolute inset-0 overflow-hidden w-1/2">
-                                            <Heart className="h-6 w-6 fill-gray-900 text-gray-900" />
-                                        </div>
-                                    )}
-                                </div>
+                                {wishlistItems.length > 0 ? (
+                                    <HeartIconSolid className="h-6 w-6 text-brand-orange" />
+                                ) : (
+                                    <HeartIcon className="h-6 w-6" />
+                                )}
                             </button>
 
                             {/* Cart */}
                             <button
                                 onClick={() => setCartOpen(true)}
-                                className="relative p-2 text-gray-700 hover:text-gray-900"
+                                className="relative p-2 text-brand-purple hover:text-brand-purple-700"
                             >
-                                <ShoppingCart className="h-6 w-6" />
+                                <ShoppingBagIcon className="h-6 w-6" />
                                 {cart.total_items > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-gray-900 text-white text-xs rounded-full flex items-center justify-center">
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-brand-orange text-white text-xs rounded-full flex items-center justify-center">
                                         {cart.total_items}
                                     </span>
                                 )}
@@ -134,9 +140,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* User Menu */}
                             {auth.user ? (
                                 <div className="relative group">
-                                    <button className="flex items-center space-x-1 p-2 text-gray-700 hover:text-gray-900">
-                                        <User className="h-6 w-6" />
-                                        <ChevronDown className="h-4 w-4" />
+                                    <button className="flex items-center space-x-1 p-2 text-brand-purple hover:text-brand-purple-700">
+                                        <UserIcon className="h-6 w-6" />
+                                        <ChevronDownIcon className="h-4 w-4" />
                                     </button>
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                                         <div className="py-2">
@@ -177,10 +183,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="p-2 text-gray-700 hover:text-gray-900"
+                                    className="p-2 text-brand-purple hover:text-brand-purple-700"
                                     title={t('nav:login')}
                                 >
-                                    <User className="h-6 w-6 md:hidden" />
+                                    <UserIcon className="h-6 w-6 md:hidden" />
                                     <span className="hidden md:inline font-medium">{t('nav:login')}</span>
                                 </Link>
                             )}
@@ -188,22 +194,22 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* Language Toggle */}
                             <button
                                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-                                className="flex items-center gap-1 p-2 text-gray-700 hover:text-gray-900 font-medium text-sm border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-1 p-2 text-brand-purple hover:text-brand-purple-700 font-medium text-sm border border-brand-purple-200 rounded-full hover:bg-brand-purple-50 transition-colors"
                                 title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
                             >
-                                <Globe className="h-4 w-4" />
+                                <GlobeAltIcon className="h-4 w-4" />
                                 <span>{language === 'en' ? 'AR' : 'EN'}</span>
                             </button>
 
                             {/* Mobile menu button */}
                             <button
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="md:hidden p-2 text-gray-700"
+                                className="md:hidden p-2 text-brand-purple hover:text-brand-purple-700"
                             >
                                 {mobileMenuOpen ? (
-                                    <X className="h-6 w-6" />
+                                    <XMarkIcon className="h-6 w-6" />
                                 ) : (
-                                    <Menu className="h-6 w-6" />
+                                    <Bars3Icon className="h-6 w-6" />
                                 )}
                             </button>
                         </div>
@@ -257,7 +263,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             <main>{children}</main>
 
             {/* Footer */}
-            <footer className="bg-gray-900 text-white mt-16">
+            <footer className="bg-brand-purple-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         <div>
@@ -315,7 +321,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             </ul>
                         </div>
                     </div>
-                    <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+                    <div className="border-t border-white/10 mt-8 pt-8 text-center text-brand-purple-200 text-sm">
                         <p>&copy; {new Date().getFullYear()} HardRock. {t('common:allRightsReserved')}</p>
                     </div>
                 </div>
