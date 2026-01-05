@@ -118,8 +118,6 @@ export default function Category({ category, products, subcategories, parentCate
         { value: 50, label: t('shop:filterLabels.discountOff', { percent: 50 }) },
         { value: 60, label: t('shop:filterLabels.discountOff', { percent: 60 }) },
         { value: 70, label: t('shop:filterLabels.discountOff', { percent: 70 }) },
-        { value: 80, label: t('shop:filterLabels.discountOff', { percent: 80 }) },
-        { value: 90, label: t('shop:filterLabels.discountOff', { percent: 90 }) },
     ];
 
     const sortOptions = [
@@ -133,8 +131,8 @@ export default function Category({ category, products, subcategories, parentCate
     const filterCategories = [
         { id: 'new_arrivals' as FilterCategory, label: t('shop:filterCategories.newArrivals'), icon: Clock },
         { id: 'price' as FilterCategory, label: t('shop:filterCategories.price'), icon: Wallet },
-        { id: 'discount' as FilterCategory, label: t('shop:filterCategories.discount'), icon: Tag },
         { id: 'availability' as FilterCategory, label: t('shop:filterCategories.availability'), icon: Package },
+        { id: 'discount' as FilterCategory, label: t('shop:filterCategories.discount'), icon: Tag },
     ];
 
     const quickFilters = [
@@ -341,6 +339,15 @@ export default function Category({ category, products, subcategories, parentCate
                 />
             </FilterSection>
 
+            {/* Availability */}
+            <FilterSection title={t('shop:filterCategories.availability')} icon={Package}>
+                <FilterCheckbox
+                    label={t('shop:filterLabels.inStockOnly')}
+                    checked={localFilters.in_stock}
+                    onChange={(checked) => applyFilters({ in_stock: checked })}
+                />
+            </FilterSection>
+
             {/* Discount */}
             <FilterSection title={t('shop:filterCategories.discount')} icon={Tag}>
                 <div className="space-y-1">
@@ -353,15 +360,6 @@ export default function Category({ category, products, subcategories, parentCate
                         />
                     ))}
                 </div>
-            </FilterSection>
-
-            {/* Availability */}
-            <FilterSection title={t('shop:filterCategories.availability')} icon={Package}>
-                <FilterCheckbox
-                    label={t('shop:filterLabels.inStockOnly')}
-                    checked={localFilters.in_stock}
-                    onChange={(checked) => applyFilters({ in_stock: checked })}
-                />
             </FilterSection>
 
             {/* Clear Filters */}
@@ -478,7 +476,7 @@ export default function Category({ category, products, subcategories, parentCate
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="font-semibold text-gray-900">{t('shop:filters')}</h2>
                                 {hasActiveFilters && (
-                                    <span className="bg-gray-900 text-white text-xs px-2 py-0.5 rounded-full">
+                                    <span className="bg-brand-purple text-white text-xs px-2 py-0.5 rounded-full">
                                         {activeFilterCount}
                                     </span>
                                 )}
@@ -499,7 +497,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 <Filter className="h-4 w-4" />
                                 {t('shop:filters')}
                                 {activeFilterCount > 0 && (
-                                    <span className="bg-gray-900 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                    <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
                                         {activeFilterCount}
                                     </span>
                                 )}
@@ -523,7 +521,7 @@ export default function Category({ category, products, subcategories, parentCate
                                         onClick={() => toggleQuickFilter(filter)}
                                         className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                                             isActive
-                                                ? 'bg-gray-900 text-white'
+                                                ? 'bg-brand-purple text-white'
                                                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                                         }`}
                                     >
@@ -582,7 +580,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => toggleQuickFilter(filter)}
                                             className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                                                 isActive
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-purple text-white'
                                                     : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                                             }`}
                                         >
@@ -668,7 +666,7 @@ export default function Category({ category, products, subcategories, parentCate
                                         href={link.url || '#'}
                                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                             link.active
-                                                ? 'bg-gray-900 text-white'
+                                                ? 'bg-brand-slate text-white'
                                                 : link.url
                                                 ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                                                 : 'bg-gray-50 text-gray-400 cursor-not-allowed'
@@ -732,7 +730,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => setSelectedFilterCategory(cat.id)}
                                             className={`w-full flex items-center gap-2 px-4 py-4 text-left text-sm transition-colors ${
                                                 isActive
-                                                    ? 'bg-white border-l-2 border-gray-900 font-medium text-gray-900'
+                                                    ? 'bg-white border-l-2 border-brand-slate font-medium text-brand-slate'
                                                     : 'text-gray-600 hover:bg-gray-100'
                                             }`}
                                         >
@@ -752,7 +750,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => applyFilters({ new_arrivals: true })}
                                             className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                 localFilters.new_arrivals
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-slate text-white'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -763,7 +761,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => applyFilters({ new_arrivals: false })}
                                             className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                 !localFilters.new_arrivals
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-slate text-white'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -797,7 +795,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => applyFilters({ min_discount: 0 })}
                                             className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                 localFilters.min_discount === 0
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-slate text-white'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -810,7 +808,7 @@ export default function Category({ category, products, subcategories, parentCate
                                                 onClick={() => applyFilters({ min_discount: option.value })}
                                                 className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                     localFilters.min_discount === option.value
-                                                        ? 'bg-gray-900 text-white'
+                                                        ? 'bg-brand-slate text-white'
                                                         : 'text-gray-700 hover:bg-gray-100'
                                                 }`}
                                             >
@@ -828,7 +826,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => applyFilters({ in_stock: false })}
                                             className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                 !localFilters.in_stock
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-slate text-white'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -839,7 +837,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onClick={() => applyFilters({ in_stock: true })}
                                             className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
                                                 localFilters.in_stock
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-brand-slate text-white'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
@@ -856,9 +854,9 @@ export default function Category({ category, products, subcategories, parentCate
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearFilters}
-                                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                                    className="text-sm text-brand-slate font-medium hover:text-brand-purple transition-colors"
                                 >
-                                    {t('shop:clearFilters')}
+                                    {t('shop:clearAll')}
                                 </button>
                             )}
                             <Button
@@ -896,7 +894,7 @@ export default function Category({ category, products, subcategories, parentCate
                                     onClick={() => handleSortChange(option.value)}
                                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-colors ${
                                         sort === option.value
-                                            ? 'bg-gray-900 text-white'
+                                            ? 'bg-brand-slate text-white'
                                             : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                                 >

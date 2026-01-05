@@ -280,8 +280,8 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             {/* Footer */}
             <footer className="bg-brand-slate text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        <div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        <div className="col-span-2 md:col-span-1">
                             <h3 className="text-lg font-bold mb-4">HardRock</h3>
                             <p className="text-gray-400 text-sm mb-4">
                                 Reach The Peak - A demo e-commerce platform by
@@ -332,11 +332,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 </a>
                             </div>
                         </div>
-                        <div>
+                        <div className="col-span-2 md:col-span-1">
                             <h4 className="font-semibold mb-4">
                                 {t("nav:shop")}
                             </h4>
-                            <ul className="space-y-2 text-gray-400 text-sm">
+                            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 text-gray-400 text-sm">
                                 <li>
                                     <Link href="/" className="hover:text-white">
                                         {t("nav:allProducts")}
@@ -352,29 +352,6 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         </Link>
                                     </li>
                                 ))}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4">
-                                {t("nav:account")}
-                            </h4>
-                            <ul className="space-y-2 text-gray-400 text-sm">
-                                <li>
-                                    <Link
-                                        href="/login"
-                                        className="hover:text-white"
-                                    >
-                                        {t("nav:login")}
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        href="/orders"
-                                        className="hover:text-white"
-                                    >
-                                        {t("nav:orderHistory")}
-                                    </Link>
-                                </li>
                             </ul>
                         </div>
                         <div>
@@ -445,6 +422,29 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                     >
                                         sales@hardrock-co.com
                                     </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold mb-4">
+                                {t("nav:account")}
+                            </h4>
+                            <ul className="space-y-2 text-gray-400 text-sm">
+                                <li>
+                                    <Link
+                                        href="/login"
+                                        className="hover:text-white"
+                                    >
+                                        {t("nav:login")}
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/orders"
+                                        className="hover:text-white"
+                                    >
+                                        {t("nav:orderHistory")}
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
