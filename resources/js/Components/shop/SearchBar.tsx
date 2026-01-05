@@ -27,7 +27,9 @@ export function SearchBar({ initialQuery = '', placeholder }: SearchBarProps) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-300 focus:border-gray-900 outline-none text-sm"
+                className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-200 bg-white shadow-sm
+                         hover:border-gray-300 focus:border-brand-purple-500 focus:ring-2 focus:ring-brand-purple-500/20
+                           focus:outline-none text-sm transition"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         </form>

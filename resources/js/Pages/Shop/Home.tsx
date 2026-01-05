@@ -88,9 +88,9 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
             {/* Demo Banner - Brand Purple Theme */}
             <section className="relative py-16 overflow-hidden">
                 {/* Gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-purple-900 via-brand-purple-800 to-brand-purple-900" />
+                <div className="absolute inset-0 bg-brand-slate" />
                 {/* Decorative circles */}
-                <div className="absolute top-0 left-1/4 w-64 h-64 bg-brand-orange/10 rounded-full blur-3xl" />
+                <div className="absolute top-0 left-1/4 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-brand-purple-400/20 rounded-full blur-3xl" />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

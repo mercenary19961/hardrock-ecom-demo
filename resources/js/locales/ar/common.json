@@ -32,5 +32,6 @@
     "all": "الكل",
     "onSale": "تخفيضات",
     "hotDeals": "عروض حصرية",
-    "featured": "مميز"
+    "featured": "مميز",
+    "savePercent": "وفّر {{percent}}%"
 }

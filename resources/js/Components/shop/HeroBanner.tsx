@@ -57,7 +57,7 @@ export function HeroBanner() {
     const isArabic = language === 'ar';
     const availableSlides = getAvailableSlides();
 
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(2); // Start at third slide (kids toys)
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
     const goToNext = useCallback(() => {

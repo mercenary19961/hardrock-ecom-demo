@@ -148,7 +148,19 @@ class LandingController extends Controller
 
         $products = $query->paginate(12)->withQueryString();
 
+        // Get subcategories - if viewing a subcategory, show siblings (parent's children)
+        // If viewing a parent category, show its children
         $subcategories = $category->children()->active()->ordered()->get();
+        $parentCategory = null;
+
+        if ($subcategories->isEmpty() && $category->parent_id) {
+            // This is a subcategory - get siblings from parent
+            $parentCategory = $category->parent;
+            $subcategories = Category::where('parent_id', $category->parent_id)
+                ->active()
+                ->ordered()
+                ->get();
+        }
 
         // Get price range for the filter UI
         $priceRange = Product::whereIn('category_id', $categoryIds)
@@ -160,6 +172,7 @@ class LandingController extends Controller
             'category' => $category,
             'products' => $products,
             'subcategories' => $subcategories,
+            'parentCategory' => $parentCategory,
             'sort' => $sort,
             'filters' => $filters,
             'priceRange' => [

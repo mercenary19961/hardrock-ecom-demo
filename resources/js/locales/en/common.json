@@ -32,5 +32,6 @@
     "all": "All",
     "onSale": "On Sale",
     "hotDeals": "Hot Deals",
-    "featured": "Featured"
+    "featured": "Featured",
+    "savePercent": "Save {{percent}}%"
 }

@@ -15,6 +15,7 @@ interface Props {
     category: CategoryType;
     products: PaginatedData<Product>;
     subcategories: CategoryType[];
+    parentCategory?: CategoryType | null;
     sort: string;
     filters: {
         min_price?: number;
@@ -85,9 +86,13 @@ function FilterCheckbox({ label, checked, onChange, count }: {
     );
 }
 
-export default function Category({ category, products, subcategories, sort, filters, priceRange }: Props) {
+export default function Category({ category, products, subcategories, parentCategory, sort, filters, priceRange }: Props) {
     const { t } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
+
+    // Determine if we're viewing a subcategory (has parent) or a parent category
+    const isSubcategory = !!parentCategory;
+    const displayParentCategory = parentCategory || category;
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
@@ -382,7 +387,17 @@ export default function Category({ category, products, subcategories, sort, filt
                         <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
                             <Link href="/" className="hover:text-white transition-colors">{t('shop:hero.home')}</Link>
                             <ChevronRight className="h-4 w-4" />
-                            <span className="text-white">{getCategoryName(category)}</span>
+                            {parentCategory ? (
+                                <>
+                                    <Link href={`/category/${parentCategory.slug}`} className="hover:text-white transition-colors">
+                                        {getCategoryName(parentCategory)}
+                                    </Link>
+                                    <ChevronRight className="h-4 w-4" />
+                                    <span className="text-white">{getCategoryName(category)}</span>
+                                </>
+                            ) : (
+                                <span className="text-white">{getCategoryName(category)}</span>
+                            )}
                         </div>
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
                             {getCategoryName(category)}
@@ -402,26 +417,46 @@ export default function Category({ category, products, subcategories, sort, filt
                 </div>
             </div>
 
-            {/* Subcategories Pills */}
+            {/* Subcategories Section */}
             {subcategories.length > 0 && (
-                <div className="bg-gray-50 border-b">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
+                <div className="bg-gradient-to-b from-brand-purple-50 to-white border-b border-brand-purple-100">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="flex flex-wrap items-center justify-center gap-3">
+                            {/* "All" button - links to parent category when viewing subcategory */}
                             <Link
-                                href={`/category/${category.slug}`}
-                                className="flex-shrink-0 px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-medium"
+                                href={`/category/${displayParentCategory.slug}`}
+                                preserveScroll
+                                className={`group flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                                    !isSubcategory
+                                        ? 'bg-brand-purple text-white'
+                                        : 'bg-white border-2 border-brand-purple-200 text-brand-purple-700 hover:bg-brand-purple hover:text-white hover:border-brand-purple'
+                                }`}
                             >
-                                {t('shop:subcategories.all', { category: getCategoryName(category) })}
+                                <span>{t('shop:subcategories.all', { category: getCategoryName(displayParentCategory) })}</span>
+                                {!isSubcategory && (
+                                    <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                )}
                             </Link>
-                            {subcategories.map((sub) => (
-                                <Link
-                                    key={sub.id}
-                                    href={`/category/${sub.slug}`}
-                                    className="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-colors"
-                                >
-                                    {getCategoryName(sub)}
-                                </Link>
-                            ))}
+                            {subcategories.map((sub) => {
+                                const isCurrentSubcategory = isSubcategory && sub.id === category.id;
+                                return (
+                                    <Link
+                                        key={sub.id}
+                                        href={`/category/${sub.slug}`}
+                                        preserveScroll
+                                        className={`group flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                                            isCurrentSubcategory
+                                                ? 'bg-brand-purple text-white'
+                                                : 'bg-white border-2 border-brand-purple-200 text-brand-purple-700 hover:bg-brand-purple hover:text-white hover:border-brand-purple'
+                                        }`}
+                                    >
+                                        <span>{getCategoryName(sub)}</span>
+                                        {isCurrentSubcategory && (
+                                            <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                        )}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

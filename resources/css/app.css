@@ -58,6 +58,15 @@ select:focus {
     font-family: 'Rubik', sans-serif !important;
 }
 
+/* RTL font weight adjustment - Rubik renders heavier than Inter */
+[dir="rtl"] .font-bold {
+    font-weight: 500 !important;
+}
+
+[dir="rtl"] .font-semibold {
+    font-weight: 500 !important;
+}
+
 /* RTL-specific spacing utilities */
 [dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]) {
     --tw-space-x-reverse: 1;
