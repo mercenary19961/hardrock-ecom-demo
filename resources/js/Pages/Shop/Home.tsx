@@ -46,15 +46,19 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
             </section>
 
             {/* Featured Category Sections */}
-            {featuredCategories?.map((featured, index) => (
-                <FeaturedCategorySection
-                    key={featured.category.id}
-                    category={featured.category}
-                    products={featured.products}
-                    bgColor={sectionColors[index % sectionColors.length]}
-                    accentColor={index % 2 === 0 ? 'purple' : 'orange'}
-                />
-            ))}
+            {featuredCategories?.map((featured, index) => {
+                const isBuildingBlocks = featured.category.slug === 'building-blocks';
+                return (
+                    <FeaturedCategorySection
+                        key={featured.category.id}
+                        category={featured.category}
+                        products={featured.products}
+                        bgColor={sectionColors[index % sectionColors.length]}
+                        accentColor={isBuildingBlocks ? 'purple' : (index % 2 === 0 ? 'purple' : 'orange')}
+                        variant={isBuildingBlocks ? 'grid-cards' : 'default'}
+                    />
+                );
+            })}
 
             {/* Sale Products - Brand Orange Theme */}
             {saleProducts && saleProducts.length > 0 && (

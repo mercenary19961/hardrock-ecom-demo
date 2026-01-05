@@ -1,18 +1,108 @@
 import { useRef } from 'react';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    ArrowRight,
+    ArrowLeft,
+    ChevronLeft,
+    ChevronRight,
+    Smartphone,
+    Sparkles,
+    ToyBrick,
+    Watch,
+    ChefHat,
+    Trophy,
+    GraduationCap,
+    Baby,
+    ShoppingBag
+} from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { Product, Category } from '@/types/models';
 import { useLocalized } from '@/hooks/useLocalized';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getImageUrl } from '@/lib/utils';
+
+// Map category slugs to icons
+const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    'electronics': Smartphone,
+    'skincare': Sparkles,
+    'building-blocks': ToyBrick,
+    'fashion': Watch,
+    'home-kitchen': ChefHat,
+    'sports': Trophy,
+    'stationery': GraduationCap,
+    'kids': Baby,
+};
+
+// All featured category icons use brand purple
+const iconColor = 'text-brand-purple';
 
 interface Props {
     category: Category;
     products: Product[];
-    variant?: 'default' | 'highlight';
+    variant?: 'default' | 'highlight' | 'grid-cards';
     bgColor?: string;
     accentColor?: 'purple' | 'orange';
+}
+
+// Mini product card for grid-cards variant (image + title only)
+function MiniProductCard({ product }: { product: Product }) {
+    const { getProductName } = useLocalized();
+    const mainImage = product.images?.find(img => img.is_primary) || product.images?.[0];
+    const imageUrl = mainImage
+        ? getImageUrl(mainImage.path, product.id, mainImage.sort_order)
+        : getImageUrl(null, product.id, 0);
+
+    return (
+        <Link href={`/product/${product.slug}`} className="group block">
+            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
+                <img
+                    src={imageUrl}
+                    alt={getProductName(product)}
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                />
+            </div>
+            <p className="text-sm text-gray-700 group-hover:text-brand-purple line-clamp-2 transition-colors">
+                {getProductName(product)}
+            </p>
+        </Link>
+    );
+}
+
+// Grid card component - contains 4 products in 2x2 grid
+function ProductGridCard({
+    title,
+    products,
+    linkHref,
+    linkText,
+    accentColor = 'purple'
+}: {
+    title: string;
+    products: Product[];
+    linkHref: string;
+    linkText: string;
+    accentColor?: 'purple' | 'orange';
+}) {
+    const linkColorClass = accentColor === 'purple'
+        ? 'text-brand-purple hover:text-brand-purple-700'
+        : 'text-brand-orange hover:text-brand-orange-700';
+
+    return (
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                {products.slice(0, 4).map((product) => (
+                    <MiniProductCard key={product.id} product={product} />
+                ))}
+            </div>
+            <Link
+                href={linkHref}
+                className={`text-sm font-medium ${linkColorClass} transition-colors`}
+            >
+                {linkText}
+            </Link>
+        </div>
+    );
 }
 
 export function FeaturedCategorySection({ category, products, variant = 'default', bgColor, accentColor = 'purple' }: Props) {
@@ -21,6 +111,9 @@ export function FeaturedCategorySection({ category, products, variant = 'default
     const { language } = useLanguage();
     const isRTL = language === 'ar';
     const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
+
+    // Get the icon for this category
+    const CategoryIcon = categoryIcons[category.slug] || ShoppingBag;
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +132,69 @@ export function FeaturedCategorySection({ category, products, variant = 'default
     };
 
     const colors = colorConfig[accentColor];
+
+    // Grid cards variant - 2 cards with 4 products each
+    if (variant === 'grid-cards') {
+        if (products.length === 0) return null;
+
+        const sectionBg = bgColor || 'bg-gray-50';
+        const firstCardProducts = products.slice(0, 4);
+        const secondCardProducts = products.slice(4, 8);
+
+        // Get subcategories for card titles (if available)
+        const subcategories = category.children || [];
+        const firstCardTitle = subcategories[0]
+            ? getCategoryName(subcategories[0])
+            : t('common:featured') + ' ' + getCategoryName(category);
+        const secondCardTitle = subcategories[1]
+            ? getCategoryName(subcategories[1])
+            : t('common:topRated') + ' ' + getCategoryName(category);
+
+        return (
+            <section className={`${sectionBg} py-12`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Section Header */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <CategoryIcon className={`h-7 w-7 ${iconColor}`} />
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                {getCategoryName(category)}
+                            </h2>
+                        </div>
+                        <Link
+                            href={`/category/${category.slug}`}
+                            className={`flex items-center gap-2 font-medium transition-colors group ${colors.link}`}
+                        >
+                            <span>{t('common:viewAll')}</span>
+                            <ArrowIcon className="h-5 w-5 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                        </Link>
+                    </div>
+
+                    {/* Two cards grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {firstCardProducts.length > 0 && (
+                            <ProductGridCard
+                                title={firstCardTitle}
+                                products={firstCardProducts}
+                                linkHref={subcategories[0] ? `/category/${subcategories[0].slug}` : `/category/${category.slug}`}
+                                linkText={t('common:seeMore')}
+                                accentColor={accentColor}
+                            />
+                        )}
+                        {secondCardProducts.length > 0 && (
+                            <ProductGridCard
+                                title={secondCardTitle}
+                                products={secondCardProducts}
+                                linkHref={subcategories[1] ? `/category/${subcategories[1].slug}` : `/category/${category.slug}`}
+                                linkText={t('common:seeMore')}
+                                accentColor={accentColor}
+                            />
+                        )}
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     const scroll = (direction: 'left' | 'right') => {
         const container = scrollContainerRef.current;
@@ -95,10 +251,10 @@ export function FeaturedCategorySection({ category, products, variant = 'default
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
+                        <CategoryIcon className={`h-7 w-7 ${iconColor}`} />
                         <h2 className="text-2xl font-bold text-gray-900">
                             {t('common:featured')} {getCategoryName(category)}
                         </h2>
-                        <div className={`hidden sm:block h-1 w-12 bg-gradient-to-r ${colors.accent} rounded-full`} />
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Navigation Buttons */}

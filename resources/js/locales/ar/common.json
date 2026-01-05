@@ -33,5 +33,7 @@
     "onSale": "تخفيضات",
     "hotDeals": "عروض حصرية",
     "featured": "مميز",
-    "savePercent": "وفّر {{percent}}%"
+    "savePercent": "وفّر {{percent}}%",
+    "seeMore": "عرض المزيد",
+    "topRated": "الأعلى تقييماً"
 }
