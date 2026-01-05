@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
-import { ChevronRight, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { useLocalized } from '@/hooks/useLocalized';
 
@@ -96,6 +96,18 @@ export default function Category({ category, products, subcategories, parentCate
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
+    const subcategoriesRef = useRef<HTMLDivElement>(null);
+
+    // Scroll subcategories left/right
+    const scrollSubcategories = (direction: 'left' | 'right') => {
+        if (subcategoriesRef.current) {
+            const scrollAmount = 200;
+            subcategoriesRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
     const [selectedFilterCategory, setSelectedFilterCategory] = useState<FilterCategory>('new_arrivals');
     const [localFilters, setLocalFilters] = useState({
         min_price: filters.min_price?.toString() || '',
@@ -418,8 +430,26 @@ export default function Category({ category, products, subcategories, parentCate
             {/* Subcategories Section */}
             {subcategories.length > 0 && (
                 <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                        {/* Left scroll arrow */}
+                        <button
+                            onClick={() => scrollSubcategories('left')}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            aria-label="Scroll left"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        {/* Right scroll arrow */}
+                        <button
+                            onClick={() => scrollSubcategories('right')}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            aria-label="Scroll right"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
+                        <div
+                            ref={subcategoriesRef}
+                            className="flex items-center justify-start lg:justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide mx-8 lg:mx-0">
                             {/* "All" button - links to parent category when viewing subcategory */}
                             <Link
                                 href={`/category/${displayParentCategory.slug}`}
@@ -644,7 +674,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 <button
                                     onClick={clearFilters}
-                                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                                    className="px-3 py-1.5 text-sm font-medium border border-brand-slate text-brand-slate rounded-lg hover:bg-brand-slate hover:text-white transition-colors"
                                 >
                                     {t('shop:clearAll')}
                                 </button>
@@ -854,7 +884,7 @@ export default function Category({ category, products, subcategories, parentCate
                             {hasActiveFilters && (
                                 <button
                                     onClick={clearFilters}
-                                    className="text-sm text-brand-slate font-medium hover:text-brand-purple transition-colors"
+                                    className="px-4 py-2 text-sm font-medium border border-brand-slate text-brand-slate rounded-lg hover:bg-brand-slate hover:text-white transition-colors"
                                 >
                                     {t('shop:clearAll')}
                                 </button>
