@@ -1,0 +1,18 @@
+{
+    "searchPlaceholder": "Search products...",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
+    "orders": "My Orders",
+    "adminPanel": "Admin Panel",
+    "wishlist": "Wishlist",
+    "cart": "Cart",
+    "switchToArabic": "Switch to Arabic",
+    "switchToEnglish": "Switch to English",
+    "menu": "Menu",
+    "account": "Account",
+    "shop": "Shop",
+    "allProducts": "All Products",
+    "orderHistory": "Order History",
+    "contact": "Contact"
+}

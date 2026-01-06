@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Link } from '@inertiajs/react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Heart, Trash2, ShoppingCart } from 'lucide-react';
+import { HeartIcon, XMarkIcon, TrashIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/Components/ui';
@@ -17,10 +17,23 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
     const { removeFromWishlist } = useWishlist();
     const { addToCart } = useCart();
 
-    const firstImage = product.images && product.images.length > 0 ? product.images[0] : null;
-    const imageUrl = firstImage
-        ? getImageUrl(firstImage.path, product.id, firstImage.sort_order)
-        : '/images/placeholder.jpg';
+    // Get image URL - check primary_image first, then images array
+    const getProductImageUrl = () => {
+        if (product.primary_image?.url) {
+            return product.primary_image.url;
+        }
+        if (product.images && product.images.length > 0) {
+            const firstImage = product.images[0];
+            // Use url property if available, otherwise fallback to getImageUrl
+            if (firstImage.url) {
+                return firstImage.url;
+            }
+            return getImageUrl(firstImage.path, product.id, firstImage.sort_order);
+        }
+        return '/images/placeholder.jpg';
+    };
+
+    const imageUrl = getProductImageUrl();
 
     const handleAddToCart = async () => {
         try {
@@ -65,9 +78,9 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
                 <div className="mt-2 flex items-center gap-2">
                     <button
                         onClick={handleAddToCart}
-                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-brand-purple rounded hover:bg-brand-purple-700 transition-colors"
                     >
-                        <ShoppingCart className="h-3 w-3" />
+                        <ShoppingBagIcon className="h-3 w-3" />
                         Add to Cart
                     </button>
                     <button
@@ -75,7 +88,7 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                         title="Remove from wishlist"
                     >
-                        <Trash2 className="h-4 w-4" />
+                        <TrashIcon className="h-4 w-4" />
                     </button>
                 </div>
             </div>
@@ -117,21 +130,21 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                     <div className="flex h-full flex-col bg-white shadow-xl">
                                         <div className="flex items-center justify-between px-4 py-4 border-b">
                                             <Dialog.Title className="text-lg font-semibold flex items-center gap-2">
-                                                <Heart className="h-5 w-5" />
+                                                <HeartIcon className="h-5 w-5 text-brand-purple" />
                                                 Wishlist ({items.length})
                                             </Dialog.Title>
                                             <button
                                                 onClick={onClose}
                                                 className="p-2 rounded-lg hover:bg-gray-100"
                                             >
-                                                <X className="h-5 w-5" />
+                                                <XMarkIcon className="h-5 w-5" />
                                             </button>
                                         </div>
 
                                         <div className="flex-1 overflow-y-auto px-4">
                                             {items.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center h-full text-center">
-                                                    <Heart className="h-16 w-16 text-gray-300 mb-4" />
+                                                    <HeartIcon className="h-16 w-16 text-brand-purple-200 mb-4" />
                                                     <p className="text-gray-500">Your wishlist is empty</p>
                                                     <Link
                                                         href="/"

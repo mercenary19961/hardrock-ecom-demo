@@ -1,0 +1,84 @@
+{
+    "relatedProducts": "منتجات ذات صلة",
+    "description": "الوصف",
+    "reviews": "تقييم",
+    "notifyMe": "أعلمني عند التوفر",
+    "requestSubmitted": "تم إرسال الطلب",
+    "notifyMeDescription": "سنخبرك عندما يعود هذا المنتج للمخزون.",
+    "filters": "تصفية",
+    "sort": "ترتيب",
+    "sortBy": "ترتيب حسب",
+    "priceRange": "نطاق السعر",
+    "clearFilters": "مسح الكل",
+    "clearAll": "مسح الكل",
+    "noProducts": "لا توجد منتجات",
+    "noProductsMatch": "لا توجد منتجات تطابق الفلاتر. حاول تعديل معايير البحث.",
+    "products": "منتجات",
+    "product": "منتج",
+    "showingResults": "عرض {{from}}-{{to}} من {{total}} منتج",
+    "showResults": "عرض {{count}} نتيجة",
+    "showResult": "عرض {{count}} نتيجة",
+    "sortOptions": {
+        "newest": "الأحدث وصولاً",
+        "sale": "أفضل العروض",
+        "priceLow": "السعر: من الأقل للأعلى",
+        "priceHigh": "السعر: من الأعلى للأقل",
+        "name": "الاسم: أ إلى ي",
+        "priceLowHigh": "السعر: من الأقل للأعلى",
+        "priceHighLow": "السعر: من الأعلى للأقل",
+        "popular": "الأكثر شعبية",
+        "rating": "الأعلى تقييماً"
+    },
+    "filterCategories": {
+        "newArrivals": "وصل حديثاً",
+        "price": "السعر",
+        "discount": "الخصم",
+        "availability": "التوفر"
+    },
+    "filterLabels": {
+        "latestProducts": "أحدث المنتجات",
+        "allProducts": "جميع المنتجات",
+        "allItems": "جميع المنتجات",
+        "inStockOnly": "المتوفر فقط",
+        "discountOff": "خصم {{percent}}%+"
+    },
+    "quickFilters": {
+        "under25": "حتى 25 دينار",
+        "25to50": "25 - 50 دينار",
+        "over50": "50+ دينار",
+        "onSale": "تخفيضات",
+        "topRated": "4+ نجوم",
+        "popular": "شائع"
+    },
+    "activeFilters": {
+        "newArrivals": "وصل حديثاً",
+        "below100": "أقل من 100 دينار",
+        "min": "الحد الأدنى: {{price}}",
+        "max": "الحد الأقصى: {{price}}",
+        "discountOff": "خصم {{percent}}%+",
+        "inStockOnly": "المتوفر فقط"
+    },
+    "hero": {
+        "home": "الرئيسية",
+        "startingFrom": "تبدأ من"
+    },
+    "subcategories": {
+        "all": "جميع {{category}}"
+    },
+    "cta": {
+        "needHelp": "تحتاج مساعدة في الاختيار؟",
+        "helpDescription": "فريقنا جاهز لمساعدتك في إيجاد المنتج المثالي. تواصل معنا للحصول على توصيات مخصصة.",
+        "chatWhatsApp": "تواصل عبر واتساب",
+        "browseAll": "تصفح جميع المنتجات"
+    },
+    "cartTitle": "سلة التسوق",
+    "cartEmpty": "سلة التسوق فارغة",
+    "checkout": "إتمام الشراء",
+    "remove": "إزالة",
+    "wishlistTitle": "قائمة الرغبات",
+    "wishlistEmpty": "قائمة الرغبات فارغة",
+    "startShopping": "ابدأ التسوق",
+    "clearWishlist": "مسح القائمة",
+    "addedToWishlist": "تمت الإضافة للمفضلة",
+    "removedFromWishlist": "تمت الإزالة من المفضلة"
+}

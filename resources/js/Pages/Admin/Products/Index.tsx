@@ -345,7 +345,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search products..."
                                 autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-brand-purple-700 outline-none"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         </div>

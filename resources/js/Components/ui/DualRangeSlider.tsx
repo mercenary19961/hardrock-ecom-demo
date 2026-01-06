@@ -23,13 +23,13 @@ export function DualRangeSlider({
     onChangeEnd,
     className,
 }: DualRangeSliderProps) {
-    const [localMin, setLocalMin] = useState(minValue.toString());
-    const [localMax, setLocalMax] = useState(maxValue.toString());
+    const [localMin, setLocalMin] = useState(Math.floor(minValue).toString());
+    const [localMax, setLocalMax] = useState(Math.ceil(maxValue).toString());
 
     // Sync with props
     useEffect(() => {
-        setLocalMin(minValue.toString());
-        setLocalMax(maxValue.toString());
+        setLocalMin(Math.floor(minValue).toString());
+        setLocalMax(Math.ceil(maxValue).toString());
     }, [minValue, maxValue]);
 
     const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,0 +1,84 @@
+{
+    "relatedProducts": "Related Products",
+    "description": "Description",
+    "reviews": "reviews",
+    "notifyMe": "Notify Me When Available",
+    "requestSubmitted": "Request Submitted",
+    "notifyMeDescription": "We'll let you know when this product is back in stock.",
+    "filters": "Filters",
+    "sort": "Sort",
+    "sortBy": "Sort By",
+    "priceRange": "Price Range",
+    "clearFilters": "Clear All",
+    "clearAll": "Clear all",
+    "noProducts": "No products found",
+    "noProductsMatch": "No products match your filters. Try adjusting your criteria.",
+    "products": "products",
+    "product": "product",
+    "showingResults": "Showing {{from}}-{{to}} of {{total}} products",
+    "showResults": "Show {{count}} Results",
+    "showResult": "Show {{count}} Result",
+    "sortOptions": {
+        "newest": "Newest Arrivals",
+        "sale": "Best Deals",
+        "priceLow": "Price: Low to High",
+        "priceHigh": "Price: High to Low",
+        "name": "Name: A to Z",
+        "priceLowHigh": "Price: Low to High",
+        "priceHighLow": "Price: High to Low",
+        "popular": "Most Popular",
+        "rating": "Highest Rated"
+    },
+    "filterCategories": {
+        "newArrivals": "New Arrivals",
+        "price": "Price",
+        "discount": "Discount",
+        "availability": "Availability"
+    },
+    "filterLabels": {
+        "latestProducts": "Latest Products",
+        "allProducts": "All Products",
+        "allItems": "All Items",
+        "inStockOnly": "In Stock Only",
+        "discountOff": "{{percent}}%+ Off"
+    },
+    "quickFilters": {
+        "under25": "Up to 25 JOD",
+        "25to50": "25 - 50 JOD",
+        "over50": "50+ JOD",
+        "onSale": "On Sale",
+        "topRated": "4+ Stars",
+        "popular": "Popular"
+    },
+    "activeFilters": {
+        "newArrivals": "New Arrivals",
+        "below100": "Below 100 JOD",
+        "min": "Min: {{price}}",
+        "max": "Max: {{price}}",
+        "discountOff": "{{percent}}%+ Off",
+        "inStockOnly": "In Stock Only"
+    },
+    "hero": {
+        "home": "Home",
+        "startingFrom": "Starting from"
+    },
+    "subcategories": {
+        "all": "All {{category}}"
+    },
+    "cta": {
+        "needHelp": "Need Help Choosing?",
+        "helpDescription": "Our team is ready to help you find the perfect product. Contact us for personalized recommendations.",
+        "chatWhatsApp": "Chat on WhatsApp",
+        "browseAll": "Browse All Products"
+    },
+    "cartTitle": "Shopping Cart",
+    "cartEmpty": "Your cart is empty",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "wishlistTitle": "Wishlist",
+    "wishlistEmpty": "Your wishlist is empty",
+    "startShopping": "Start shopping",
+    "clearWishlist": "Clear Wishlist",
+    "addedToWishlist": "Added to wishlist",
+    "removedFromWishlist": "Removed from wishlist"
+}

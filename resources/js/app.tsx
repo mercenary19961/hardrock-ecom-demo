@@ -1,9 +1,13 @@
 import '../css/app.css';
 import './bootstrap';
+import './i18n';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import { CartProvider } from '@/contexts/CartContext';
+import { WishlistProvider } from '@/contexts/WishlistContext';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -17,7 +21,15 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <LanguageProvider>
+                <CartProvider>
+                    <WishlistProvider>
+                        <App {...props} />
+                    </WishlistProvider>
+                </CartProvider>
+            </LanguageProvider>
+        );
     },
     progress: false,
 });

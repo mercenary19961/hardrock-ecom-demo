@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { QuantitySelector } from '@/Components/shop/QuantitySelector';
 import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
+import { useLocalized } from '@/hooks/useLocalized';
 import { Product as ProductType, Breadcrumb } from '@/types/models';
 import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
@@ -56,10 +58,18 @@ interface Props {
 }
 
 function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
+    const { t } = useTranslation();
     const { addToCart, loading } = useCart();
+    const { getProductName, getProductDescription, getProductShortDescription, getCategoryName } = useLocalized();
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
+
+    // Get localized content
+    const productName = getProductName(product);
+    const productDescription = getProductDescription(product);
+    const productShortDescription = getProductShortDescription(product);
+    const categoryName = product.category ? getCategoryName(product.category) : '';
 
     // Check localStorage for previously requested notifications
     const storageKey = `notify_product_${product.id}`;
@@ -90,19 +100,24 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
 
     return (
         <>
-            <Head title={product.name} />
+            <Head title={productName} />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Breadcrumbs */}
-                <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-                    <Link href="/" className="hover:text-gray-900">Home</Link>
+                <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6 overflow-hidden">
+                    <Link href="/" className="hover:text-gray-900 flex-shrink-0">{t('common:home')}</Link>
                     {breadcrumbs.map((crumb, index) => (
-                        <span key={crumb.slug} className="flex items-center gap-2">
-                            <ChevronRight className="h-4 w-4" />
+                        <span key={crumb.slug} className="flex items-center gap-2 min-w-0">
+                            <ChevronRight className="h-4 w-4 flex-shrink-0" />
                             {index === breadcrumbs.length - 1 ? (
-                                <span className="text-gray-900 line-clamp-1">{crumb.name}</span>
+                                <span
+                                    className="text-gray-900 truncate max-w-[150px] sm:max-w-none cursor-default"
+                                    title={crumb.name}
+                                >
+                                    {crumb.name}
+                                </span>
                             ) : (
-                                <Link href={`/category/${crumb.slug}`} className="hover:text-gray-900">
+                                <Link href={`/category/${crumb.slug}`} className="hover:text-gray-900 whitespace-nowrap flex-shrink-0">
                                     {crumb.name}
                                 </Link>
                             )}
@@ -118,7 +133,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             {images[selectedImage] ? (
                                 <img
                                     src={getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order)}
-                                    alt={product.name}
+                                    alt={productName}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
@@ -128,20 +143,20 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             )}
                         </div>
                         {images.length > 1 && (
-                            <div className="flex gap-2 overflow-x-auto">
+                            <div className="flex gap-3 overflow-x-auto pb-2">
                                 {images.map((image, index) => (
                                     <button
                                         key={image.id}
                                         onClick={() => setSelectedImage(index)}
-                                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                                        className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                                             selectedImage === index
-                                                ? 'border-gray-900'
-                                                : 'border-transparent'
+                                                ? 'border-brand-purple'
+                                                : 'border-gray-200 hover:border-gray-400'
                                         }`}
                                     >
                                         <img
                                             src={getImageUrl(image.path, product.id, image.sort_order)}
-                                            alt={image.alt_text || product.name}
+                                            alt={image.alt_text || productName}
                                             className="w-full h-full object-cover"
                                         />
                                     </button>
@@ -158,12 +173,12 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                                     href={`/category/${product.category.slug}`}
                                     className="text-sm text-gray-500 hover:text-gray-900"
                                 >
-                                    {product.category.name}
+                                    {categoryName}
                                 </Link>
                             </div>
                         )}
 
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{productName}</h1>
 
                         {product.rating_count > 0 && (
                             <div className="mb-4">
@@ -181,7 +196,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                                         {formatPrice(product.compare_price!)}
                                     </span>
                                     <Badge variant="danger">
-                                        Save {getDiscountPercentage(product.price, product.compare_price!)}%
+                                        {t('common:savePercent', { percent: getDiscountPercentage(product.price, product.compare_price!) })}
                                     </Badge>
                                 </>
                             )}
@@ -189,14 +204,14 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
 
                         <div className="mb-6">
                             {product.stock > 0 ? (
-                                <Badge variant="success">In Stock</Badge>
+                                <Badge variant="success">{t('common:inStock')}</Badge>
                             ) : (
-                                <Badge variant="danger">Out of Stock</Badge>
+                                <Badge variant="danger">{t('common:outOfStock')}</Badge>
                             )}
                         </div>
 
-                        {product.short_description && (
-                            <p className="text-gray-600 mb-6">{product.short_description}</p>
+                        {productShortDescription && (
+                            <p className="text-gray-600 mb-6">{productShortDescription}</p>
                         )}
 
                         {/* Add to Cart or Notify Me */}
@@ -215,13 +230,13 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                                 >
                                     {added ? (
                                         <>
-                                            <Check className="mr-2 h-5 w-5" />
-                                            Added to Cart
+                                            <Check className="me-2 h-5 w-5" />
+                                            {t('common:addedToCart')}
                                         </>
                                     ) : (
                                         <>
-                                            <ShoppingCart className="mr-2 h-5 w-5" />
-                                            Add to Cart
+                                            <ShoppingCart className="me-2 h-5 w-5" />
+                                            {t('common:addToCart')}
                                         </>
                                     )}
                                 </Button>
@@ -237,30 +252,30 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                                 >
                                     {notifyRequested ? (
                                         <>
-                                            <Check className="mr-2 h-5 w-5" />
-                                            Request Submitted
+                                            <Check className="me-2 h-5 w-5" />
+                                            {t('shop:requestSubmitted')}
                                         </>
                                     ) : (
                                         <>
-                                            <Bell className="mr-2 h-5 w-5" />
-                                            Notify Me When Available
+                                            <Bell className="me-2 h-5 w-5" />
+                                            {t('shop:notifyMe')}
                                         </>
                                     )}
                                 </Button>
                                 {notifyRequested && (
                                     <p className="text-sm text-gray-500 mt-2 text-center">
-                                        We'll let you know when this product is back in stock.
+                                        {t('shop:notifyMeDescription')}
                                     </p>
                                 )}
                             </div>
                         )}
 
                         {/* Description */}
-                        {product.description && (
+                        {productDescription && (
                             <div className="mt-8 pt-8 border-t">
-                                <h2 className="text-lg font-semibold mb-4">Description</h2>
+                                <h2 className="text-lg font-semibold mb-4">{t('shop:description')}</h2>
                                 <div className="prose prose-sm text-gray-600 whitespace-pre-line">
-                                    {product.description}
+                                    {productDescription}
                                 </div>
                             </div>
                         )}
@@ -270,7 +285,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                 {/* Related Products */}
                 {relatedProducts.length > 0 && (
                     <section>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('shop:relatedProducts')}</h2>
                         <ProductGrid products={relatedProducts} />
                     </section>
                 )}

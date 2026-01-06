@@ -1,9 +1,9 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
 import { Cart, User } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
-import { Truck, RotateCcw, Clock } from 'lucide-react';
+import { Truck, RotateCcw, Clock, ArrowLeft } from 'lucide-react';
 
 interface Props {
     cart: Cart;
@@ -37,7 +37,16 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
             <Head title="Checkout" />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+                    <Link
+                        href="/cart"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Cart
+                    </Link>
+                </div>
 
                 {stockErrors.length > 0 && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
