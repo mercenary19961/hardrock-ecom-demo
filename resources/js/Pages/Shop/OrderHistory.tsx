@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Badge, Card, CardContent } from '@/Components/ui';
 import { Order, PaginatedData } from '@/types/models';
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function OrderHistory({ orders }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     return (
         <ShopLayout>
             <Head title="Order History" />
@@ -59,7 +62,7 @@ export default function OrderHistory({ orders }: Props) {
                                                 {order.items?.length || 0} items
                                             </span>
                                             <span className="font-semibold">
-                                                {formatPrice(order.total)}
+                                                {formatPrice(order.total, language)}
                                             </span>
                                         </div>
                                         <Link

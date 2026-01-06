@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Order, PaginatedData } from '@/types/models';
@@ -29,6 +30,8 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const [search, setSearch] = useState(filters.search || '');
     const [currentStatus, setCurrentStatus] = useState(filters.status || '');
     const [perPage, setPerPage] = useState(filters.per_page || '15');
@@ -201,7 +204,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                                 {formatDateTime(order.created_at)}
                                             </div>
                                             <div className="font-semibold text-gray-900 tabular-nums">
-                                                {formatPrice(order.total)}
+                                                {formatPrice(order.total, language)}
                                             </div>
                                         </div>
                                     </div>
@@ -261,7 +264,7 @@ export default function OrdersIndex({ orders, statusCounts, filters }: Props) {
                                             {formatDateTime(order.created_at)}
                                         </td>
                                         <td className="px-6 py-4 font-medium tabular-nums">
-                                            {formatPrice(order.total)}
+                                            {formatPrice(order.total, language)}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Badge className={getStatusColor(order.status)}>

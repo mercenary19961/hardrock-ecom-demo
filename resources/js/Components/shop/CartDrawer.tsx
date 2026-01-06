@@ -86,7 +86,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                             <div className="border-t px-4 py-4 space-y-4">
                                                 <div className="flex justify-between text-lg font-semibold">
                                                     <span>Subtotal</span>
-                                                    <span>{formatPrice(cart.subtotal)}</span>
+                                                    <span>{formatPrice(cart.subtotal, language)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-500">
                                                     Shipping and taxes calculated at checkout.

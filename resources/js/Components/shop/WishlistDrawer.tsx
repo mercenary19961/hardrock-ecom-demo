@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, Transition } from '@headlessui/react';
 import { HeartIcon, XMarkIcon, TrashIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -14,6 +15,8 @@ interface WishlistDrawerProps {
 }
 
 function WishlistItem({ product, onClose }: { product: Product; onClose: () => void }) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const { removeFromWishlist } = useWishlist();
     const { addToCart } = useCart();
 
@@ -67,11 +70,11 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
                 </Link>
                 <div className="mt-1 flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-900">
-                        {formatPrice(product.price)}
+                        {formatPrice(product.price, language)}
                     </span>
                     {product.compare_price && product.compare_price > product.price && (
                         <span className="text-sm text-gray-400 line-through">
-                            {formatPrice(product.compare_price)}
+                            {formatPrice(product.compare_price, language)}
                         </span>
                     )}
                 </div>

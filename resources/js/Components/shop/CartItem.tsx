@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { CartItem as CartItemType } from '@/types/models';
 import { useCart } from '@/contexts/CartContext';
@@ -11,6 +12,8 @@ interface CartItemProps {
 }
 
 export function CartItem({ item, showRemove = true }: CartItemProps) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const { updateQuantity, removeItem, loading } = useCart();
 
     const handleQuantityChange = async (quantity: number) => {
@@ -38,7 +41,7 @@ export function CartItem({ item, showRemove = true }: CartItemProps) {
                     {item.product.name}
                 </Link>
                 <p className="text-sm text-gray-500 mt-0.5">
-                    {formatPrice(item.product.price)}
+                    {formatPrice(item.product.price, language)}
                 </p>
                 <div className="flex items-center justify-between mt-2">
                     <QuantitySelector
@@ -59,7 +62,7 @@ export function CartItem({ item, showRemove = true }: CartItemProps) {
                 </div>
             </div>
             <div className="text-right">
-                <p className="font-medium">{formatPrice(item.subtotal)}</p>
+                <p className="font-medium">{formatPrice(item.subtotal, language)}</p>
             </div>
         </div>
     );
