@@ -9,6 +9,18 @@ import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package,
 import { formatPrice } from '@/lib/utils';
 import { useLocalized } from '@/hooks/useLocalized';
 
+// Map category slugs to banner image names
+const categoryBannerMap: Record<string, string> = {
+    'electronics': 'category-electronics-hero',
+    'skincare': 'category-skincare-hero',
+    'building-blocks': 'category-building-blocks-hero',
+    'fashion': 'category-fashion-accessories-hero',
+    'home-kitchen': 'category-home-kitchen-hero',
+    'sports': 'category-sports-outdoors-hero',
+    'stationery': 'category-books-stationery-hero',
+    'kids': 'category-baby-kids-hero',
+};
+
 type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability';
 
 interface Props {
@@ -87,12 +99,20 @@ function FilterCheckbox({ label, checked, onChange, count }: {
 }
 
 export default function Category({ category, products, subcategories, parentCategory, sort, filters, priceRange }: Props) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
+    const language = i18n.language;
 
     // Determine if we're viewing a subcategory (has parent) or a parent category
     const isSubcategory = !!parentCategory;
     const displayParentCategory = parentCategory || category;
+
+    // Get the banner image for the category (use parent category for subcategories)
+    const bannerCategorySlug = displayParentCategory.slug;
+    const bannerBaseName = categoryBannerMap[bannerCategorySlug];
+    const bannerImage = bannerBaseName
+        ? `/images/banners/categories/${bannerBaseName}-${language}.webp`
+        : null;
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
@@ -347,7 +367,7 @@ export default function Category({ category, products, subcategories, parentCate
                     onChange={handleSliderChange}
                     onChangeEnd={handleSliderChangeEnd}
                     step={1}
-                    formatValue={(v) => formatPrice(v)}
+                    formatValue={(v) => formatPrice(v, language)}
                 />
             </FilterSection>
 
@@ -390,37 +410,47 @@ export default function Category({ category, products, subcategories, parentCate
             <Head title={getCategoryName(category)} />
 
             {/* Hero Banner */}
-            <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent"></div>
+            <div className="relative bg-white overflow-hidden">
+                {/* Background Image */}
+                {bannerImage && (
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${bannerImage})` }}
+                    />
+                )}
+                {/* Fallback gradient if no banner */}
+                {!bannerImage && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white" />
+                )}
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
-                        <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-                            <Link href="/" className="hover:text-white transition-colors">{t('shop:hero.home')}</Link>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                            <Link href="/" className="hover:text-gray-900 transition-colors">{t('shop:hero.home')}</Link>
                             <ChevronRight className="h-4 w-4" />
                             {parentCategory ? (
                                 <>
-                                    <Link href={`/category/${parentCategory.slug}`} className="hover:text-white transition-colors">
+                                    <Link href={`/category/${parentCategory.slug}`} className="hover:text-gray-900 transition-colors">
                                         {getCategoryName(parentCategory)}
                                     </Link>
                                     <ChevronRight className="h-4 w-4" />
-                                    <span className="text-white">{getCategoryName(category)}</span>
+                                    <span className="text-gray-900 font-medium">{getCategoryName(category)}</span>
                                 </>
                             ) : (
-                                <span className="text-white">{getCategoryName(category)}</span>
+                                <span className="text-gray-900 font-medium">{getCategoryName(category)}</span>
                             )}
                         </div>
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-gray-900">
                             {getCategoryName(category)}
                         </h1>
                         {getCategoryDescription(category) && (
-                            <p className="text-lg sm:text-xl text-gray-300 mb-6 leading-relaxed">
+                            <p className="text-lg sm:text-xl text-gray-600 mb-6 leading-relaxed">
                                 {getCategoryDescription(category)}
                             </p>
                         )}
                         {priceRange.min > 0 && priceRange.max > 0 && (
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 w-fit">
+                            <div className="flex items-center gap-2 bg-gray-900 text-white rounded-full px-4 py-2 w-fit">
                                 <span className="text-gray-300">{t('shop:hero.startingFrom')}</span>
-                                <span className="font-bold">{formatPrice(priceRange.min)}</span>
+                                <span className="font-bold">{formatPrice(priceRange.min, language)}</span>
                             </div>
                         )}
                     </div>
@@ -642,7 +672,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.min_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.min', { price: formatPrice(filters.min_price) })}
+                                        {t('shop:activeFilters.min', { price: formatPrice(filters.min_price, language) })}
                                         <button onClick={() => removeFilter('min_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
@@ -650,7 +680,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.max_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.max', { price: formatPrice(filters.max_price) })}
+                                        {t('shop:activeFilters.max', { price: formatPrice(filters.max_price, language) })}
                                         <button onClick={() => removeFilter('max_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
@@ -813,7 +843,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onChange={handleSliderChange}
                                             onChangeEnd={handleSliderChangeEnd}
                                             step={1}
-                                            formatValue={(v) => formatPrice(v)}
+                                            formatValue={(v) => formatPrice(v, language)}
                                         />
                                     </div>
                                 )}

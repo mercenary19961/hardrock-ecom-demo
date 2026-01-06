@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
@@ -13,6 +14,8 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const { cart, loading } = useCart();
 
     return (

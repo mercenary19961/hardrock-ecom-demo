@@ -5,13 +5,15 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-JO', {
-        style: 'currency',
-        currency: 'JOD',
+export function formatPrice(price: number, language: string = 'en'): string {
+    const isArabic = language === 'ar';
+    const formatted = new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
     }).format(price);
+
+    // Add currency label based on language
+    return isArabic ? `${formatted} دينار` : `JOD ${formatted}`;
 }
 
 export function formatDate(date: string): string {

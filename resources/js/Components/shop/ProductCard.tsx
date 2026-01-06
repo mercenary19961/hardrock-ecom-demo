@@ -49,7 +49,8 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { getProductName, getCategoryName } = useLocalized();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
@@ -177,11 +178,11 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
                 <div className="mt-1 sm:mt-2 flex items-center gap-2">
                     <span className="text-sm sm:text-base text-gray-600">
-                        {formatPrice(product.price)}
+                        {formatPrice(product.price, language)}
                     </span>
                     {hasDiscount && (
                         <span className="text-sm sm:text-base text-gray-400 line-through">
-                            {formatPrice(product.compare_price!)}
+                            {formatPrice(product.compare_price!, language)}
                         </span>
                     )}
                 </div>

@@ -58,7 +58,8 @@ interface Props {
 }
 
 function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { addToCart, loading } = useCart();
     const { getProductName, getProductDescription, getProductShortDescription, getCategoryName } = useLocalized();
     const [quantity, setQuantity] = useState(1);
@@ -188,12 +189,12 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
 
                         <div className="flex items-center gap-4 mb-6">
                             <span className="text-3xl font-bold text-gray-900">
-                                {formatPrice(product.price)}
+                                {formatPrice(product.price, language)}
                             </span>
                             {hasDiscount && (
                                 <>
                                     <span className="text-xl text-gray-400 line-through">
-                                        {formatPrice(product.compare_price!)}
+                                        {formatPrice(product.compare_price!, language)}
                                     </span>
                                     <Badge variant="danger">
                                         {t('common:savePercent', { percent: getDiscountPercentage(product.price, product.compare_price!) })}
