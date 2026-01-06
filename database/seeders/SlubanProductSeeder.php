@@ -56,12 +56,24 @@ class SlubanProductSeeder extends Seeder
             ]
         );
 
-        // Read and parse CSV file
-        $csvPath = base_path('../../../Users/sabba/Downloads/sulban new - Sheet1.csv');
+        // Read and parse CSV file - check multiple possible locations
+        $possiblePaths = [
+            'c:/Users/sabba/Desktop/Project files/hardrock_e-commerce/sulban new - Sheet1.csv',
+            'c:/Users/sabba/Downloads/sulban new - Sheet1.csv',
+            base_path('../../../Users/sabba/Downloads/sulban new - Sheet1.csv'),
+        ];
 
-        // Alternative path if running from different location
-        if (!file_exists($csvPath)) {
-            $csvPath = 'c:/Users/sabba/Downloads/sulban new - Sheet1.csv';
+        $csvPath = null;
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                $csvPath = $path;
+                break;
+            }
+        }
+
+        if (!$csvPath) {
+            $this->command->warn('Sluban CSV file not found. Skipping Sluban products.');
+            return;
         }
 
         $csvContent = file_get_contents($csvPath);
