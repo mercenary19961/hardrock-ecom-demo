@@ -62,6 +62,10 @@ export function getImageUrl(path: string | null, productId?: number, sortOrder?:
     }
     if (path.startsWith('http')) return path;
 
-    // All product images are stored in storage
+    // Seeded product images are in public/images/, uploaded images are in storage/
+    if (path.startsWith('products/')) {
+        return `/images/${path}`;
+    }
+
     return `/storage/${path}`;
 }

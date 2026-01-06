@@ -428,10 +428,12 @@ class ProductSeeder extends Seeder
                 'view_count' => $productData['view_count'] ?? 0,
             ]);
 
-            // Create product image using product slug
+            // Create product image - electronics categories use 'electronics' folder, others use category slug
+            $imageFolder = in_array($productData['category'], ['smartphones', 'laptops', 'accessories']) ? 'electronics' : $productData['category'];
+
             ProductImage::create([
                 'product_id' => $product->id,
-                'path' => "products/{$product->slug}.webp",
+                'path' => "products/{$imageFolder}/{$product->slug}.webp",
                 'alt_text' => $product->name,
                 'sort_order' => 0,
                 'is_primary' => true,

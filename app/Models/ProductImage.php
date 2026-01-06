@@ -48,9 +48,14 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        $storagePath = storage_path('app/public/' . $this->path);
+        // Check if file exists in public/images (for seeded product images)
+        $publicImagesPath = public_path('images/' . $this->path);
+        if (file_exists($publicImagesPath)) {
+            return asset('images/' . $this->path);
+        }
 
-        // If file exists in storage, return the actual URL
+        // Check if file exists in storage (for uploaded images)
+        $storagePath = storage_path('app/public/' . $this->path);
         if (file_exists($storagePath)) {
             return asset('storage/' . $this->path);
         }
