@@ -55,14 +55,14 @@ function MiniProductCard({ product }: { product: Product }) {
 
     return (
         <Link href={`/product/${product.slug}`} className="group block">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2">
+            <div className="aspect-square bg-white rounded-lg overflow-hidden mb-2">
                 <img
                     src={imageUrl}
                     alt={getProductName(product)}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                 />
             </div>
-            <p className="text-sm text-gray-700 group-hover:text-brand-purple line-clamp-2 transition-colors">
+            <p className="text-sm text-gray-900 group-hover:text-gray-500 line-clamp-2 transition-colors">
                 {getProductName(product)}
             </p>
         </Link>
