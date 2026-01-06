@@ -44,8 +44,8 @@ class ProductSubcategoriesSeeder extends Seeder
         if (!$parent) return;
 
         $subcategories = [
-            'mens-fashion' => ['men', "men's", 'male', 'gentleman'],
-            'womens-fashion' => ['women', "women's", 'female', 'lady', 'ladies', 'dress', 'handbag', 'purse'],
+            'mens-fashion' => ['men', "men's", 'male', 'gentleman', 'belt', 'beanie', 'watch', 'sunglasses', 'crossbody'],
+            'womens-fashion' => ['women', "women's", 'female', 'lady', 'ladies', 'dress', 'handbag', 'purse', 'tote bag', 'bracelet', 'scarf'],
         ];
 
         $this->redistributeProducts($parent, $subcategories, 'Fashion', 'mens-fashion');
@@ -97,7 +97,7 @@ class ProductSubcategoriesSeeder extends Seeder
 
         $subcategories = [
             'toys' => ['toy', 'game', 'puzzle', 'doll', 'car', 'robot', 'lego', 'block', 'play', 'fun'],
-            'kids-clothing' => ['shirt', 'pants', 'dress', 'jacket', 'shoe', 'sock', 'hat', 'clothes', 'wear', 'outfit'],
+            'kids-clothing' => ['shirt', 'pants', 'dress', 'jacket', 'shoe', 'sock', 'hat', 'clothes', 'wear', 'outfit', 'blanket', 'backpack'],
         ];
 
         $this->redistributeProducts($parent, $subcategories, 'Kids', 'toys');

@@ -50,20 +50,7 @@ class CategorySeeder extends Seeder
                 'slug' => 'building-blocks',
                 'description' => 'Creative building sets for all ages.',
                 'description_ar' => 'مجموعات بناء إبداعية لجميع الأعمار.',
-                'children' => [
-                    [
-                        'name' => 'LEGO Sets',
-                        'name_ar' => 'مجموعات ليغو',
-                        'description' => 'Official LEGO building sets',
-                        'description_ar' => 'مجموعات ليغو الرسمية',
-                    ],
-                    [
-                        'name' => 'Educational Blocks',
-                        'name_ar' => 'مكعبات تعليمية',
-                        'description' => 'Learning through building',
-                        'description_ar' => 'التعلم من خلال البناء',
-                    ],
-                ],
+                'children' => [],
             ],
             [
                 'name' => 'Fashion',
