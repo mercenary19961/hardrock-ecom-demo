@@ -16,6 +16,13 @@ export function formatPrice(price: number, language: string = 'en'): string {
     return isArabic ? `${formatted} دينار` : `JOD ${formatted}`;
 }
 
+export function formatNumber(value: number, language: string = 'en'): string {
+    const isArabic = language === 'ar';
+    return new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
+        useGrouping: false,
+    }).format(value);
+}
+
 export function formatDate(date: string): string {
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',

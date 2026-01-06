@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import { cn, formatNumber } from '@/lib/utils';
 import { Button } from '@/Components/ui/Button';
 
 interface DualRangeSliderProps {
@@ -14,6 +15,21 @@ interface DualRangeSliderProps {
     className?: string;
 }
 
+// Convert Arabic numerals to Western numerals for parsing
+function parseArabicNumber(str: string): number {
+    const arabicNumerals = '٠١٢٣٤٥٦٧٨٩';
+    let result = '';
+    for (const char of str) {
+        const index = arabicNumerals.indexOf(char);
+        if (index !== -1) {
+            result += index.toString();
+        } else if (/[0-9]/.test(char)) {
+            result += char;
+        }
+    }
+    return parseInt(result) || 0;
+}
+
 export function DualRangeSlider({
     min,
     max,
@@ -23,14 +39,16 @@ export function DualRangeSlider({
     onChangeEnd,
     className,
 }: DualRangeSliderProps) {
-    const [localMin, setLocalMin] = useState(Math.floor(minValue).toString());
-    const [localMax, setLocalMax] = useState(Math.ceil(maxValue).toString());
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
+    const [localMin, setLocalMin] = useState(formatNumber(Math.floor(minValue), language));
+    const [localMax, setLocalMax] = useState(formatNumber(Math.ceil(maxValue), language));
 
     // Sync with props
     useEffect(() => {
-        setLocalMin(Math.floor(minValue).toString());
-        setLocalMax(Math.ceil(maxValue).toString());
-    }, [minValue, maxValue]);
+        setLocalMin(formatNumber(Math.floor(minValue), language));
+        setLocalMax(formatNumber(Math.ceil(maxValue), language));
+    }, [minValue, maxValue, language]);
 
     const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLocalMin(e.target.value);
@@ -41,8 +59,8 @@ export function DualRangeSlider({
     };
 
     const handleApply = () => {
-        let newMin = parseInt(localMin) || min;
-        let newMax = parseInt(localMax) || max;
+        let newMin = parseArabicNumber(localMin) || min;
+        let newMax = parseArabicNumber(localMax) || max;
 
         // Clamp values
         newMin = Math.max(min, Math.min(newMin, max));
@@ -53,8 +71,8 @@ export function DualRangeSlider({
             [newMin, newMax] = [newMax, newMin];
         }
 
-        setLocalMin(newMin.toString());
-        setLocalMax(newMax.toString());
+        setLocalMin(formatNumber(newMin, language));
+        setLocalMax(formatNumber(newMax, language));
         onChange(newMin, newMax);
         onChangeEnd?.(newMin, newMax);
     };
@@ -70,27 +88,25 @@ export function DualRangeSlider({
             <div className="flex items-center gap-2">
                 <div className="flex-1">
                     <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         value={localMin}
                         onChange={handleMinChange}
                         onKeyDown={handleKeyDown}
-                        min={min}
-                        max={max}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-                        placeholder="Min"
+                        placeholder={t('shop:min')}
                     />
                 </div>
                 <span className="text-gray-400">—</span>
                 <div className="flex-1">
                     <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         value={localMax}
                         onChange={handleMaxChange}
                         onKeyDown={handleKeyDown}
-                        min={min}
-                        max={max}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
-                        placeholder="Max"
+                        placeholder={t('shop:max')}
                     />
                 </div>
             </div>
@@ -100,7 +116,7 @@ export function DualRangeSlider({
                 onClick={handleApply}
                 className="w-full"
             >
-                Apply
+                {t('shop:apply')}
             </Button>
         </div>
     );

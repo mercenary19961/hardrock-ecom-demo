@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
-import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
+import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { Badge } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -12,7 +12,7 @@ interface ProductCardProps {
     product: Product;
 }
 
-function StarRating({ rating, count }: { rating: number; count: number }) {
+function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
     if (count === 0) return null;
 
     const getStarFill = (starPosition: number) => {
@@ -43,7 +43,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
                     );
                 })}
             </div>
-            <span className="text-xs text-gray-500">({count})</span>
+            <span className="text-xs text-gray-500">({formatNumber(count, language)})</span>
         </div>
     );
 }
@@ -173,7 +173,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 </h3>
                 {product.rating_count > 0 && (
                     <div className="mt-1">
-                        <StarRating rating={product.average_rating} count={product.rating_count} />
+                        <StarRating rating={product.average_rating} count={product.rating_count} language={language} />
                     </div>
                 )}
                 <div className="mt-1 sm:mt-2 flex items-center gap-2">

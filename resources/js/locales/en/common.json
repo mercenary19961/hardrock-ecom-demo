@@ -35,5 +35,10 @@
     "featured": "Featured",
     "savePercent": "Save {{percent}}%",
     "seeMore": "See more",
-    "topRated": "Top Rated"
+    "topRated": "Top Rated",
+    "footer": {
+        "location": "Khalda - Amman, Jordan",
+        "phone": "+962 79 170 0034",
+        "tagline": "Reach The Peak - A demo e-commerce platform by HardRock Marketing & Technology."
+    }
 }

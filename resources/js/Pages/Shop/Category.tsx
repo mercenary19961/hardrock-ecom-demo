@@ -6,7 +6,7 @@ import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
 import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, formatNumber } from '@/lib/utils';
 import { useLocalized } from '@/hooks/useLocalized';
 
 // Map category slugs to banner image names
@@ -143,13 +143,13 @@ export default function Category({ category, products, subcategories, parentCate
     const [sliderMax, setSliderMax] = useState(filters.max_price || priceRange.max);
 
     const discountOptions = [
-        { value: 10, label: t('shop:filterLabels.discountOff', { percent: 10 }) },
-        { value: 20, label: t('shop:filterLabels.discountOff', { percent: 20 }) },
-        { value: 30, label: t('shop:filterLabels.discountOff', { percent: 30 }) },
-        { value: 40, label: t('shop:filterLabels.discountOff', { percent: 40 }) },
-        { value: 50, label: t('shop:filterLabels.discountOff', { percent: 50 }) },
-        { value: 60, label: t('shop:filterLabels.discountOff', { percent: 60 }) },
-        { value: 70, label: t('shop:filterLabels.discountOff', { percent: 70 }) },
+        { value: 10, label: t('shop:filterLabels.discountOff', { percent: formatNumber(10, language) }) },
+        { value: 20, label: t('shop:filterLabels.discountOff', { percent: formatNumber(20, language) }) },
+        { value: 30, label: t('shop:filterLabels.discountOff', { percent: formatNumber(30, language) }) },
+        { value: 40, label: t('shop:filterLabels.discountOff', { percent: formatNumber(40, language) }) },
+        { value: 50, label: t('shop:filterLabels.discountOff', { percent: formatNumber(50, language) }) },
+        { value: 60, label: t('shop:filterLabels.discountOff', { percent: formatNumber(60, language) }) },
+        { value: 70, label: t('shop:filterLabels.discountOff', { percent: formatNumber(70, language) }) },
     ];
 
     const sortOptions = [
@@ -688,7 +688,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.min_discount && filters.min_discount > 0 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.discountOff', { percent: filters.min_discount })}
+                                        {t('shop:activeFilters.discountOff', { percent: formatNumber(filters.min_discount, language) })}
                                         <button onClick={() => removeFilter('min_discount')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>

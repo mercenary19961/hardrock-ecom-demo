@@ -284,8 +284,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                         <div className="col-span-2 md:col-span-1">
                             <h3 className="text-lg font-bold mb-4">HardRock</h3>
                             <p className="text-gray-400 text-sm mb-4">
-                                Reach The Peak - A demo e-commerce platform by
-                                HardRock Marketing & Technology.
+                                {t("common:footer.tagline")}
                             </p>
                             <div className="flex gap-3">
                                 <a
@@ -379,7 +378,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                         />
                                     </svg>
-                                    <span>Khalda - Amman, Jordan</span>
+                                    <span>{t("common:footer.location")}</span>
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <svg
@@ -398,8 +397,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                     <a
                                         href="tel:+962791700034"
                                         className="hover:text-white"
+                                        dir="ltr"
                                     >
-                                        +962 79 170 0034
+                                        {t("common:footer.phone")}
                                     </a>
                                 </li>
                                 <li className="flex items-center gap-2">

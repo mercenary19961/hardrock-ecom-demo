@@ -80,5 +80,8 @@
     "startShopping": "Start shopping",
     "clearWishlist": "Clear Wishlist",
     "addedToWishlist": "Added to wishlist",
-    "removedFromWishlist": "Removed from wishlist"
+    "removedFromWishlist": "Removed from wishlist",
+    "min": "Min",
+    "max": "Max",
+    "apply": "Apply"
 }
