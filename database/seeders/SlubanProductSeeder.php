@@ -10,6 +10,22 @@ use Illuminate\Support\Str;
 
 class SlubanProductSeeder extends Seeder
 {
+    // SKUs to skip (products with missing images)
+    private array $skipSkus = [
+        'M38-B1287',  // Metropolis-Rescue Headquarters 407pcs
+        'M38-B1290',  // Metropolis-Indoor Express 255pcs
+        'M38-B1259',  // ARMY-Operation Hunt and Eliminate - Raid 557pcs
+        'M38-B1257',  // ARMY-IFR-T90AS Main Battle Tank 318pcs
+        'M38-P8062',  // PLEYERID-Sunflower (Plated vases) 288pcs
+        'M38-B1329',  // Metropolis-Girl-4 types
+        'M38-B1296',  // ARMY WWI – Mark V Tank Offensive Action – 516 PCS
+        'M38-B1295',  // ARMY WWI-A7Vs Tank Offensive action 506pcs
+        'M38-B1293',  // ModelBricks – 1/35 Sopwith Camel S – 293 PCS
+        'M38-B0708',  // ModelBricks- London bus (382pcs)
+        'M38-B1213',  // Metropolis-Doctor- Rescue (Pull back)
+        'M38-B1193',  // ModelBricks- 1/35 TS-3 RV 506pcs
+    ];
+
     public function run(): void
     {
         // Create parent category "Building Blocks"
@@ -60,6 +76,12 @@ class SlubanProductSeeder extends Seeder
             $data = array_combine($headers, $row);
 
             if (empty($data['SKU']) || empty($data['name_en'])) {
+                continue;
+            }
+
+            // Skip products with missing images
+            if (in_array($data['SKU'], $this->skipSkus)) {
+                $this->command->info("Skipping product with missing image: {$data['SKU']}");
                 continue;
             }
 
