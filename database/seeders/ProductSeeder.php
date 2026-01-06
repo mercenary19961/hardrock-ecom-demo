@@ -36,7 +36,7 @@ class ProductSeeder extends Seeder
                 'short' => 'AI-powered Galaxy with S Pen, 200MP camera, and Snapdragon 8 Gen 3.',
                 'short_ar' => 'جالكسي مدعوم بالذكاء الاصطناعي مع قلم S وكاميرا 200 ميجابكسل ومعالج سناب دراجون 8 الجيل الثالث.',
                 'price' => 1299.00,
-                'compare' => 1449.00,
+                'compare' => 1850.00, // ~30% off
                 'stock' => 18,
                 'featured' => true,
                 'times_purchased' => 203,
@@ -51,7 +51,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Leica optics, Snapdragon 8 Gen 3, and 120W HyperCharge.',
                 'short_ar' => 'بصريات لايكا ومعالج سناب دراجون 8 الجيل الثالث وشحن سريع 120 واط.',
                 'price' => 799.00,
-                'compare' => 899.00,
+                'compare' => 1140.00, // ~30% off
                 'stock' => 35,
                 'featured' => false,
                 'times_purchased' => 87,
@@ -81,7 +81,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Portrait expert with Hasselblad color science and 80W fast charging.',
                 'short_ar' => 'خبير البورتريه مع تقنية ألوان هاسيلبلاد وشحن سريع 80 واط.',
                 'price' => 549.00,
-                'compare' => 649.00,
+                'compare' => 915.00, // ~40% off
                 'stock' => 42,
                 'featured' => false,
                 'times_purchased' => 112,
@@ -96,7 +96,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Best-in-class AI photography with Tensor G3 chip and 7 years of updates.',
                 'short_ar' => 'أفضل تصوير بالذكاء الاصطناعي مع معالج تينسور G3 و7 سنوات من التحديثات.',
                 'price' => 999.00,
-                'compare' => 1099.00,
+                'compare' => 1430.00, // ~30% off
                 'stock' => 20,
                 'featured' => true,
                 'times_purchased' => 145,
@@ -144,7 +144,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Intel Core Ultra, OLED display, and premium aluminum build.',
                 'short_ar' => 'معالج إنتل كور ألترا وشاشة OLED وهيكل ألمنيوم فاخر.',
                 'price' => 1599.00,
-                'compare' => 1799.00,
+                'compare' => 2280.00, // ~30% off
                 'stock' => 15,
                 'featured' => true,
                 'times_purchased' => 67,
@@ -174,7 +174,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Business ultrabook with Intel vPro, 4G LTE, and legendary keyboard.',
                 'short_ar' => 'ألترابوك للأعمال مع إنتل vPro و4G LTE ولوحة مفاتيح أسطورية.',
                 'price' => 1699.00,
-                'compare' => 1899.00,
+                'compare' => 2430.00, // ~30% off
                 'stock' => 6,
                 'featured' => false,
                 'low_threshold' => 5,
@@ -190,7 +190,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Affordable everyday laptop with Intel Core i5 and 512GB SSD.',
                 'short_ar' => 'لابتوب يومي بسعر مناسب مع معالج إنتل كور i5 و512 جيجابايت SSD.',
                 'price' => 549.00,
-                'compare' => 649.00,
+                'compare' => 915.00, // ~40% off
                 'stock' => 45,
                 'featured' => false,
                 'times_purchased' => 234,
@@ -220,7 +220,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Ultra-portable with Intel Core Ultra and stunning 2.8K OLED display.',
                 'short_ar' => 'خفيف جداً مع معالج إنتل كور ألترا وشاشة OLED مذهلة بدقة 2.8K.',
                 'price' => 899.00,
-                'compare' => 999.00,
+                'compare' => 1500.00, // ~40% off
                 'stock' => 22,
                 'featured' => false,
                 'times_purchased' => 76,
@@ -252,7 +252,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Super fast charging adapter compatible with Galaxy devices.',
                 'short_ar' => 'محول شحن سريع جداً متوافق مع أجهزة جالكسي.',
                 'price' => 29.00,
-                'compare' => 39.00,
+                'compare' => 58.00, // 50% off
                 'stock' => 150,
                 'featured' => false,
                 'times_purchased' => 567,
@@ -282,7 +282,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Quiet clicks, 8K DPI sensor, and MagSpeed electromagnetic scrolling.',
                 'short_ar' => 'نقرات هادئة ومستشعر 8K DPI وتمرير كهرومغناطيسي MagSpeed.',
                 'price' => 99.00,
-                'compare' => 119.00,
+                'compare' => 165.00, // ~40% off
                 'stock' => 40,
                 'featured' => true,
                 'times_purchased' => 178,
@@ -297,7 +297,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Wireless over-ear headphones with active noise cancelling and 50hr battery.',
                 'short_ar' => 'سماعات لاسلكية فوق الأذن مع إلغاء الضوضاء النشط وبطارية 50 ساعة.',
                 'price' => 119.00,
-                'compare' => 149.00,
+                'compare' => 170.00, // ~30% off
                 'stock' => 55,
                 'featured' => false,
                 'times_purchased' => 156,
@@ -344,7 +344,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Rich cream with ceramides and hyaluronic acid for 24hr hydration.',
                 'short_ar' => 'كريم غني بالسيراميد وحمض الهيالورونيك لترطيب 24 ساعة.',
                 'price' => 19.00,
-                'compare' => 25.00,
+                'compare' => 38.00, // 50% off
                 'stock' => 110,
                 'featured' => true,
                 'times_purchased' => 456,
@@ -374,7 +374,7 @@ class ProductSeeder extends Seeder
                 'short' => 'Authentic Jordan Dead Sea mud for deep pore cleansing.',
                 'short_ar' => 'طين البحر الميت الأردني الأصلي لتنظيف المسام بعمق.',
                 'price' => 24.00,
-                'compare' => 32.00,
+                'compare' => 40.00, // ~40% off
                 'stock' => 60,
                 'featured' => true,
                 'times_purchased' => 267,

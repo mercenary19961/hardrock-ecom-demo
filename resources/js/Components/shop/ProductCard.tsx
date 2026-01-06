@@ -64,7 +64,7 @@ export function ProductCard({ product }: ProductCardProps) {
         ? getImageUrl(currentImage.path, product.id, currentImage.sort_order)
         : getImageUrl(null, product.id, 0);
 
-    const hasDiscount = product.compare_price && product.compare_price > product.price;
+    const hasDiscount = product.compare_price && Number(product.compare_price) > Number(product.price);
 
     const handlePrevImage = (e: React.MouseEvent) => {
         e.preventDefault();
