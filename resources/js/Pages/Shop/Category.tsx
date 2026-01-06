@@ -567,7 +567,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 {products.total} {products.total === 1 ? t('shop:product') : t('shop:products')}
                             </span>
                             {/* Custom Sort Dropdown */}
-                            <div className="relative flex-shrink-0 z-[120]">
+                            <div className="relative flex-shrink-0 z-30">
                                 <button
                                     onClick={() => setShowDesktopSort(!showDesktopSort)}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -578,8 +578,8 @@ export default function Category({ category, products, subcategories, parentCate
                                 </button>
                                 {showDesktopSort && (
                                     <>
-                                        <div className="fixed inset-0 z-[100]" onClick={() => setShowDesktopSort(false)} />
-                                        <div className="absolute top-full left-0 mt-2 z-[110] bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[200px]">
+                                        <div className="fixed inset-0 z-20" onClick={() => setShowDesktopSort(false)} />
+                                        <div className="absolute top-full left-0 mt-2 z-30 bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[200px]">
                                             {sortOptions.map((option) => (
                                                 <button
                                                     key={option.value}

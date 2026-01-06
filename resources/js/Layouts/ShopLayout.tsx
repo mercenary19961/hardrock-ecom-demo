@@ -255,7 +255,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
             {/* Secondary Category Navigation */}
             <div
-                className={`bg-white border-b sticky z-30 transition-all duration-300 ease-out ${
+                className={`bg-white border-b sticky z-[35] transition-all duration-300 ease-out ${
                     showCategoryNav ? "top-16 opacity-100" : "-top-10 opacity-0"
                 }`}
             >
