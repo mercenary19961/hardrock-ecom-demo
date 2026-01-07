@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, ReactNode } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import {
     ShoppingBagIcon,
@@ -283,15 +283,32 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-10 overflow-x-auto scrollbar-hide">
-                        {categories?.map((category) => (
-                            <Link
-                                key={category.id}
-                                href={`/category/${category.slug}`}
-                                className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap flex-shrink-0"
-                            >
-                                {getCategoryName(category)}
-                            </Link>
-                        ))}
+                        {categories?.map((category) => {
+                            const isOnCategoryPage = window.location.pathname.startsWith('/category/');
+                            const categoryUrl = `/category/${category.slug}`;
+
+                            const handleClick = (e: React.MouseEvent) => {
+                                if (isOnCategoryPage) {
+                                    e.preventDefault();
+                                    router.get(categoryUrl, {}, {
+                                        preserveState: false,
+                                        preserveScroll: false,
+                                        only: ['category', 'subcategories', 'products', 'filters', 'productsWithColors', 'productsWithSizes'],
+                                    });
+                                }
+                            };
+
+                            return (
+                                <Link
+                                    key={category.id}
+                                    href={categoryUrl}
+                                    onClick={handleClick}
+                                    className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap flex-shrink-0"
+                                >
+                                    {getCategoryName(category)}
+                                </Link>
+                            );
+                        })}
                     </nav>
                 </div>
             </div>
