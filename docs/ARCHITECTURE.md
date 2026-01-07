@@ -99,77 +99,69 @@ app/
 resources/js/
 ├── app.tsx                           # Application entry
 ├── bootstrap.ts                      # Axios, global setup
-├── components/
+├── Components/
 │   ├── ui/                           # Base primitives (buttons, inputs, cards)
 │   │   ├── Button.tsx
 │   │   ├── Input.tsx
 │   │   ├── Card.tsx
 │   │   ├── Badge.tsx
 │   │   ├── Modal.tsx
-│   │   ├── Toast.tsx
-│   │   ├── Skeleton.tsx
+│   │   ├── DualRangeSlider.tsx       # Price range filter
 │   │   └── index.ts
 │   ├── shop/                         # Shop-specific components
 │   │   ├── ProductCard.tsx
 │   │   ├── ProductGrid.tsx
-│   │   ├── CategoryNav.tsx
+│   │   ├── CategoryNav.tsx           # Glassmorphism category icons
+│   │   ├── HeroBanner.tsx            # Homepage hero carousel
 │   │   ├── CartDrawer.tsx
 │   │   ├── CartItem.tsx
-│   │   ├── PriceDisplay.tsx
-│   │   ├── QuantitySelector.tsx
+│   │   ├── WishlistDrawer.tsx
 │   │   ├── SearchBar.tsx
-│   │   └── ImageGallery.tsx
+│   │   └── FeaturedCategorySection.tsx
 │   └── admin/                        # Admin-specific components
 │       ├── DataTable.tsx
 │       ├── StatsCard.tsx
-│       ├── ImageUploader.tsx
-│       ├── OrderStatusBadge.tsx
-│       └── Sidebar.tsx
-├── layouts/
-│   ├── ShopLayout.tsx                # Customer-facing layout
+│       └── ImageUploader.tsx
+├── Layouts/
+│   ├── ShopLayout.tsx                # Customer layout (header, nav, footer)
 │   ├── AdminLayout.tsx               # Admin panel layout
-│   └── AuthLayout.tsx                # Login/register layout
-├── pages/
+│   └── AuthenticatedLayout.tsx       # Auth layout
+├── Pages/
 │   ├── Shop/
 │   │   ├── Home.tsx                  # Landing page
-│   │   ├── Category.tsx              # Category listing
+│   │   ├── Category.tsx              # Category with filters
 │   │   ├── Product.tsx               # Product detail
 │   │   ├── Search.tsx                # Search results
 │   │   ├── Cart.tsx                  # Cart page
-│   │   ├── Checkout.tsx              # Checkout flow
-│   │   ├── OrderConfirmation.tsx     # Order success
-│   │   └── OrderHistory.tsx          # Past orders
+│   │   └── Checkout.tsx              # Checkout flow
 │   ├── Admin/
 │   │   ├── Dashboard.tsx
 │   │   ├── Categories/
-│   │   │   ├── Index.tsx
-│   │   │   ├── Create.tsx
-│   │   │   └── Edit.tsx
 │   │   ├── Products/
-│   │   │   ├── Index.tsx
-│   │   │   ├── Create.tsx
-│   │   │   └── Edit.tsx
 │   │   └── Orders/
-│   │       ├── Index.tsx
-│   │       └── Show.tsx
 │   └── Auth/
 │       ├── Login.tsx
-│       ├── Register.tsx
-│       └── ForgotPassword.tsx
+│       └── Register.tsx
 ├── hooks/
-│   ├── useCart.ts                    # Cart state management
-│   ├── useToast.ts                   # Toast notifications
+│   ├── useLocalized.ts               # Bilingual content helper
 │   └── useDebounce.ts                # Search debouncing
 ├── contexts/
-│   └── CartContext.tsx               # Global cart state
+│   ├── CartContext.tsx               # Global cart state
+│   ├── WishlistContext.tsx           # Wishlist state
+│   └── LanguageContext.tsx           # i18n language state
+├── locales/                          # Translation files
+│   ├── en/
+│   │   ├── common.json
+│   │   ├── shop.json
+│   │   └── nav.json
+│   └── ar/
+│       ├── common.json
+│       ├── shop.json
+│       └── nav.json
 ├── lib/
-│   ├── utils.ts                      # Utility functions
-│   ├── formatters.ts                 # Price/date formatting
-│   └── validators.ts                 # Client-side validation
+│   └── utils.ts                      # Utility functions (formatPrice, formatNumber)
 └── types/
-    ├── index.d.ts                    # Global types
-    ├── models.ts                     # Data model types
-    └── inertia.d.ts                  # Inertia page props
+    └── models.ts                     # Data model types
 ```
 
 ---
@@ -217,8 +209,17 @@ AdminLayout
 ### 4. State Management
 
 - **Server state**: Inertia handles all data fetching
-- **Cart state**: React Context + localStorage (guest) / database (authenticated)
-- **UI state**: Local component state (modals, dropdowns)
+- **Cart state**: React Context + database (CartContext.tsx)
+- **Wishlist state**: React Context + localStorage (WishlistContext.tsx)
+- **Language state**: React Context + i18next (LanguageContext.tsx)
+- **UI state**: Local component state (modals, drawers, filters)
+
+### 5. Localization (i18n)
+
+- **Languages**: English (default), Arabic (RTL)
+- **Translation files**: `resources/js/locales/{en,ar}/*.json`
+- **Bilingual content**: Products, categories have `name` and `name_ar` fields
+- **Utility hook**: `useLocalized()` returns `getProductName()`, `getCategoryName()`
 
 ---
 

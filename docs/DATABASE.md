@@ -115,9 +115,11 @@
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PK, AUTO | Primary key |
-| name | VARCHAR(255) | NOT NULL | Display name |
+| name | VARCHAR(255) | NOT NULL | Display name (English) |
+| name_ar | VARCHAR(255) | NULLABLE | Display name (Arabic) |
 | slug | VARCHAR(255) | UNIQUE, NOT NULL | URL slug |
-| description | TEXT | NULLABLE | Category description |
+| description | TEXT | NULLABLE | Category description (English) |
+| description_ar | TEXT | NULLABLE | Category description (Arabic) |
 | image | VARCHAR(255) | NULLABLE | Category image path |
 | parent_id | BIGINT | FK→categories, NULLABLE | Parent category |
 | sort_order | INT | DEFAULT 0 | Display order |
@@ -131,16 +133,28 @@
 |--------|------|-------------|-------------|
 | id | BIGINT | PK, AUTO | Primary key |
 | category_id | BIGINT | FK→categories, NOT NULL | Parent category |
-| name | VARCHAR(255) | NOT NULL | Product name |
+| name | VARCHAR(255) | NOT NULL | Product name (English) |
+| name_ar | VARCHAR(255) | NULLABLE | Product name (Arabic) |
 | slug | VARCHAR(255) | UNIQUE, NOT NULL | URL slug |
-| description | TEXT | NULLABLE | Full description |
-| short_description | VARCHAR(500) | NULLABLE | Card description |
+| description | TEXT | NULLABLE | Full description (English) |
+| description_ar | TEXT | NULLABLE | Full description (Arabic) |
+| short_description | VARCHAR(500) | NULLABLE | Card description (English) |
+| short_description_ar | VARCHAR(500) | NULLABLE | Card description (Arabic) |
 | price | DECIMAL(10,2) | NOT NULL | Sale price |
 | compare_price | DECIMAL(10,2) | NULLABLE | Original price (strikethrough) |
 | sku | VARCHAR(100) | UNIQUE, NOT NULL | Stock keeping unit |
 | stock | INT | DEFAULT 0 | Available quantity |
 | is_active | BOOLEAN | DEFAULT true | Visibility |
 | is_featured | BOOLEAN | DEFAULT false | Homepage feature |
+| times_purchased | INT | DEFAULT 0 | Purchase count |
+| average_rating | DECIMAL(3,2) | DEFAULT 0 | 0-5 rating |
+| rating_count | INT | DEFAULT 0 | Number of reviews |
+| view_count | INT | DEFAULT 0 | Page views |
+| color | VARCHAR(50) | NULLABLE | Color variant name |
+| color_hex | VARCHAR(7) | NULLABLE | Hex code (e.g., #000000) |
+| available_sizes | JSON | NULLABLE | Array of sizes ["S","M","L"] |
+| size_stock | JSON | NULLABLE | Stock per size {"S":10,"M":15} |
+| product_group | VARCHAR(100) | NULLABLE | Groups related variants |
 | created_at | TIMESTAMP | | |
 | updated_at | TIMESTAMP | | |
 
@@ -246,9 +260,23 @@ The demo includes realistic seed data:
 | Entity | Count | Description |
 |--------|-------|-------------|
 | Users | 2 | 1 admin, 1 demo customer |
-| Categories | 6 | Main categories with 2-3 subcategories each |
-| Products | 30 | ~5 per category, varied prices |
-| Product Images | 90 | 3 images per product |
+| Categories | 8 | Main categories with subcategories |
+| Products | 100+ | Across all categories, bilingual |
+| Product Images | 300+ | Multiple images per product |
 | Orders | 10 | Sample orders in various statuses |
+
+**Main Categories:**
+Electronics, Skincare, Building Blocks, Fashion, Home & Kitchen, Sports, Stationery, Kids
+
+**Seeder Order:**
+1. UserSeeder - Demo accounts
+2. CategorySeeder - Categories & subcategories
+3. ProductSeeder - Electronics & Skincare
+4. AdditionalProductsSeeder - Fashion, Home, Sports, etc.
+5. SlubanProductSeeder - Imports from CSV (Building Blocks)
+6. BuildingBlocksSubcategoriesSeeder - Organize Sluban products
+7. ProductSubcategoriesSeeder - Redistribute to subcategories
+8. SaleProductsSeeder - Add discounts
+9. OrderSeeder - Demo orders
 
 See `database/seeders/` for implementation details.

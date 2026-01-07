@@ -11,13 +11,16 @@
 3. [Key Utilities & Hooks](#key-utilities--hooks)
 4. [Cart & Wishlist System](#cart--wishlist-system)
 5. [Product Variant System](#product-variant-system)
-6. [RTL Navigation Patterns](#rtl-navigation-patterns)
-7. [Responsive Design](#responsive-design)
-8. [File Reference](#file-reference)
-9. [Database & Seeding](#database--seeding)
-10. [Image Handling](#image-handling)
-11. [Data Models](#data-models)
-12. [Common Issues & Solutions](#common-issues--solutions)
+6. [Category Page & Filters](#category-page--filters)
+7. [RTL Navigation Patterns](#rtl-navigation-patterns)
+8. [UI Effects & Animations](#ui-effects--animations)
+9. [SPA Navigation](#spa-navigation)
+10. [Responsive Design](#responsive-design)
+11. [File Reference](#file-reference)
+12. [Database & Seeding](#database--seeding)
+13. [Image Handling](#image-handling)
+14. [Data Models](#data-models)
+15. [Common Issues & Solutions](#common-issues--solutions)
 
 ---
 
@@ -353,6 +356,161 @@ Both subcategories row and quick filters row use this pattern for RTL-aware scro
 
 ---
 
+## Category Page & Filters
+
+### Filter System
+
+The category page uses a simplified filter approach with toggle checkboxes for variant options.
+
+**Filter Types:**
+| Filter | Type | Description |
+|--------|------|-------------|
+| New Arrivals | Checkbox | Products added in last 30 days |
+| Price | Dual Range Slider | Min/max price range |
+| Availability | Checkbox | In stock only |
+| Has Color Options | Checkbox | Products with color variants |
+| Has Size Options | Checkbox | Products with size variants |
+| Discount | Checkbox | Products on sale |
+
+**Filter Order (Desktop & Mobile):**
+1. New Arrivals
+2. Price
+3. Availability
+4. Color Options (conditional - only shows if products have colors)
+5. Size Options (conditional - only shows if products have sizes)
+6. Discount
+
+### Backend Filtering (`LandingController.php`)
+
+```php
+// Color/Size filter - checks for products with variants
+if ($request->boolean('has_colors')) {
+    $query->whereNotNull('color')->where('color', '!=', '');
+}
+
+if ($request->boolean('has_sizes')) {
+    $query->whereNotNull('available_sizes');
+}
+
+// Returns counts for conditional filter display
+$productsWithColors = Product::whereNotNull('color')->where('color', '!=', '')->count();
+$productsWithSizes = Product::whereNotNull('available_sizes')->count();
+```
+
+### Mobile Filter Panel
+
+The mobile filter uses a two-panel approach:
+- **Left panel**: Filter categories (New Arrivals, Price, etc.)
+- **Right panel**: Filter options for selected category
+
+Dynamic categories based on available products:
+```typescript
+const filterCategories = [
+    { id: 'new_arrivals', label: t('shop:filterCategories.newArrivals'), icon: Clock },
+    { id: 'price', label: t('shop:filterCategories.price'), icon: Wallet },
+    { id: 'availability', label: t('shop:filterCategories.availability'), icon: Package },
+    ...(productsWithColors > 0 ? [{ id: 'color', label: t('shop:filterCategories.color'), icon: Palette }] : []),
+    ...(productsWithSizes > 0 ? [{ id: 'size', label: t('shop:filterCategories.size'), icon: Ruler }] : []),
+    { id: 'discount', label: t('shop:filterCategories.discount'), icon: Tag },
+];
+```
+
+### Category Banner Images
+
+Location: `public/images/banners/categories/`
+
+Naming convention: `{category-slug}-{language}.webp`
+- Example: `electronics-en.webp`, `electronics-ar.webp`
+
+All 8 categories have both English and Arabic banner versions.
+
+---
+
+## UI Effects & Animations
+
+### Homepage Category Icons (Glassmorphism)
+
+File: `Components/shop/CategoryNav.tsx`
+
+Category icons use glassmorphism effect with brand colors:
+
+```typescript
+const brandStyle = {
+    bg: 'from-brand-purple/10 to-brand-purple-400/20',
+    icon: 'text-brand-orange group-hover:text-brand-orange-600',
+    glow: 'group-hover:shadow-brand-purple/30'
+};
+```
+
+**Effects:**
+- Semi-transparent card (`bg-white/40 backdrop-blur-md`)
+- Gradient icon background (brand purple)
+- Orange icon color
+- Hover: scale up, lift, colored shadow glow
+- Bottom accent line (purple to orange gradient) expands on hover
+
+### Logo Pulse Animation
+
+File: `Layouts/ShopLayout.tsx`
+
+The HardRock logo pulses periodically:
+- Initial pulse after 3 seconds
+- Recurring pulse every 15 seconds
+- Scale animation (100% → 110%)
+- 700ms smooth transition
+
+```typescript
+const [logoPulse, setLogoPulse] = useState(false);
+
+useEffect(() => {
+    const triggerLogoPulse = () => {
+        setLogoPulse(true);
+        setTimeout(() => setLogoPulse(false), 1500);
+    };
+    const initialTimeout = setTimeout(triggerLogoPulse, 3000);
+    const interval = setInterval(triggerLogoPulse, 15000);
+    return () => { clearTimeout(initialTimeout); clearInterval(interval); };
+}, []);
+```
+
+### Wishlist Pulse Animation
+
+When wishlist has items, the heart icon pulses:
+- Every 10 seconds
+- Scale animation (100% → 125%)
+- Orange color when items present
+
+---
+
+## SPA Navigation
+
+### Category Navigation (Partial Page Updates)
+
+File: `Layouts/ShopLayout.tsx`
+
+The secondary category navbar uses SPA navigation when already on a category page:
+
+```typescript
+const handleClick = (e: React.MouseEvent) => {
+    if (isOnCategoryPage) {
+        e.preventDefault();
+        router.get(categoryUrl, {}, {
+            preserveState: false,
+            preserveScroll: false,
+            only: ['category', 'subcategories', 'products', 'filters', 'productsWithColors', 'productsWithSizes'],
+        });
+    }
+};
+```
+
+**Behavior:**
+- On category page: Uses `router.get()` with `only` option for AJAX request (no full page refresh)
+- On other pages: Normal navigation with full page load
+
+The `only` option tells Inertia to only fetch specified props from the server, making navigation faster and smoother.
+
+---
+
 ## Responsive Design
 
 ### Breakpoints
@@ -400,10 +558,12 @@ Both subcategories row and quick filters row use this pattern for RTL-aware scro
 |------|-------------|
 | `Components/shop/ProductCard.tsx` | Product card in grids |
 | `Components/shop/ProductGrid.tsx` | Product grid layout |
-| `Components/shop/HeroBanner.tsx` | Homepage hero |
+| `Components/shop/HeroBanner.tsx` | Homepage hero carousel |
+| `Components/shop/CategoryNav.tsx` | Homepage category icons (glassmorphism) |
 | `Components/shop/CartDrawer.tsx` | Slide-out cart panel (Arabic localized) |
 | `Components/shop/CartItem.tsx` | Cart item row (localized product names) |
 | `Components/shop/WishlistDrawer.tsx` | Slide-out wishlist panel (Arabic localized) |
+| `Components/shop/SearchBar.tsx` | Product search input |
 | `Components/ui/DualRangeSlider.tsx` | Price range filter |
 | `Components/ui/Badge.tsx` | Status badges |
 
