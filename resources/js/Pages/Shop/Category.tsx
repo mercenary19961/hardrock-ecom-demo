@@ -6,8 +6,20 @@ import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
 import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, formatNumber } from '@/lib/utils';
 import { useLocalized } from '@/hooks/useLocalized';
+
+// Map category slugs to banner image names
+const categoryBannerMap: Record<string, string> = {
+    'electronics': 'category-electronics-hero',
+    'skincare': 'category-skincare-hero',
+    'building-blocks': 'category-building-blocks-hero',
+    'fashion': 'category-fashion-accessories-hero',
+    'home-kitchen': 'category-home-kitchen-hero',
+    'sports': 'category-sports-outdoors-hero',
+    'stationery': 'category-books-stationery-hero',
+    'kids': 'category-baby-kids-hero',
+};
 
 type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability';
 
@@ -87,22 +99,42 @@ function FilterCheckbox({ label, checked, onChange, count }: {
 }
 
 export default function Category({ category, products, subcategories, parentCategory, sort, filters, priceRange }: Props) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
+    const language = i18n.language;
 
     // Determine if we're viewing a subcategory (has parent) or a parent category
     const isSubcategory = !!parentCategory;
     const displayParentCategory = parentCategory || category;
+
+    // Get the banner image for the category (use parent category for subcategories)
+    const bannerCategorySlug = displayParentCategory.slug;
+    const bannerBaseName = categoryBannerMap[bannerCategorySlug];
+    const bannerImage = bannerBaseName
+        ? `/images/banners/categories/${bannerBaseName}-${language}.webp`
+        : null;
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
     const subcategoriesRef = useRef<HTMLDivElement>(null);
+    const quickFiltersRef = useRef<HTMLDivElement>(null);
 
     // Scroll subcategories left/right
     const scrollSubcategories = (direction: 'left' | 'right') => {
         if (subcategoriesRef.current) {
             const scrollAmount = 200;
             subcategoriesRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    // Scroll quick filters left/right
+    const scrollQuickFilters = (direction: 'left' | 'right') => {
+        if (quickFiltersRef.current) {
+            const scrollAmount = 150;
+            quickFiltersRef.current.scrollBy({
                 left: direction === 'left' ? -scrollAmount : scrollAmount,
                 behavior: 'smooth'
             });
@@ -123,13 +155,13 @@ export default function Category({ category, products, subcategories, parentCate
     const [sliderMax, setSliderMax] = useState(filters.max_price || priceRange.max);
 
     const discountOptions = [
-        { value: 10, label: t('shop:filterLabels.discountOff', { percent: 10 }) },
-        { value: 20, label: t('shop:filterLabels.discountOff', { percent: 20 }) },
-        { value: 30, label: t('shop:filterLabels.discountOff', { percent: 30 }) },
-        { value: 40, label: t('shop:filterLabels.discountOff', { percent: 40 }) },
-        { value: 50, label: t('shop:filterLabels.discountOff', { percent: 50 }) },
-        { value: 60, label: t('shop:filterLabels.discountOff', { percent: 60 }) },
-        { value: 70, label: t('shop:filterLabels.discountOff', { percent: 70 }) },
+        { value: 10, label: t('shop:filterLabels.discountOff', { percent: formatNumber(10, language) }) },
+        { value: 20, label: t('shop:filterLabels.discountOff', { percent: formatNumber(20, language) }) },
+        { value: 30, label: t('shop:filterLabels.discountOff', { percent: formatNumber(30, language) }) },
+        { value: 40, label: t('shop:filterLabels.discountOff', { percent: formatNumber(40, language) }) },
+        { value: 50, label: t('shop:filterLabels.discountOff', { percent: formatNumber(50, language) }) },
+        { value: 60, label: t('shop:filterLabels.discountOff', { percent: formatNumber(60, language) }) },
+        { value: 70, label: t('shop:filterLabels.discountOff', { percent: formatNumber(70, language) }) },
     ];
 
     const sortOptions = [
@@ -347,7 +379,7 @@ export default function Category({ category, products, subcategories, parentCate
                     onChange={handleSliderChange}
                     onChangeEnd={handleSliderChangeEnd}
                     step={1}
-                    formatValue={(v) => formatPrice(v)}
+                    formatValue={(v) => formatPrice(v, language)}
                 />
             </FilterSection>
 
@@ -390,37 +422,49 @@ export default function Category({ category, products, subcategories, parentCate
             <Head title={getCategoryName(category)} />
 
             {/* Hero Banner */}
-            <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-white/5 to-transparent"></div>
+            <div className="relative bg-white overflow-hidden">
+                {/* Mobile gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white md:hidden" />
+                {/* Desktop background image */}
+                {bannerImage && (
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden md:block"
+                        style={{ backgroundImage: `url(${bannerImage})` }}
+                    />
+                )}
+                {/* Fallback gradient if no banner (desktop only) */}
+                {!bannerImage && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white hidden md:block" />
+                )}
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
-                        <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-                            <Link href="/" className="hover:text-white transition-colors">{t('shop:hero.home')}</Link>
+                        <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                            <Link href="/" className="hover:text-gray-900 transition-colors">{t('shop:hero.home')}</Link>
                             <ChevronRight className="h-4 w-4" />
                             {parentCategory ? (
                                 <>
-                                    <Link href={`/category/${parentCategory.slug}`} className="hover:text-white transition-colors">
+                                    <Link href={`/category/${parentCategory.slug}`} className="hover:text-gray-900 transition-colors">
                                         {getCategoryName(parentCategory)}
                                     </Link>
                                     <ChevronRight className="h-4 w-4" />
-                                    <span className="text-white">{getCategoryName(category)}</span>
+                                    <span className="text-gray-900 font-medium">{getCategoryName(category)}</span>
                                 </>
                             ) : (
-                                <span className="text-white">{getCategoryName(category)}</span>
+                                <span className="text-gray-900 font-medium">{getCategoryName(category)}</span>
                             )}
                         </div>
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-gray-900">
                             {getCategoryName(category)}
                         </h1>
                         {getCategoryDescription(category) && (
-                            <p className="text-lg sm:text-xl text-gray-300 mb-6 leading-relaxed">
+                            <p className="text-lg sm:text-xl text-gray-600 mb-6 leading-relaxed">
                                 {getCategoryDescription(category)}
                             </p>
                         )}
                         {priceRange.min > 0 && priceRange.max > 0 && (
-                            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 w-fit">
+                            <div className="flex items-center gap-2 bg-gray-900 text-white rounded-full px-4 py-2 w-fit">
                                 <span className="text-gray-300">{t('shop:hero.startingFrom')}</span>
-                                <span className="font-bold">{formatPrice(priceRange.min)}</span>
+                                <span className="font-bold">{formatPrice(priceRange.min, language)}</span>
                             </div>
                         )}
                     </div>
@@ -429,20 +473,20 @@ export default function Category({ category, products, subcategories, parentCate
 
             {/* Subcategories Section */}
             {subcategories.length > 0 && (
-                <div className="bg-white border-b border-gray-200">
+                <div className="bg-white border-b border-gray-200 overflow-hidden">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                         {/* Left scroll arrow */}
                         <button
-                            onClick={() => scrollSubcategories('left')}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            onClick={() => scrollSubcategories(language === 'ar' ? 'right' : 'left')}
+                            className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll left"
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </button>
                         {/* Right scroll arrow */}
                         <button
-                            onClick={() => scrollSubcategories('right')}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            onClick={() => scrollSubcategories(language === 'ar' ? 'left' : 'right')}
+                            className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll right"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -462,7 +506,7 @@ export default function Category({ category, products, subcategories, parentCate
                             >
                                 <span>{t('shop:subcategories.all', { category: getCategoryName(displayParentCategory) })}</span>
                                 {!isSubcategory && (
-                                    <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                    <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{formatNumber(products.total, language)}</span>
                                 )}
                                 {/* Underline indicator */}
                                 {!isSubcategory && (
@@ -484,7 +528,7 @@ export default function Category({ category, products, subcategories, parentCate
                                     >
                                         <span>{getCategoryName(sub)}</span>
                                         {isCurrentSubcategory && (
-                                            <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                            <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{formatNumber(products.total, language)}</span>
                                         )}
                                         {/* Underline indicator */}
                                         {isCurrentSubcategory && (
@@ -507,7 +551,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 <h2 className="font-semibold text-gray-900">{t('shop:filters')}</h2>
                                 {hasActiveFilters && (
                                     <span className="bg-brand-purple text-white text-xs px-2 py-0.5 rounded-full">
-                                        {activeFilterCount}
+                                        {formatNumber(activeFilterCount, language)}
                                     </span>
                                 )}
                             </div>
@@ -518,56 +562,77 @@ export default function Category({ category, products, subcategories, parentCate
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
                         {/* Mobile Filter & Sort Buttons */}
-                        <div className="flex items-center gap-2 mb-4 lg:hidden overflow-x-auto pb-2 scrollbar-hide">
-                            {/* Filter Button */}
+                        <div className="relative mb-4 lg:hidden overflow-hidden">
+                            {/* Left scroll arrow - hidden on small mobile, visible on tablet */}
                             <button
-                                onClick={() => setShowMobileFilters(true)}
-                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                onClick={() => scrollQuickFilters(language === 'ar' ? 'right' : 'left')}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
+                                aria-label="Scroll filters left"
                             >
-                                <Filter className="h-4 w-4" />
-                                {t('shop:filters')}
-                                {activeFilterCount > 0 && (
-                                    <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
+                                {language === 'ar' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                             </button>
-
-                            {/* Sort Button */}
+                            {/* Right scroll arrow - hidden on small mobile, visible on tablet */}
                             <button
-                                onClick={() => setShowMobileSort(true)}
-                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                onClick={() => scrollQuickFilters(language === 'ar' ? 'left' : 'right')}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
+                                aria-label="Scroll filters right"
                             >
-                                <ArrowUpDown className="h-3.5 w-3.5" />
-                                {t('shop:sort')}
+                                {language === 'ar' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </button>
+                            <div
+                                ref={quickFiltersRef}
+                                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide sm:mx-8"
+                            >
+                                {/* Filter Button */}
+                                <button
+                                    onClick={() => setShowMobileFilters(true)}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Filter className="h-4 w-4" />
+                                    {t('shop:filters')}
+                                    {activeFilterCount > 0 && (
+                                        <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
+                                            {formatNumber(activeFilterCount, language)}
+                                        </span>
+                                    )}
+                                </button>
 
-                            {/* Quick Filter Chips - Mobile */}
-                            {quickFilters.map((filter) => {
-                                const isActive = isQuickFilterActive(filter.id);
-                                return (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => toggleQuickFilter(filter)}
-                                        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                                            isActive
-                                                ? 'bg-brand-purple text-white'
-                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
+                                {/* Sort Button */}
+                                <button
+                                    onClick={() => setShowMobileSort(true)}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                    {t('shop:sort')}
+                                </button>
+
+                                {/* Quick Filter Chips - Mobile */}
+                                {quickFilters.map((filter) => {
+                                    const isActive = isQuickFilterActive(filter.id);
+                                    return (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => toggleQuickFilter(filter)}
+                                            className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                                                isActive
+                                                    ? 'bg-brand-purple text-white'
+                                                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
                         <div className="hidden lg:flex items-center gap-3 mb-6">
                             <span className="text-sm text-gray-500 flex-shrink-0">
-                                {products.total} {products.total === 1 ? t('shop:product') : t('shop:products')}
+                                {formatNumber(products.total, language)} {products.total === 1 ? t('shop:product') : t('shop:products')}
                             </span>
                             {/* Custom Sort Dropdown */}
-                            <div className="relative flex-shrink-0 z-[120]">
+                            <div className="relative flex-shrink-0 z-30">
                                 <button
                                     onClick={() => setShowDesktopSort(!showDesktopSort)}
                                     className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -578,8 +643,8 @@ export default function Category({ category, products, subcategories, parentCate
                                 </button>
                                 {showDesktopSort && (
                                     <>
-                                        <div className="fixed inset-0 z-[100]" onClick={() => setShowDesktopSort(false)} />
-                                        <div className="absolute top-full left-0 mt-2 z-[110] bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[200px]">
+                                        <div className="fixed inset-0 z-20" onClick={() => setShowDesktopSort(false)} />
+                                        <div className="absolute top-full left-0 mt-2 z-30 bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[200px]">
                                             {sortOptions.map((option) => (
                                                 <button
                                                     key={option.value}
@@ -642,7 +707,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.min_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.min', { price: formatPrice(filters.min_price) })}
+                                        {t('shop:activeFilters.min', { price: formatPrice(filters.min_price, language) })}
                                         <button onClick={() => removeFilter('min_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
@@ -650,7 +715,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.max_price && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.max', { price: formatPrice(filters.max_price) })}
+                                        {t('shop:activeFilters.max', { price: formatPrice(filters.max_price, language) })}
                                         <button onClick={() => removeFilter('max_price')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
@@ -658,7 +723,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 )}
                                 {filters.min_discount && filters.min_discount > 0 && (
                                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        {t('shop:activeFilters.discountOff', { percent: filters.min_discount })}
+                                        {t('shop:activeFilters.discountOff', { percent: formatNumber(filters.min_discount, language) })}
                                         <button onClick={() => removeFilter('min_discount')} className="ms-1 hover:text-gray-900">
                                             <X className="h-3 w-3" />
                                         </button>
@@ -813,7 +878,7 @@ export default function Category({ category, products, subcategories, parentCate
                                             onChange={handleSliderChange}
                                             onChangeEnd={handleSliderChangeEnd}
                                             step={1}
-                                            formatValue={(v) => formatPrice(v)}
+                                            formatValue={(v) => formatPrice(v, language)}
                                         />
                                     </div>
                                 )}
@@ -894,8 +959,8 @@ export default function Category({ category, products, subcategories, parentCate
                                 className={hasActiveFilters ? '' : 'w-full'}
                             >
                                 {products.total === 1
-                                    ? t('shop:showResult', { count: products.total })
-                                    : t('shop:showResults', { count: products.total })
+                                    ? t('shop:showResult', { count: formatNumber(products.total, language) as unknown as number })
+                                    : t('shop:showResults', { count: formatNumber(products.total, language) as unknown as number })
                                 }
                             </Button>
                         </div>

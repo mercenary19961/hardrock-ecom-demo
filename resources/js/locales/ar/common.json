@@ -35,5 +35,30 @@
     "featured": "مميز",
     "savePercent": "وفّر {{percent}}%",
     "seeMore": "عرض المزيد",
-    "topRated": "الأعلى تقييماً"
+    "topRated": "الأعلى تقييماً",
+    "wishlist": {
+        "title": "قائمة الرغبات",
+        "itemCount": "({{count}})",
+        "empty": "قائمة رغباتك فارغة",
+        "startShopping": "ابدأ التسوق",
+        "clearWishlist": "مسح القائمة",
+        "inCart": "في السلة",
+        "removeFromWishlist": "إزالة من القائمة"
+    },
+    "cart": {
+        "title": "السلة",
+        "itemCount": "({{count}})",
+        "empty": "سلتك فارغة",
+        "continueShopping": "متابعة التسوق",
+        "subtotal": "المجموع الفرعي",
+        "shippingNote": "يتم احتساب الشحن والضرائب عند الدفع.",
+        "checkout": "إتمام الشراء",
+        "viewCart": "عرض السلة",
+        "removeFromCart": "إزالة من السلة"
+    },
+    "footer": {
+        "location": "خلدا - عمّان، الأردن",
+        "phone": "+٠٠٣٤ ١٧٠ ٧٩ ٩٦٢",
+        "tagline": "هارد روك - منصة تجارة إلكترونية تجريبية من هاردروك للتسويق والتكنولوجيا."
+    }
 }

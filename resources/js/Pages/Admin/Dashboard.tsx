@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, Badge } from '@/Components/ui';
 import { DashboardStats, Order, Product } from '@/types/models';
@@ -22,6 +23,8 @@ interface Props {
 }
 
 export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStockProducts }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     // Auto-refresh data every 30 seconds
     usePolling({ interval: 30000 });
     const statCards = [
@@ -51,7 +54,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
         },
         {
             name: 'Revenue',
-            value: formatPrice(stats.revenue),
+            value: formatPrice(stats.revenue, language),
             icon: DollarSign,
             color: 'text-emerald-600 bg-emerald-100',
         },
@@ -127,7 +130,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                                 {order.status}
                                             </Badge>
                                             <p className="text-sm text-gray-500 mt-1">
-                                                {formatPrice(order.total)}
+                                                {formatPrice(order.total, language)}
                                             </p>
                                         </div>
                                     </div>

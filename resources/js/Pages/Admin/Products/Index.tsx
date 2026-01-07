@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Product, Category, PaginatedData } from '@/types/models';
@@ -8,7 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
 // Product Detail Modal Component
-function ProductDetailModal({ product, onClose }: { product: Product | null; onClose: () => void }) {
+function ProductDetailModal({ product, onClose, language }: { product: Product | null; onClose: () => void; language: string }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
@@ -109,9 +110,9 @@ function ProductDetailModal({ product, onClose }: { product: Product | null; onC
 
                                 {/* Price */}
                                 <div className="flex items-baseline gap-3">
-                                    <span className="text-2xl font-bold text-gray-900">{formatPrice(product.price)}</span>
+                                    <span className="text-2xl font-bold text-gray-900">{formatPrice(product.price, language)}</span>
                                     {product.compare_price && (
-                                        <span className="text-lg text-gray-400 line-through">{formatPrice(product.compare_price)}</span>
+                                        <span className="text-lg text-gray-400 line-through">{formatPrice(product.compare_price, language)}</span>
                                     )}
                                     {product.compare_price && (
                                         <Badge variant="danger">
@@ -210,6 +211,8 @@ function useDebounce<T>(value: T, delay: number): T {
 const perPageOptions = ['5', '10', '15', '25', '50', '100'];
 
 export default function ProductsIndex({ products, categories, filters }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const [search, setSearch] = useState(filters.search || '');
     const [category, setCategory] = useState(filters.category || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -449,10 +452,10 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="font-semibold tabular-nums">{formatPrice(product.price)}</div>
+                                            <div className="font-semibold tabular-nums">{formatPrice(product.price, language)}</div>
                                             {product.compare_price && (
                                                 <div className="text-xs text-gray-400 line-through tabular-nums">
-                                                    {formatPrice(product.compare_price)}
+                                                    {formatPrice(product.compare_price, language)}
                                                 </div>
                                             )}
                                         </div>
@@ -542,11 +545,11 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-medium tabular-nums">
-                                                {formatPrice(product.price)}
+                                                {formatPrice(product.price, language)}
                                             </div>
                                             {product.compare_price && (
                                                 <div className="text-sm text-gray-400 line-through tabular-nums">
-                                                    {formatPrice(product.compare_price)}
+                                                    {formatPrice(product.compare_price, language)}
                                                 </div>
                                             )}
                                         </td>
@@ -699,6 +702,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
             <ProductDetailModal
                 product={selectedProduct}
                 onClose={() => setSelectedProduct(null)}
+                language={language}
             />
         </AdminLayout>
     );

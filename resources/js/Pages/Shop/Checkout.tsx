@@ -1,4 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
 import { Cart, User } from '@/types/models';
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function Checkout({ cart, stockErrors, user }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const { data, setData, post, processing, errors } = useForm({
         customer_name: user?.name || '',
         customer_email: user?.email || '',
@@ -199,26 +202,26 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                                 <span className="text-gray-600">
                                                     {item.product.name} × {item.quantity}
                                                 </span>
-                                                <span>{formatPrice(item.subtotal)}</span>
+                                                <span>{formatPrice(item.subtotal, language)}</span>
                                             </div>
                                         ))}
                                     </div>
                                     <div className="border-t pt-4 space-y-2">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Subtotal</span>
-                                            <span>{formatPrice(cart.subtotal)}</span>
+                                            <span>{formatPrice(cart.subtotal, language)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Delivery</span>
                                             {deliveryFee === 0 ? (
                                                 <span className="text-green-600">Free</span>
                                             ) : (
-                                                <span>{formatPrice(deliveryFee)}</span>
+                                                <span>{formatPrice(deliveryFee, language)}</span>
                                             )}
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-semibold">
                                             <span>Total</span>
-                                            <span>{formatPrice(total)}</span>
+                                            <span>{formatPrice(total, language)}</span>
                                         </div>
                                     </div>
                                     <Button
@@ -241,7 +244,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     <Truck className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">Free Delivery</p>
-                                        <p className="text-xs text-gray-500">On orders over {formatPrice(FREE_DELIVERY_THRESHOLD)}</p>
+                                        <p className="text-xs text-gray-500">On orders over {formatPrice(FREE_DELIVERY_THRESHOLD, language)}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">

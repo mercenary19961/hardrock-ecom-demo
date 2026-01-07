@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Button, Badge, Card, CardContent } from '@/Components/ui';
 import { Order } from '@/types/models';
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export default function OrderConfirmation({ order }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     return (
         <ShopLayout>
             <Head title="Order Confirmed" />
@@ -87,7 +90,7 @@ export default function OrderConfirmation({ order }: Props) {
                                             SKU: {item.product_sku} · Qty: {item.quantity}
                                         </p>
                                     </div>
-                                    <p className="font-medium">{formatPrice(item.subtotal)}</p>
+                                    <p className="font-medium">{formatPrice(item.subtotal, language)}</p>
                                 </div>
                             ))}
                         </div>
@@ -95,15 +98,15 @@ export default function OrderConfirmation({ order }: Props) {
                         <div className="border-t mt-4 pt-4 space-y-2">
                             <div className="flex justify-between text-gray-600">
                                 <span>Subtotal</span>
-                                <span>{formatPrice(order.subtotal)}</span>
+                                <span>{formatPrice(order.subtotal, language)}</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
                                 <span>Tax</span>
-                                <span>{formatPrice(order.tax)}</span>
+                                <span>{formatPrice(order.tax, language)}</span>
                             </div>
                             <div className="flex justify-between text-lg font-semibold">
                                 <span>Total</span>
-                                <span>{formatPrice(order.total)}</span>
+                                <span>{formatPrice(order.total, language)}</span>
                             </div>
                         </div>
                     </CardContent>

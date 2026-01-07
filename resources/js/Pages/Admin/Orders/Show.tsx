@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Badge, Card, CardHeader, CardContent } from '@/Components/ui';
 import { Order } from '@/types/models';
@@ -12,6 +13,8 @@ interface Props {
 const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
 export default function OrderShow({ order }: Props) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const handleStatusUpdate = (status: string) => {
         router.patch(`/admin/orders/${order.id}/status`, { status });
     };
@@ -55,10 +58,10 @@ export default function OrderShow({ order }: Props) {
                                             <div className="flex-1">
                                                 <p className="font-medium">{item.product_name}</p>
                                                 <p className="text-sm text-gray-500">
-                                                    SKU: {item.product_sku} · {formatPrice(item.price)} × {item.quantity}
+                                                    SKU: {item.product_sku} · {formatPrice(item.price, language)} × {item.quantity}
                                                 </p>
                                             </div>
-                                            <p className="font-medium">{formatPrice(item.subtotal)}</p>
+                                            <p className="font-medium">{formatPrice(item.subtotal, language)}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -66,15 +69,15 @@ export default function OrderShow({ order }: Props) {
                                 <div className="border-t mt-4 pt-4 space-y-2">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal</span>
-                                        <span>{formatPrice(order.subtotal)}</span>
+                                        <span>{formatPrice(order.subtotal, language)}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Tax</span>
-                                        <span>{formatPrice(order.tax)}</span>
+                                        <span>{formatPrice(order.tax, language)}</span>
                                     </div>
                                     <div className="flex justify-between text-lg font-semibold">
                                         <span>Total</span>
-                                        <span>{formatPrice(order.total)}</span>
+                                        <span>{formatPrice(order.total, language)}</span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -146,7 +149,7 @@ export default function OrderShow({ order }: Props) {
                                 </div>
                                 <div className="flex justify-between font-semibold">
                                     <span>Total</span>
-                                    <span>{formatPrice(order.total)}</span>
+                                    <span>{formatPrice(order.total, language)}</span>
                                 </div>
                             </CardContent>
                         </Card>

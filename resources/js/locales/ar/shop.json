@@ -43,16 +43,16 @@
         "discountOff": "خصم {{percent}}%+"
     },
     "quickFilters": {
-        "under25": "حتى 25 دينار",
-        "25to50": "25 - 50 دينار",
-        "over50": "50+ دينار",
+        "under25": "حتى ٢٥ دينار",
+        "25to50": "٢٥ - ٥٠ دينار",
+        "over50": "+٥٠ دينار",
         "onSale": "تخفيضات",
-        "topRated": "4+ نجوم",
+        "topRated": "+٤ نجوم",
         "popular": "شائع"
     },
     "activeFilters": {
         "newArrivals": "وصل حديثاً",
-        "below100": "أقل من 100 دينار",
+        "below100": "أقل من ١٠٠ دينار",
         "min": "الحد الأدنى: {{price}}",
         "max": "الحد الأقصى: {{price}}",
         "discountOff": "خصم {{percent}}%+",
@@ -80,5 +80,8 @@
     "startShopping": "ابدأ التسوق",
     "clearWishlist": "مسح القائمة",
     "addedToWishlist": "تمت الإضافة للمفضلة",
-    "removedFromWishlist": "تمت الإزالة من المفضلة"
+    "removedFromWishlist": "تمت الإزالة من المفضلة",
+    "min": "الحد الأدنى",
+    "max": "الحد الأقصى",
+    "apply": "تطبيق"
 }

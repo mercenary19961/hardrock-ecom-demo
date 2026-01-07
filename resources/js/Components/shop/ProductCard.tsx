@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
-import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
+import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { Badge } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -12,7 +12,7 @@ interface ProductCardProps {
     product: Product;
 }
 
-function StarRating({ rating, count }: { rating: number; count: number }) {
+function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
     if (count === 0) return null;
 
     const getStarFill = (starPosition: number) => {
@@ -43,13 +43,14 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
                     );
                 })}
             </div>
-            <span className="text-xs text-gray-500">({count})</span>
+            <span className="text-xs text-gray-500">({formatNumber(count, language)})</span>
         </div>
     );
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { getProductName, getCategoryName } = useLocalized();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
@@ -118,7 +119,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {/* Discount Badge */}
                 {hasDiscount && (
                     <Badge variant="danger" className="absolute top-2 left-2 sm:top-3 sm:left-3 text-xs sm:text-sm">
-                        -{getDiscountPercentage(product.price, product.compare_price!)}%
+                        -{formatNumber(getDiscountPercentage(product.price, product.compare_price!), language)}%
                     </Badge>
                 )}
 
@@ -172,16 +173,16 @@ export function ProductCard({ product }: ProductCardProps) {
                 </h3>
                 {product.rating_count > 0 && (
                     <div className="mt-1">
-                        <StarRating rating={product.average_rating} count={product.rating_count} />
+                        <StarRating rating={product.average_rating} count={product.rating_count} language={language} />
                     </div>
                 )}
                 <div className="mt-1 sm:mt-2 flex items-center gap-2">
                     <span className="text-sm sm:text-base text-gray-600">
-                        {formatPrice(product.price)}
+                        {formatPrice(product.price, language)}
                     </span>
                     {hasDiscount && (
                         <span className="text-sm sm:text-base text-gray-400 line-through">
-                            {formatPrice(product.compare_price!)}
+                            {formatPrice(product.compare_price!, language)}
                         </span>
                     )}
                 </div>

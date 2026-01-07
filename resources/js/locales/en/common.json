@@ -35,5 +35,30 @@
     "featured": "Featured",
     "savePercent": "Save {{percent}}%",
     "seeMore": "See more",
-    "topRated": "Top Rated"
+    "topRated": "Top Rated",
+    "wishlist": {
+        "title": "Wishlist",
+        "itemCount": "({{count}})",
+        "empty": "Your wishlist is empty",
+        "startShopping": "Start shopping",
+        "clearWishlist": "Clear Wishlist",
+        "inCart": "In Cart",
+        "removeFromWishlist": "Remove from wishlist"
+    },
+    "cart": {
+        "title": "Cart",
+        "itemCount": "({{count}})",
+        "empty": "Your cart is empty",
+        "continueShopping": "Continue shopping",
+        "subtotal": "Subtotal",
+        "shippingNote": "Shipping and taxes calculated at checkout.",
+        "checkout": "Checkout",
+        "viewCart": "View Cart",
+        "removeFromCart": "Remove from cart"
+    },
+    "footer": {
+        "location": "Khalda - Amman, Jordan",
+        "phone": "+962 79 170 0034",
+        "tagline": "Reach The Peak - A demo e-commerce platform by HardRock Marketing & Technology."
+    }
 }

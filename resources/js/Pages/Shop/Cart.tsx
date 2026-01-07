@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { Button } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
@@ -6,6 +7,8 @@ import { formatPrice } from '@/lib/utils';
 import { ShoppingBag, ArrowLeft, Trash2, Minus, Plus } from 'lucide-react';
 
 function CartContent() {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
     const { cart, updateQuantity, removeItem, loading } = useCart();
 
     const handleQuantityChange = async (itemId: number, newQuantity: number, maxStock: number) => {
@@ -89,12 +92,12 @@ function CartContent() {
                                                             {item.product.name}
                                                         </Link>
                                                         <p className="text-sm text-gray-500 mt-1">
-                                                            {formatPrice(item.product.price)} each
+                                                            {formatPrice(item.product.price, language)} each
                                                         </p>
                                                     </div>
                                                     <div className="text-right flex-shrink-0">
                                                         <p className="font-semibold text-gray-900">
-                                                            {formatPrice(item.subtotal)}
+                                                            {formatPrice(item.subtotal, language)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -146,7 +149,7 @@ function CartContent() {
                                         <span className="text-gray-600">
                                             Subtotal ({cart.total_items} {cart.total_items === 1 ? 'item' : 'items'})
                                         </span>
-                                        <span className="font-medium text-gray-900">{formatPrice(cart.subtotal)}</span>
+                                        <span className="font-medium text-gray-900">{formatPrice(cart.subtotal, language)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Delivery</span>
@@ -156,7 +159,7 @@ function CartContent() {
                                 <div className="border-t mt-4 pt-4">
                                     <div className="flex justify-between text-base font-semibold">
                                         <span className="text-gray-900">Total</span>
-                                        <span className="text-gray-900">{formatPrice(cart.subtotal)}</span>
+                                        <span className="text-gray-900">{formatPrice(cart.subtotal, language)}</span>
                                     </div>
                                 </div>
                                 <Link href="/checkout" className="block mt-6">

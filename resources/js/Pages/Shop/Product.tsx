@@ -8,10 +8,10 @@ import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { useLocalized } from '@/hooks/useLocalized';
 import { Product as ProductType, Breadcrumb } from '@/types/models';
-import { formatPrice, getImageUrl, getDiscountPercentage } from '@/lib/utils';
+import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
 
-function StarRating({ rating, count }: { rating: number; count: number }) {
+function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
     if (count === 0 || rating == null) return null;
 
     const ratingValue = Number(rating) || 0;
@@ -21,6 +21,12 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
         if (ratingValue >= starPosition - 0.5) return 'half';
         return 'empty';
     };
+
+    const isArabic = language === 'ar';
+    const formattedRating = new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+    }).format(ratingValue);
 
     return (
         <div className="flex items-center gap-2">
@@ -45,7 +51,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
                 })}
             </div>
             <span className="text-sm text-gray-600">
-                {ratingValue.toFixed(1)} ({count} {count === 1 ? 'review' : 'reviews'})
+                {formattedRating} ({formatNumber(count, language)} {count === 1 ? (isArabic ? 'تقييم' : 'review') : (isArabic ? 'تقييمات' : 'reviews')})
             </span>
         </div>
     );
@@ -58,7 +64,8 @@ interface Props {
 }
 
 function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { addToCart, loading } = useCart();
     const { getProductName, getProductDescription, getProductShortDescription, getCategoryName } = useLocalized();
     const [quantity, setQuantity] = useState(1);
@@ -182,18 +189,18 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
 
                         {product.rating_count > 0 && (
                             <div className="mb-4">
-                                <StarRating rating={product.average_rating} count={product.rating_count} />
+                                <StarRating rating={product.average_rating} count={product.rating_count} language={language} />
                             </div>
                         )}
 
                         <div className="flex items-center gap-4 mb-6">
                             <span className="text-3xl font-bold text-gray-900">
-                                {formatPrice(product.price)}
+                                {formatPrice(product.price, language)}
                             </span>
                             {hasDiscount && (
                                 <>
                                     <span className="text-xl text-gray-400 line-through">
-                                        {formatPrice(product.compare_price!)}
+                                        {formatPrice(product.compare_price!, language)}
                                     </span>
                                     <Badge variant="danger">
                                         {t('common:savePercent', { percent: getDiscountPercentage(product.price, product.compare_price!) })}

@@ -1,11 +1,13 @@
 import { Fragment } from 'react';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, Transition } from '@headlessui/react';
-import { HeartIcon, XMarkIcon, TrashIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, XMarkIcon, TrashIcon, ShoppingBagIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/Components/ui';
-import { formatPrice, getImageUrl } from '@/lib/utils';
+import { formatPrice, formatNumber, getImageUrl } from '@/lib/utils';
+import { useLocalized } from '@/hooks/useLocalized';
 import { Product } from '@/types/models';
 
 interface WishlistDrawerProps {
@@ -14,8 +16,13 @@ interface WishlistDrawerProps {
 }
 
 function WishlistItem({ product, onClose }: { product: Product; onClose: () => void }) {
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { removeFromWishlist } = useWishlist();
-    const { addToCart } = useCart();
+    const { addToCart, isInCart } = useCart();
+    const { getProductName } = useLocalized();
+
+    const inCart = isInCart(product.id);
 
     // Get image URL - check primary_image first, then images array
     const getProductImageUrl = () => {
@@ -38,7 +45,6 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
     const handleAddToCart = async () => {
         try {
             await addToCart(product.id, 1);
-            removeFromWishlist(product.id);
         } catch (error) {
             console.error('Failed to add to cart:', error);
         }
@@ -49,13 +55,18 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
             <Link
                 href={`/product/${product.slug}`}
                 onClick={onClose}
-                className="flex-shrink-0"
+                className="flex-shrink-0 relative"
             >
                 <img
                     src={imageUrl}
                     alt={product.name}
                     className="w-20 h-20 object-contain rounded-lg bg-gray-50"
                 />
+                {inCart && (
+                    <div className="absolute -top-1 -right-1 bg-brand-orange text-white rounded-full p-0.5">
+                        <CheckIcon className="h-3 w-3" strokeWidth={3} />
+                    </div>
+                )}
             </Link>
             <div className="flex-1 min-w-0">
                 <Link
@@ -63,30 +74,37 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
                     onClick={onClose}
                     className="text-sm font-medium text-gray-900 hover:text-gray-600 line-clamp-2"
                 >
-                    {product.name}
+                    {getProductName(product)}
                 </Link>
                 <div className="mt-1 flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-900">
-                        {formatPrice(product.price)}
+                        {formatPrice(product.price, language)}
                     </span>
                     {product.compare_price && product.compare_price > product.price && (
                         <span className="text-sm text-gray-400 line-through">
-                            {formatPrice(product.compare_price)}
+                            {formatPrice(product.compare_price, language)}
                         </span>
                     )}
                 </div>
                 <div className="mt-2 flex items-center gap-2">
-                    <button
-                        onClick={handleAddToCart}
-                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-brand-purple rounded hover:bg-brand-purple-700 transition-colors"
-                    >
-                        <ShoppingBagIcon className="h-3 w-3" />
-                        Add to Cart
-                    </button>
+                    {inCart ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-brand-orange rounded">
+                            <CheckIcon className="h-3 w-3" strokeWidth={2.5} />
+                            {t('common:wishlist.inCart')}
+                        </span>
+                    ) : (
+                        <button
+                            onClick={handleAddToCart}
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-brand-purple rounded hover:bg-brand-purple-700 transition-colors"
+                        >
+                            <ShoppingBagIcon className="h-3 w-3" />
+                            {t('common:addToCart')}
+                        </button>
+                    )}
                     <button
                         onClick={() => removeFromWishlist(product.id)}
                         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Remove from wishlist"
+                        title={t('common:wishlist.removeFromWishlist')}
                     >
                         <TrashIcon className="h-4 w-4" />
                     </button>
@@ -97,6 +115,8 @@ function WishlistItem({ product, onClose }: { product: Product; onClose: () => v
 }
 
 export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { items, clearWishlist } = useWishlist();
 
     return (
@@ -131,7 +151,7 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                         <div className="flex items-center justify-between px-4 py-4 border-b">
                                             <Dialog.Title className="text-lg font-semibold flex items-center gap-2">
                                                 <HeartIcon className="h-5 w-5 text-brand-purple" />
-                                                Wishlist ({items.length})
+                                                {t('common:wishlist.title')} {t('common:wishlist.itemCount', { count: formatNumber(items.length, language) as unknown as number })}
                                             </Dialog.Title>
                                             <button
                                                 onClick={onClose}
@@ -145,13 +165,13 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                             {items.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center h-full text-center">
                                                     <HeartIcon className="h-16 w-16 text-brand-purple-200 mb-4" />
-                                                    <p className="text-gray-500">Your wishlist is empty</p>
+                                                    <p className="text-gray-500">{t('common:wishlist.empty')}</p>
                                                     <Link
                                                         href="/"
                                                         className="mt-4 text-gray-900 underline"
                                                         onClick={onClose}
                                                     >
-                                                        Start shopping
+                                                        {t('common:wishlist.startShopping')}
                                                     </Link>
                                                 </div>
                                             ) : (
@@ -174,7 +194,7 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                                     className="w-full"
                                                     onClick={clearWishlist}
                                                 >
-                                                    Clear Wishlist
+                                                    {t('common:wishlist.clearWishlist')}
                                                 </Button>
                                             </div>
                                         )}
