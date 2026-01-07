@@ -119,7 +119,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {/* Discount Badge */}
                 {hasDiscount && (
                     <Badge variant="danger" className="absolute top-2 left-2 sm:top-3 sm:left-3 text-xs sm:text-sm">
-                        -{getDiscountPercentage(product.price, product.compare_price!)}%
+                        -{formatNumber(getDiscountPercentage(product.price, product.compare_price!), language)}%
                     </Badge>
                 )}
 

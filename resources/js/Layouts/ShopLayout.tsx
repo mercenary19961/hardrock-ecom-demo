@@ -281,7 +281,8 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             <footer className="bg-brand-slate text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <div className="col-span-2 md:col-span-1">
+                        {/* HardRock Brand */}
+                        <div>
                             <h3 className="text-lg font-bold mb-4">HardRock</h3>
                             <p className="text-gray-400 text-sm mb-4">
                                 {t("common:footer.tagline")}
@@ -331,11 +332,12 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 </a>
                             </div>
                         </div>
-                        <div className="col-span-2 md:col-span-1">
+                        {/* Shop Categories */}
+                        <div>
                             <h4 className="font-semibold mb-4">
                                 {t("nav:shop")}
                             </h4>
-                            <ul className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 text-gray-400 text-sm">
+                            <ul className="space-y-2 text-gray-400 text-sm md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-2 md:space-y-0">
                                 <li>
                                     <Link href="/" className="hover:text-white">
                                         {t("nav:allProducts")}
@@ -353,14 +355,15 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 ))}
                             </ul>
                         </div>
+                        {/* Contact */}
                         <div>
                             <h4 className="font-semibold mb-4">
                                 {t("nav:contact")}
                             </h4>
                             <ul className="space-y-3 text-gray-400 text-sm">
-                                <li className="flex items-center gap-2">
+                                <li className="flex items-start gap-2">
                                     <svg
-                                        className="h-4 w-4 flex-shrink-0"
+                                        className="h-4 w-4 flex-shrink-0 mt-0.5"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -425,6 +428,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 </li>
                             </ul>
                         </div>
+                        {/* Account */}
                         <div>
                             <h4 className="font-semibold mb-4">
                                 {t("nav:account")}

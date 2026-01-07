@@ -411,16 +411,18 @@ export default function Category({ category, products, subcategories, parentCate
 
             {/* Hero Banner */}
             <div className="relative bg-white overflow-hidden">
-                {/* Background Image */}
+                {/* Mobile gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white md:hidden" />
+                {/* Desktop background image */}
                 {bannerImage && (
                     <div
-                        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat hidden md:block"
                         style={{ backgroundImage: `url(${bannerImage})` }}
                     />
                 )}
-                {/* Fallback gradient if no banner */}
+                {/* Fallback gradient if no banner (desktop only) */}
                 {!bannerImage && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white hidden md:block" />
                 )}
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
@@ -459,12 +461,12 @@ export default function Category({ category, products, subcategories, parentCate
 
             {/* Subcategories Section */}
             {subcategories.length > 0 && (
-                <div className="bg-white border-b border-gray-200">
+                <div className="bg-white border-b border-gray-200 overflow-hidden">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                         {/* Left scroll arrow */}
                         <button
                             onClick={() => scrollSubcategories('left')}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll left"
                         >
                             <ChevronLeft className="h-5 w-5" />
@@ -472,7 +474,7 @@ export default function Category({ category, products, subcategories, parentCate
                         {/* Right scroll arrow */}
                         <button
                             onClick={() => scrollSubcategories('right')}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
+                            className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll right"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -492,7 +494,7 @@ export default function Category({ category, products, subcategories, parentCate
                             >
                                 <span>{t('shop:subcategories.all', { category: getCategoryName(displayParentCategory) })}</span>
                                 {!isSubcategory && (
-                                    <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                    <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{formatNumber(products.total, language)}</span>
                                 )}
                                 {/* Underline indicator */}
                                 {!isSubcategory && (
@@ -514,7 +516,7 @@ export default function Category({ category, products, subcategories, parentCate
                                     >
                                         <span>{getCategoryName(sub)}</span>
                                         {isCurrentSubcategory && (
-                                            <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{products.total}</span>
+                                            <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">{formatNumber(products.total, language)}</span>
                                         )}
                                         {/* Underline indicator */}
                                         {isCurrentSubcategory && (
@@ -537,7 +539,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 <h2 className="font-semibold text-gray-900">{t('shop:filters')}</h2>
                                 {hasActiveFilters && (
                                     <span className="bg-brand-purple text-white text-xs px-2 py-0.5 rounded-full">
-                                        {activeFilterCount}
+                                        {formatNumber(activeFilterCount, language)}
                                     </span>
                                 )}
                             </div>
@@ -558,7 +560,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 {t('shop:filters')}
                                 {activeFilterCount > 0 && (
                                     <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
-                                        {activeFilterCount}
+                                        {formatNumber(activeFilterCount, language)}
                                     </span>
                                 )}
                             </button>
@@ -594,7 +596,7 @@ export default function Category({ category, products, subcategories, parentCate
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
                         <div className="hidden lg:flex items-center gap-3 mb-6">
                             <span className="text-sm text-gray-500 flex-shrink-0">
-                                {products.total} {products.total === 1 ? t('shop:product') : t('shop:products')}
+                                {formatNumber(products.total, language)} {products.total === 1 ? t('shop:product') : t('shop:products')}
                             </span>
                             {/* Custom Sort Dropdown */}
                             <div className="relative flex-shrink-0 z-30">
@@ -924,8 +926,8 @@ export default function Category({ category, products, subcategories, parentCate
                                 className={hasActiveFilters ? '' : 'w-full'}
                             >
                                 {products.total === 1
-                                    ? t('shop:showResult', { count: products.total })
-                                    : t('shop:showResults', { count: products.total })
+                                    ? t('shop:showResult', { count: formatNumber(products.total, language) as unknown as number })
+                                    : t('shop:showResults', { count: formatNumber(products.total, language) as unknown as number })
                                 }
                             </Button>
                         </div>
