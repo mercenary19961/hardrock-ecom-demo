@@ -9,12 +9,14 @@
 1. [Project Overview](#project-overview)
 2. [Localization (i18n)](#localization-i18n)
 3. [Key Utilities & Hooks](#key-utilities--hooks)
-4. [Responsive Design](#responsive-design)
-5. [File Reference](#file-reference)
-6. [Database & Seeding](#database--seeding)
-7. [Image Handling](#image-handling)
-8. [Data Models](#data-models)
-9. [Common Issues & Solutions](#common-issues--solutions)
+4. [Cart & Wishlist System](#cart--wishlist-system)
+5. [RTL Navigation Patterns](#rtl-navigation-patterns)
+6. [Responsive Design](#responsive-design)
+7. [File Reference](#file-reference)
+8. [Database & Seeding](#database--seeding)
+9. [Image Handling](#image-handling)
+10. [Data Models](#data-models)
+11. [Common Issues & Solutions](#common-issues--solutions)
 
 ---
 
@@ -125,6 +127,134 @@ getCategoryName(category)  // Returns name_ar if Arabic, else name
 
 ---
 
+## Cart & Wishlist System
+
+### CartContext (`contexts/CartContext.tsx`)
+
+**Key exports:**
+```typescript
+interface CartContextType {
+    cart: CartData;
+    addToCart: (productId: number, quantity?: number) => Promise<void>;
+    updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+    removeItem: (itemId: number) => Promise<void>;
+    loading: boolean;
+    isInCart: (productId: number) => boolean;  // Check if product is in cart
+}
+```
+
+**Usage:**
+```typescript
+const { cart, addToCart, isInCart } = useCart();
+
+// Check if product is already in cart
+if (isInCart(product.id)) {
+    // Show "In Cart" indicator
+}
+```
+
+### WishlistContext (`contexts/WishlistContext.tsx`)
+
+**Behavior:** Items stay in wishlist after adding to cart. Shows "In Cart" badge with brand-orange color.
+
+### Drawer Localization Pattern
+
+Both CartDrawer and WishlistDrawer follow the same localization pattern:
+
+```typescript
+const { t, i18n } = useTranslation();
+const language = i18n.language;
+const { getProductName } = useLocalized();
+
+// Title with Arabic numerals
+{t('common:cart.title')} {t('common:cart.itemCount', {
+    count: formatNumber(cart.total_items, language) as unknown as number
+})}
+
+// Localized product name
+const productName = getProductName(item.product);
+// Or manually:
+const productName = language === 'ar' && item.product.name_ar
+    ? item.product.name_ar
+    : item.product.name;
+```
+
+### Translation Keys (common.json)
+
+**Wishlist namespace:**
+```json
+"wishlist": {
+    "title": "Wishlist" / "قائمة الرغبات",
+    "itemCount": "({{count}})",
+    "empty": "Your wishlist is empty" / "قائمة رغباتك فارغة",
+    "startShopping": "Start Shopping" / "ابدأ التسوق",
+    "clearWishlist": "Clear Wishlist" / "مسح القائمة",
+    "inCart": "In Cart" / "في السلة",
+    "removeFromWishlist": "Remove from wishlist" / "إزالة من القائمة"
+}
+```
+
+**Cart namespace:**
+```json
+"cart": {
+    "title": "Cart" / "السلة",
+    "itemCount": "({{count}})",
+    "empty": "Your cart is empty" / "سلتك فارغة",
+    "continueShopping": "Continue Shopping" / "متابعة التسوق",
+    "subtotal": "Subtotal" / "المجموع الفرعي",
+    "shippingNote": "Shipping and taxes calculated at checkout." / "يتم احتساب الشحن والضرائب عند الدفع.",
+    "checkout": "Checkout" / "إتمام الشراء",
+    "viewCart": "View Cart" / "عرض السلة",
+    "removeFromCart": "Remove from cart" / "إزالة من السلة"
+}
+```
+
+### Backend Cart Data (`CartService.php`)
+
+The `getCartData()` method returns bilingual product names:
+```php
+'product' => [
+    'id' => $item->product->id,
+    'name' => $item->product->name,
+    'name_ar' => $item->product->name_ar,  // For Arabic support
+    'slug' => $item->product->slug,
+    'price' => $item->product->price,
+    'stock' => $item->product->stock,
+    'image' => $item->product->getPrimaryImageUrl(),
+],
+```
+
+---
+
+## RTL Navigation Patterns
+
+### Scroll Arrow Behavior
+
+For horizontal scrollable rows (subcategories, filters), arrows should:
+- **Icons stay consistent:** Left arrow on left, right arrow on right
+- **Scroll direction swaps for Arabic:** Left button scrolls right, right button scrolls left
+
+```tsx
+const { i18n } = useTranslation();
+const language = i18n.language;
+
+// Subcategories scroll buttons
+<button onClick={() => scroll(language === 'ar' ? 'right' : 'left')}>
+    <ChevronLeft className="h-5 w-5" />
+</button>
+<button onClick={() => scroll(language === 'ar' ? 'left' : 'right')}>
+    <ChevronRight className="h-5 w-5" />
+</button>
+```
+
+### Implementation in Category Page
+
+File: `Pages/Shop/Category.tsx`
+
+Both subcategories row and quick filters row use this pattern for RTL-aware scrolling.
+
+---
+
 ## Responsive Design
 
 ### Breakpoints
@@ -173,14 +303,17 @@ getCategoryName(category)  // Returns name_ar if Arabic, else name
 | `Components/shop/ProductCard.tsx` | Product card in grids |
 | `Components/shop/ProductGrid.tsx` | Product grid layout |
 | `Components/shop/HeroBanner.tsx` | Homepage hero |
+| `Components/shop/CartDrawer.tsx` | Slide-out cart panel (Arabic localized) |
+| `Components/shop/CartItem.tsx` | Cart item row (localized product names) |
+| `Components/shop/WishlistDrawer.tsx` | Slide-out wishlist panel (Arabic localized) |
 | `Components/ui/DualRangeSlider.tsx` | Price range filter |
 | `Components/ui/Badge.tsx` | Status badges |
 
 ### Contexts
 | File | Description |
 |------|-------------|
-| `contexts/WishlistContext.tsx` | Wishlist state |
-| `contexts/CartContext.tsx` | Cart state |
+| `contexts/WishlistContext.tsx` | Wishlist state management |
+| `contexts/CartContext.tsx` | Cart state + `isInCart` helper |
 
 ---
 
