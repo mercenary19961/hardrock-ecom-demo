@@ -477,7 +477,7 @@ export default function Category({ category, products, subcategories, parentCate
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                         {/* Left scroll arrow */}
                         <button
-                            onClick={() => scrollSubcategories('left')}
+                            onClick={() => scrollSubcategories(language === 'ar' ? 'right' : 'left')}
                             className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll left"
                         >
@@ -485,7 +485,7 @@ export default function Category({ category, products, subcategories, parentCate
                         </button>
                         {/* Right scroll arrow */}
                         <button
-                            onClick={() => scrollSubcategories('right')}
+                            onClick={() => scrollSubcategories(language === 'ar' ? 'left' : 'right')}
                             className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all lg:hidden"
                             aria-label="Scroll right"
                         >
@@ -569,7 +569,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
                                 aria-label="Scroll filters left"
                             >
-                                <ChevronLeft className="h-4 w-4" />
+                                {language === 'ar' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                             </button>
                             {/* Right scroll arrow - hidden on small mobile, visible on tablet */}
                             <button
@@ -577,7 +577,7 @@ export default function Category({ category, products, subcategories, parentCate
                                 className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
                                 aria-label="Scroll filters right"
                             >
-                                <ChevronRight className="h-4 w-4" />
+                                {language === 'ar' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </button>
                             <div
                                 ref={quickFiltersRef}

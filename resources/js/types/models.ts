@@ -73,6 +73,7 @@ export interface CartItem {
     product: {
         id: number;
         name: string;
+        name_ar?: string;
         slug: string;
         price: number;
         stock: number;

@@ -6,7 +6,7 @@ import { X, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { CartItem } from './CartItem';
 import { Button } from '@/Components/ui';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, formatNumber } from '@/lib/utils';
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -14,9 +14,9 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const language = i18n.language;
-    const { cart, loading } = useCart();
+    const { cart } = useCart();
 
     return (
         <Transition show={isOpen} as={Fragment}>
@@ -50,7 +50,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                         <div className="flex items-center justify-between px-4 py-4 border-b">
                                             <Dialog.Title className="text-lg font-semibold flex items-center gap-2">
                                                 <ShoppingBag className="h-5 w-5" />
-                                                Cart ({cart.total_items})
+                                                {t('common:cart.title')} {t('common:cart.itemCount', { count: formatNumber(cart.total_items, language) as unknown as number })}
                                             </Dialog.Title>
                                             <button
                                                 onClick={onClose}
@@ -64,13 +64,13 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                             {cart.items.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center h-full text-center">
                                                     <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
-                                                    <p className="text-gray-500">Your cart is empty</p>
+                                                    <p className="text-gray-500">{t('common:cart.empty')}</p>
                                                     <Link
                                                         href="/"
                                                         className="mt-4 text-gray-900 underline"
                                                         onClick={onClose}
                                                     >
-                                                        Continue shopping
+                                                        {t('common:cart.continueShopping')}
                                                     </Link>
                                                 </div>
                                             ) : (
@@ -85,21 +85,21 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                         {cart.items.length > 0 && (
                                             <div className="border-t px-4 py-4 space-y-4">
                                                 <div className="flex justify-between text-lg font-semibold">
-                                                    <span>Subtotal</span>
+                                                    <span>{t('common:cart.subtotal')}</span>
                                                     <span>{formatPrice(cart.subtotal, language)}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-500">
-                                                    Shipping and taxes calculated at checkout.
+                                                    {t('common:cart.shippingNote')}
                                                 </p>
                                                 <div className="space-y-2">
                                                     <Link href="/checkout" onClick={onClose}>
                                                         <Button className="w-full" size="lg">
-                                                            Checkout
+                                                            {t('common:cart.checkout')}
                                                         </Button>
                                                     </Link>
                                                     <Link href="/cart" onClick={onClose}>
                                                         <Button variant="outline" className="w-full">
-                                                            View Cart
+                                                            {t('common:cart.viewCart')}
                                                         </Button>
                                                     </Link>
                                                 </div>
