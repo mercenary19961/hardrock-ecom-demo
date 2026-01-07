@@ -36,6 +36,15 @@
     "savePercent": "وفّر {{percent}}%",
     "seeMore": "عرض المزيد",
     "topRated": "الأعلى تقييماً",
+    "wishlist": {
+        "title": "قائمة الرغبات",
+        "itemCount": "({{count}})",
+        "empty": "قائمة رغباتك فارغة",
+        "startShopping": "ابدأ التسوق",
+        "clearWishlist": "مسح القائمة",
+        "inCart": "في السلة",
+        "removeFromWishlist": "إزالة من القائمة"
+    },
     "footer": {
         "location": "خلدا - عمّان، الأردن",
         "phone": "+٠٠٣٤ ١٧٠ ٧٩ ٩٦٢",

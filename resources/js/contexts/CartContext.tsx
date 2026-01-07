@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import { Cart, CartItem } from '@/types/models';
+import { Cart } from '@/types/models';
 
 interface CartContextType {
     cart: Cart;
@@ -9,6 +9,7 @@ interface CartContextType {
     updateQuantity: (itemId: number, quantity: number) => Promise<void>;
     removeItem: (itemId: number) => Promise<void>;
     refreshCart: () => Promise<void>;
+    isInCart: (productId: number) => boolean;
 }
 
 const defaultCart: Cart = {
@@ -74,6 +75,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const isInCart = (productId: number) => {
+        return cart.items.some(item => item.product.id === productId);
+    };
+
     useEffect(() => {
         refreshCart();
     }, []);
@@ -87,6 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 updateQuantity,
                 removeItem,
                 refreshCart,
+                isInCart,
             }}
         >
             {children}
