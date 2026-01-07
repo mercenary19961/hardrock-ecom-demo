@@ -38,8 +38,28 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
     const [wishlistOpen, setWishlistOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [wishlistPulse, setWishlistPulse] = useState(false);
+    const [logoPulse, setLogoPulse] = useState(false);
     const [showCategoryNav, setShowCategoryNav] = useState(true);
     const lastScrollY = useRef(0);
+
+    // Logo pulse animation every 15 seconds
+    useEffect(() => {
+        const triggerLogoPulse = () => {
+            setLogoPulse(true);
+            setTimeout(() => setLogoPulse(false), 1500);
+        };
+
+        // Initial pulse after 3 seconds
+        const initialTimeout = setTimeout(triggerLogoPulse, 3000);
+
+        // Recurring pulse every 15 seconds
+        const interval = setInterval(triggerLogoPulse, 15000);
+
+        return () => {
+            clearTimeout(initialTimeout);
+            clearInterval(interval);
+        };
+    }, []);
 
     // Pulse animation every 20 seconds when wishlist has items
     useEffect(() => {
@@ -105,7 +125,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             <img
                                 src="/images/logo-title.webp"
                                 alt="HardRock"
-                                className="h-8 w-auto"
+                                className={`h-8 w-auto transition-transform duration-700 ${
+                                    logoPulse ? "scale-110" : "scale-100"
+                                }`}
                             />
                         </Link>
 
