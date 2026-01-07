@@ -117,12 +117,24 @@ export default function Category({ category, products, subcategories, parentCate
     const [showMobileSort, setShowMobileSort] = useState(false);
     const [showDesktopSort, setShowDesktopSort] = useState(false);
     const subcategoriesRef = useRef<HTMLDivElement>(null);
+    const quickFiltersRef = useRef<HTMLDivElement>(null);
 
     // Scroll subcategories left/right
     const scrollSubcategories = (direction: 'left' | 'right') => {
         if (subcategoriesRef.current) {
             const scrollAmount = 200;
             subcategoriesRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    // Scroll quick filters left/right
+    const scrollQuickFilters = (direction: 'left' | 'right') => {
+        if (quickFiltersRef.current) {
+            const scrollAmount = 150;
+            quickFiltersRef.current.scrollBy({
                 left: direction === 'left' ? -scrollAmount : scrollAmount,
                 behavior: 'smooth'
             });
@@ -550,47 +562,68 @@ export default function Category({ category, products, subcategories, parentCate
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
                         {/* Mobile Filter & Sort Buttons */}
-                        <div className="flex items-center gap-2 mb-4 lg:hidden overflow-x-auto pb-2 scrollbar-hide">
-                            {/* Filter Button */}
+                        <div className="relative mb-4 lg:hidden overflow-hidden">
+                            {/* Left scroll arrow - hidden on small mobile, visible on tablet */}
                             <button
-                                onClick={() => setShowMobileFilters(true)}
-                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                onClick={() => scrollQuickFilters(language === 'ar' ? 'right' : 'left')}
+                                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
+                                aria-label="Scroll filters left"
                             >
-                                <Filter className="h-4 w-4" />
-                                {t('shop:filters')}
-                                {activeFilterCount > 0 && (
-                                    <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
-                                        {formatNumber(activeFilterCount, language)}
-                                    </span>
-                                )}
+                                <ChevronLeft className="h-4 w-4" />
                             </button>
-
-                            {/* Sort Button */}
+                            {/* Right scroll arrow - hidden on small mobile, visible on tablet */}
                             <button
-                                onClick={() => setShowMobileSort(true)}
-                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                onClick={() => scrollQuickFilters(language === 'ar' ? 'left' : 'right')}
+                                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 items-center justify-center bg-white shadow-md rounded-full text-gray-600 hover:text-gray-900 hover:shadow-lg transition-all hidden sm:flex md:flex lg:hidden"
+                                aria-label="Scroll filters right"
                             >
-                                <ArrowUpDown className="h-3.5 w-3.5" />
-                                {t('shop:sort')}
+                                <ChevronRight className="h-4 w-4" />
                             </button>
+                            <div
+                                ref={quickFiltersRef}
+                                className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide sm:mx-8"
+                            >
+                                {/* Filter Button */}
+                                <button
+                                    onClick={() => setShowMobileFilters(true)}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Filter className="h-4 w-4" />
+                                    {t('shop:filters')}
+                                    {activeFilterCount > 0 && (
+                                        <span className="bg-brand-purple text-white text-xs px-1.5 py-0.5 rounded-full">
+                                            {formatNumber(activeFilterCount, language)}
+                                        </span>
+                                    )}
+                                </button>
 
-                            {/* Quick Filter Chips - Mobile */}
-                            {quickFilters.map((filter) => {
-                                const isActive = isQuickFilterActive(filter.id);
-                                return (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => toggleQuickFilter(filter)}
-                                        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                                            isActive
-                                                ? 'bg-brand-purple text-white'
-                                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
+                                {/* Sort Button */}
+                                <button
+                                    onClick={() => setShowMobileSort(true)}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                    {t('shop:sort')}
+                                </button>
+
+                                {/* Quick Filter Chips - Mobile */}
+                                {quickFilters.map((filter) => {
+                                    const isActive = isQuickFilterActive(filter.id);
+                                    return (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => toggleQuickFilter(filter)}
+                                            className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                                                isActive
+                                                    ? 'bg-brand-purple text-white'
+                                                    : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
