@@ -5,10 +5,9 @@ import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { Button, DualRangeSlider } from '@/Components/ui';
 import { Product, Category as CategoryType, PaginatedData } from '@/types/models';
-import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, X, Filter, Clock, Tag, Package, Wallet, ArrowUpDown, Check, Palette, Ruler } from 'lucide-react';
 import { formatPrice, formatNumber } from '@/lib/utils';
 import { useLocalized } from '@/hooks/useLocalized';
-
 // Map category slugs to banner image names
 const categoryBannerMap: Record<string, string> = {
     'electronics': 'category-electronics-hero',
@@ -21,7 +20,7 @@ const categoryBannerMap: Record<string, string> = {
     'kids': 'category-baby-kids-hero',
 };
 
-type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability';
+type FilterCategory = 'new_arrivals' | 'price' | 'discount' | 'availability' | 'color' | 'size';
 
 interface Props {
     category: CategoryType;
@@ -40,11 +39,15 @@ interface Props {
         has_discount?: boolean;
         top_rated?: boolean;
         popular?: boolean;
+        has_colors?: boolean;
+        has_sizes?: boolean;
     };
     priceRange: {
         min: number;
         max: number;
     };
+    productsWithColors: number;
+    productsWithSizes: number;
 }
 
 // Collapsible filter section component
@@ -98,7 +101,7 @@ function FilterCheckbox({ label, checked, onChange, count }: {
     );
 }
 
-export default function Category({ category, products, subcategories, parentCategory, sort, filters, priceRange }: Props) {
+export default function Category({ category, products, subcategories, parentCategory, sort, filters, priceRange, productsWithColors, productsWithSizes }: Props) {
     const { t, i18n } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
     const language = i18n.language;
@@ -148,6 +151,8 @@ export default function Category({ category, products, subcategories, parentCate
         new_arrivals: filters.new_arrivals || false,
         below_100: filters.below_100 || false,
         min_discount: filters.min_discount || 0,
+        has_colors: filters.has_colors || false,
+        has_sizes: filters.has_sizes || false,
     });
 
     // Slider state for price range
@@ -176,7 +181,11 @@ export default function Category({ category, products, subcategories, parentCate
         { id: 'new_arrivals' as FilterCategory, label: t('shop:filterCategories.newArrivals'), icon: Clock },
         { id: 'price' as FilterCategory, label: t('shop:filterCategories.price'), icon: Wallet },
         { id: 'availability' as FilterCategory, label: t('shop:filterCategories.availability'), icon: Package },
-        { id: 'discount' as FilterCategory, label: t('shop:filterCategories.discount'), icon: Tag },
+        // Only show color filter if category has products with colors
+        ...(productsWithColors > 0 ? [{ id: 'color' as FilterCategory, label: t('shop:filterCategories.color'), icon: Palette }] : []),
+        // Only show size filter if category has products with sizes
+        ...(productsWithSizes > 0 ? [{ id: 'size' as FilterCategory, label: t('shop:filterCategories.size'), icon: Ruler }] : []),
+        { id: 'discount' as FilterCategory, label: t('shop:filterCategories.discount'), icon: Tag }, // Discount at end
     ];
 
     const quickFilters = [
@@ -242,6 +251,9 @@ export default function Category({ category, products, subcategories, parentCate
         if (filters.has_discount) params.has_discount = '1';
         if (filters.top_rated) params.top_rated = '1';
         if (filters.popular) params.popular = '1';
+        // Include has_colors/has_sizes filters
+        if (localFilters.has_colors) params.has_colors = '1';
+        if (localFilters.has_sizes) params.has_sizes = '1';
         return params;
     };
 
@@ -256,6 +268,8 @@ export default function Category({ category, products, subcategories, parentCate
         if (updatedFilters.new_arrivals) params.new_arrivals = '1';
         if (updatedFilters.below_100) params.below_100 = '1';
         if (updatedFilters.min_discount > 0) params.min_discount = updatedFilters.min_discount.toString();
+        if (updatedFilters.has_colors) params.has_colors = '1';
+        if (updatedFilters.has_sizes) params.has_sizes = '1';
 
         router.get(`/category/${category.slug}`, params, { preserveState: true, preserveScroll: true });
     };
@@ -298,6 +312,8 @@ export default function Category({ category, products, subcategories, parentCate
             new_arrivals: false,
             below_100: false,
             min_discount: 0,
+            has_colors: false,
+            has_sizes: false,
         });
         setSliderMin(priceRange.min);
         setSliderMax(priceRange.max);
@@ -342,7 +358,8 @@ export default function Category({ category, products, subcategories, parentCate
 
     const hasActiveFilters = filters.min_price || filters.max_price || filters.in_stock ||
         filters.new_arrivals || filters.below_100 || (filters.min_discount && filters.min_discount > 0) ||
-        filters.price_range || filters.has_discount || filters.top_rated || filters.popular;
+        filters.price_range || filters.has_discount || filters.top_rated || filters.popular ||
+        filters.has_colors || filters.has_sizes;
 
     const activeFilterCount = [
         filters.min_price,
@@ -355,6 +372,8 @@ export default function Category({ category, products, subcategories, parentCate
         filters.has_discount,
         filters.top_rated,
         filters.popular,
+        filters.has_colors,
+        filters.has_sizes,
     ].filter(Boolean).length;
 
     // Filter sidebar content (shared between desktop and mobile)
@@ -392,7 +411,31 @@ export default function Category({ category, products, subcategories, parentCate
                 />
             </FilterSection>
 
-            {/* Discount */}
+            {/* Color Options - Only show if category has products with colors */}
+            {productsWithColors > 0 && (
+                <FilterSection title={t('shop:filterCategories.color')} icon={Palette}>
+                    <FilterCheckbox
+                        label={t('shop:filterLabels.hasColorOptions')}
+                        checked={localFilters.has_colors}
+                        onChange={(checked) => applyFilters({ has_colors: checked })}
+                        count={productsWithColors}
+                    />
+                </FilterSection>
+            )}
+
+            {/* Size Options - Only show if category has products with sizes */}
+            {productsWithSizes > 0 && (
+                <FilterSection title={t('shop:filterCategories.size')} icon={Ruler}>
+                    <FilterCheckbox
+                        label={t('shop:filterLabels.hasSizeOptions')}
+                        checked={localFilters.has_sizes}
+                        onChange={(checked) => applyFilters({ has_sizes: checked })}
+                        count={productsWithSizes}
+                    />
+                </FilterSection>
+            )}
+
+            {/* Discount - at the end */}
             <FilterSection title={t('shop:filterCategories.discount')} icon={Tag}>
                 <div className="space-y-1">
                     {discountOptions.map((option) => (
@@ -938,6 +981,68 @@ export default function Category({ category, products, subcategories, parentCate
                                         >
                                             <span>{t('shop:filterLabels.inStockOnly')}</span>
                                             {localFilters.in_stock && <Check className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Color Options */}
+                                {selectedFilterCategory === 'color' && productsWithColors > 0 && (
+                                    <div className="space-y-1">
+                                        <button
+                                            onClick={() => applyFilters({ has_colors: false })}
+                                            className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
+                                                !localFilters.has_colors
+                                                    ? 'bg-brand-slate text-white'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span>{t('shop:filterLabels.allItems')}</span>
+                                            {!localFilters.has_colors && <Check className="h-4 w-4" />}
+                                        </button>
+                                        <button
+                                            onClick={() => applyFilters({ has_colors: true })}
+                                            className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
+                                                localFilters.has_colors
+                                                    ? 'bg-brand-slate text-white'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span>{t('shop:filterLabels.hasColorOptions')}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs opacity-70">({productsWithColors})</span>
+                                                {localFilters.has_colors && <Check className="h-4 w-4" />}
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Size Options */}
+                                {selectedFilterCategory === 'size' && productsWithSizes > 0 && (
+                                    <div className="space-y-1">
+                                        <button
+                                            onClick={() => applyFilters({ has_sizes: false })}
+                                            className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
+                                                !localFilters.has_sizes
+                                                    ? 'bg-brand-slate text-white'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span>{t('shop:filterLabels.allItems')}</span>
+                                            {!localFilters.has_sizes && <Check className="h-4 w-4" />}
+                                        </button>
+                                        <button
+                                            onClick={() => applyFilters({ has_sizes: true })}
+                                            className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${
+                                                localFilters.has_sizes
+                                                    ? 'bg-brand-slate text-white'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            <span>{t('shop:filterLabels.hasSizeOptions')}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs opacity-70">({productsWithSizes})</span>
+                                                {localFilters.has_sizes && <Check className="h-4 w-4" />}
+                                            </div>
                                         </button>
                                     </div>
                                 )}

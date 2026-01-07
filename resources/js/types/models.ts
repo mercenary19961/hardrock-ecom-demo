@@ -37,6 +37,10 @@ export interface ProductImage {
     url: string;
 }
 
+export interface SizeStock {
+    [size: string]: number;
+}
+
 export interface Product {
     id: number;
     category_id: number;
@@ -58,9 +62,17 @@ export interface Product {
     average_rating: number;
     rating_count: number;
     view_count: number;
+    // Variant fields
+    color?: string | null;
+    color_hex?: string | null;
+    available_sizes?: string[] | null;
+    size_stock?: SizeStock | null;
+    product_group?: string | null;
+    // Relations
     category?: Category;
     images?: ProductImage[];
     primary_image?: ProductImage;
+    color_variants?: Product[];
     effective_low_stock_threshold?: number;
     created_at: string;
     updated_at: string;

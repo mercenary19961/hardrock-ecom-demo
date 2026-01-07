@@ -33,14 +33,18 @@
         "newArrivals": "New Arrivals",
         "price": "Price",
         "discount": "Discount",
-        "availability": "Availability"
+        "availability": "Availability",
+        "color": "Color",
+        "size": "Size"
     },
     "filterLabels": {
         "latestProducts": "Latest Products",
         "allProducts": "All Products",
         "allItems": "All Items",
         "inStockOnly": "In Stock Only",
-        "discountOff": "{{percent}}%+ Off"
+        "discountOff": "{{percent}}%+ Off",
+        "hasColorOptions": "Products with Color Options",
+        "hasSizeOptions": "Products with Size Options"
     },
     "quickFilters": {
         "under25": "Up to 25 JOD",
@@ -83,5 +87,10 @@
     "removedFromWishlist": "Removed from wishlist",
     "min": "Min",
     "max": "Max",
-    "apply": "Apply"
+    "apply": "Apply",
+    "selectSize": "Select Size",
+    "pleaseSelectSize": "Please select a size",
+    "inStockCount": "{{count}} in stock",
+    "size": "Size",
+    "color": "Color"
 }

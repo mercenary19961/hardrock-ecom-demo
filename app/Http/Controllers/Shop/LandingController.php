@@ -132,6 +132,18 @@ class LandingController extends Controller
             $filters['popular'] = true;
         }
 
+        // Has color options filter (products with color attribute)
+        if ($request->boolean('has_colors')) {
+            $query->whereNotNull('color');
+            $filters['has_colors'] = true;
+        }
+
+        // Has size options filter (products with available_sizes)
+        if ($request->boolean('has_sizes')) {
+            $query->whereNotNull('available_sizes');
+            $filters['has_sizes'] = true;
+        }
+
         // Sorting
         $sort = $request->get('sort', 'newest');
         $query = match ($sort) {
@@ -168,6 +180,18 @@ class LandingController extends Controller
             ->selectRaw('MIN(price) as min, MAX(price) as max')
             ->first();
 
+        // Count products with color options in this category
+        $productsWithColors = Product::whereIn('category_id', $categoryIds)
+            ->active()
+            ->whereNotNull('color')
+            ->count();
+
+        // Count products with size options in this category
+        $productsWithSizes = Product::whereIn('category_id', $categoryIds)
+            ->active()
+            ->whereNotNull('available_sizes')
+            ->count();
+
         return Inertia::render('Shop/Category', [
             'category' => $category,
             'products' => $products,
@@ -179,6 +203,8 @@ class LandingController extends Controller
                 'min' => (float) ($priceRange->min ?? 0),
                 'max' => (float) ($priceRange->max ?? 0),
             ],
+            'productsWithColors' => $productsWithColors,
+            'productsWithSizes' => $productsWithSizes,
         ]);
     }
 }
