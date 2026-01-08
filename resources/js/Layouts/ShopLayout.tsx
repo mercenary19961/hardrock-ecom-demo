@@ -19,6 +19,8 @@ import { CartDrawer } from "@/Components/shop/CartDrawer";
 import { WishlistDrawer } from "@/Components/shop/WishlistDrawer";
 import { SearchBar } from "@/Components/shop/SearchBar";
 import { Category, User as UserType } from "@/types/models";
+import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 
 interface ShopLayoutProps {
     children: ReactNode;
@@ -265,6 +267,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         key={category.id}
                                         href={`/category/${category.slug}`}
                                         className="block py-2 text-gray-700 hover:text-gray-900"
+                                        onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {getCategoryName(category)}
                                     </Link>
@@ -528,5 +531,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 }
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
-    return <ShopLayoutContent>{children}</ShopLayoutContent>;
+    return (
+        <CartProvider>
+            <WishlistProvider>
+                <ShopLayoutContent>{children}</ShopLayoutContent>
+            </WishlistProvider>
+        </CartProvider>
+    );
 }

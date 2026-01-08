@@ -2,7 +2,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'customer';
+    role: "admin" | "customer";
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
@@ -89,6 +89,7 @@ export interface CartItem {
         name_ar?: string;
         slug: string;
         price: number;
+        compare_price: number | null;
         stock: number;
         image: string | null;
     };
@@ -119,7 +120,12 @@ export interface OrderItem {
     product?: Product;
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus =
+    | "pending"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled";
 
 export interface Order {
     id: number;
