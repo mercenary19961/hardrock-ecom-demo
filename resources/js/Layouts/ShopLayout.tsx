@@ -284,17 +284,31 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-10 overflow-x-auto scrollbar-hide">
                         {categories?.map((category) => {
-                            const isOnCategoryPage = window.location.pathname.startsWith('/category/');
+                            const isOnCategoryPage =
+                                window.location.pathname.startsWith(
+                                    "/category/"
+                                );
                             const categoryUrl = `/category/${category.slug}`;
 
                             const handleClick = (e: React.MouseEvent) => {
                                 if (isOnCategoryPage) {
                                     e.preventDefault();
-                                    router.get(categoryUrl, {}, {
-                                        preserveState: false,
-                                        preserveScroll: false,
-                                        only: ['category', 'subcategories', 'products', 'filters', 'productsWithColors', 'productsWithSizes'],
-                                    });
+                                    router.get(
+                                        categoryUrl,
+                                        {},
+                                        {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                            only: [
+                                                "category",
+                                                "subcategories",
+                                                "products",
+                                                "filters",
+                                                "productsWithColors",
+                                                "productsWithSizes",
+                                            ],
+                                        }
+                                    );
                                 }
                             };
 
