@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
-import { Cart } from '@/types/models';
+import { createContext, useContext, ReactNode } from "react";
+import { router, usePage } from "@inertiajs/react";
+import { Cart } from "@/types/models";
+import { PageProps } from "@/types";
 
 interface CartContextType {
     cart: Cart;
@@ -21,73 +22,53 @@ const defaultCart: Cart = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-    const [cart, setCart] = useState<Cart>(defaultCart);
-    const [loading, setLoading] = useState(false);
+    const { cart = defaultCart } = usePage<any>().props;
 
     const refreshCart = async () => {
-        try {
-            const response = await axios.get('/cart/data');
-            setCart(response.data);
-        } catch (error) {
-            console.error('Failed to fetch cart:', error);
-        }
+        router.reload({ only: ["cart"] });
     };
 
     const addToCart = async (productId: number, quantity = 1) => {
-        setLoading(true);
-        try {
-            const response = await axios.post('/cart/add', {
+        router.post(
+            "/cart/add",
+            {
                 product_id: productId,
                 quantity,
-            });
-            setCart(response.data.cart);
-        } catch (error) {
-            console.error('Failed to add to cart:', error);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
     };
 
     const updateQuantity = async (itemId: number, quantity: number) => {
-        setLoading(true);
-        try {
-            const response = await axios.patch(`/cart/${itemId}`, { quantity });
-            setCart(response.data.cart);
-        } catch (error) {
-            console.error('Failed to update quantity:', error);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
+        router.patch(
+            `/cart/${itemId}`,
+            { quantity },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
     };
 
     const removeItem = async (itemId: number) => {
-        setLoading(true);
-        try {
-            const response = await axios.delete(`/cart/${itemId}`);
-            setCart(response.data.cart);
-        } catch (error) {
-            console.error('Failed to remove item:', error);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
+        router.delete(`/cart/${itemId}`, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     const isInCart = (productId: number) => {
-        return cart.items.some(item => item.product.id === productId);
+        return cart.items.some((item: any) => item.product.id === productId);
     };
-
-    useEffect(() => {
-        refreshCart();
-    }, []);
 
     return (
         <CartContext.Provider
             value={{
                 cart,
-                loading,
+                loading: false, // Inertia handles its own loading state
                 addToCart,
                 updateQuantity,
                 removeItem,
@@ -103,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 export function useCart() {
     const context = useContext(CartContext);
     if (context === undefined) {
-        throw new Error('useCart must be used within a CartProvider');
+        throw new Error("useCart must be used within a CartProvider");
     }
     return context;
 }

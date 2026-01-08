@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useForm, router } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/Components/ui';
-import { Review, Product } from '@/types/models';
-import { formatNumber } from '@/lib/utils';
-import { Star, ThumbsUp, CheckCircle, User, Trash2, Edit2 } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useForm, router } from "@inertiajs/react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/Components/ui";
+import { Review, Product } from "@/types/models";
+import { formatNumber } from "@/lib/utils";
+import { Star, ThumbsUp, CheckCircle, User, Trash2, Edit2 } from "lucide-react";
 
 interface ReviewSectionProps {
     product: Product;
@@ -15,7 +15,13 @@ interface ReviewSectionProps {
 }
 
 // Star Rating Input Component
-function StarRatingInput({ rating, onChange }: { rating: number; onChange: (rating: number) => void }) {
+function StarRatingInput({
+    rating,
+    onChange,
+}: {
+    rating: number;
+    onChange: (rating: number) => void;
+}) {
     const [hoverRating, setHoverRating] = useState(0);
 
     return (
@@ -32,8 +38,8 @@ function StarRatingInput({ rating, onChange }: { rating: number; onChange: (rati
                     <Star
                         className={`h-8 w-8 transition-colors ${
                             (hoverRating || rating) >= star
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'fill-gray-200 text-gray-200'
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "fill-gray-200 text-gray-200"
                         }`}
                     />
                 </button>
@@ -43,21 +49,42 @@ function StarRatingInput({ rating, onChange }: { rating: number; onChange: (rati
 }
 
 // Star Rating Display Component
-function StarRatingDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
-    const sizeClass = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
+function StarRatingDisplay({
+    rating,
+    size = "sm",
+}: {
+    rating: number;
+    size?: "sm" | "md";
+}) {
+    const sizeClass = size === "sm" ? "h-4 w-4" : "h-5 w-5";
 
     return (
         <div className="flex items-center">
-            {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                    key={star}
-                    className={`${sizeClass} ${
-                        rating >= star
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'fill-gray-200 text-gray-200'
-                    }`}
-                />
-            ))}
+            {[1, 2, 3, 4, 5].map((star) => {
+                const fill = Math.min(1, Math.max(0, rating - (star - 1)));
+                return (
+                    <div key={star} className={`relative ${sizeClass}`}>
+                        {/* Background empty star */}
+                        <Star
+                            className={`${sizeClass} fill-gray-200 text-gray-200`}
+                        />
+                        {/* Precisely filled portion */}
+                        {fill > 0 && (
+                            <div
+                                className="absolute inset-0 overflow-hidden"
+                                style={{
+                                    width: `${fill * 100}%`,
+                                    left: 0,
+                                }}
+                            >
+                                <Star
+                                    className={`${sizeClass} fill-yellow-400 text-yellow-400`}
+                                />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -76,14 +103,23 @@ function ReviewForm({
 }) {
     const { t } = useTranslation();
     const isEditing = !!existingReview;
-    const isArabic = language === 'ar';
+    const isArabic = language === "ar";
 
     const { data, setData, post, patch, processing, errors, reset } = useForm({
         rating: existingReview?.rating || 0,
-        title: isArabic ? (existingReview?.title_ar || '') : (existingReview?.title || ''),
-        title_ar: isArabic ? (existingReview?.title_ar || '') : (existingReview?.title || ''),
-        comment: isArabic ? (existingReview?.comment_ar || '') : (existingReview?.comment || ''),
-        comment_ar: isArabic ? (existingReview?.comment_ar || '') : (existingReview?.comment || ''),
+        title: isArabic
+            ? existingReview?.title_ar || ""
+            : existingReview?.title || "",
+        title_ar: isArabic
+            ? existingReview?.title_ar || ""
+            : existingReview?.title || "",
+        comment: isArabic
+            ? existingReview?.comment_ar || ""
+            : existingReview?.comment || "",
+        comment_ar: isArabic
+            ? existingReview?.comment_ar || ""
+            : existingReview?.comment || "",
+        language: existingReview?.language || language || "en",
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -110,36 +146,44 @@ function ReviewForm({
     return (
         <form onSubmit={handleSubmit} className="bg-gray-50 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">
-                {isEditing ? t('shop:reviewsSection.editReview') : t('shop:reviewsSection.writeReview')}
+                {isEditing
+                    ? t("shop:reviewsSection.editReview")
+                    : t("shop:reviewsSection.writeReview")}
             </h3>
 
             {/* Rating */}
             <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('shop:reviewsSection.rating')} <span className="text-red-500">*</span>
+                    {t("shop:reviewsSection.rating")}{" "}
+                    <span className="text-red-500">*</span>
                 </label>
-                <StarRatingInput rating={data.rating} onChange={(rating) => setData('rating', rating)} />
+                <StarRatingInput
+                    rating={data.rating}
+                    onChange={(rating) => setData("rating", rating)}
+                />
                 {data.rating === 0 && errors.rating && (
-                    <p className="mt-1 text-sm text-red-500">{t('shop:reviewsSection.ratingRequired')}</p>
+                    <p className="mt-1 text-sm text-red-500">
+                        {t("shop:reviewsSection.ratingRequired")}
+                    </p>
                 )}
             </div>
 
             {/* Title */}
             <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('shop:reviewsSection.title')}
+                    {t("shop:reviewsSection.title")}
                 </label>
                 <input
                     type="text"
                     value={isArabic ? data.title_ar : data.title}
                     onChange={(e) => {
                         if (isArabic) {
-                            setData('title_ar', e.target.value);
+                            setData("title_ar", e.target.value);
                         } else {
-                            setData('title', e.target.value);
+                            setData("title", e.target.value);
                         }
                     }}
-                    placeholder={t('shop:reviewsSection.titlePlaceholder')}
+                    placeholder={t("shop:reviewsSection.titlePlaceholder")}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent"
                     maxLength={255}
                 />
@@ -148,18 +192,18 @@ function ReviewForm({
             {/* Comment */}
             <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('shop:reviewsSection.comment')}
+                    {t("shop:reviewsSection.comment")}
                 </label>
                 <textarea
                     value={isArabic ? data.comment_ar : data.comment}
                     onChange={(e) => {
                         if (isArabic) {
-                            setData('comment_ar', e.target.value);
+                            setData("comment_ar", e.target.value);
                         } else {
-                            setData('comment', e.target.value);
+                            setData("comment", e.target.value);
                         }
                     }}
-                    placeholder={t('shop:reviewsSection.commentPlaceholder')}
+                    placeholder={t("shop:reviewsSection.commentPlaceholder")}
                     rows={4}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-purple focus:border-transparent resize-none"
                     maxLength={2000}
@@ -168,18 +212,55 @@ function ReviewForm({
 
             {/* Buttons */}
             <div className="flex items-center gap-3">
-                <Button type="submit" disabled={processing || data.rating === 0}>
-                    {isEditing ? t('shop:reviewsSection.update') : t('shop:reviewsSection.submit')}
+                <Button
+                    type="submit"
+                    disabled={processing || data.rating === 0}
+                >
+                    {isEditing
+                        ? t("shop:reviewsSection.update")
+                        : t("shop:reviewsSection.submit")}
                 </Button>
                 {onCancel && (
                     <Button type="button" variant="outline" onClick={onCancel}>
-                        {t('shop:reviewsSection.cancel')}
+                        {t("shop:reviewsSection.cancel")}
                     </Button>
                 )}
             </div>
         </form>
     );
 }
+
+// Helper to manage reported reviews
+const REPORT_STORAGE_KEY = "reported_reviews";
+const MAX_REPORTS_WEEKLY = 5;
+
+interface ReportRecord {
+    id: number;
+    timestamp: number;
+}
+
+const getReportedReviews = (): ReportRecord[] => {
+    try {
+        const stored = localStorage.getItem(REPORT_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        return [];
+    }
+};
+
+const saveReportedReview = (id: number) => {
+    const reports = getReportedReviews();
+    if (!reports.some((r) => r.id === id)) {
+        reports.push({ id, timestamp: Date.now() });
+        localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(reports));
+    }
+};
+
+const getRecentReportsCount = (): number => {
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const reports = getReportedReviews();
+    return reports.filter((r) => r.timestamp > oneWeekAgo).length;
+};
 
 // Single Review Card Component
 function ReviewCard({
@@ -195,155 +276,263 @@ function ReviewCard({
     onEdit: () => void;
     onDelete: () => void;
 }) {
-    const { t } = useTranslation();
-    const isArabic = language === 'ar';
+    const { t, i18n } = useTranslation();
+    const isArabic = i18n.language === "ar";
+    const [isReported, setIsReported] = useState(() => {
+        const reports = getReportedReviews();
+        return reports.some((r) => r.id === review.id);
+    });
+    const [isReporting, setIsReporting] = useState(false);
 
-    const title = isArabic && review.title_ar ? review.title_ar : review.title;
-    const comment = isArabic && review.comment_ar ? review.comment_ar : review.comment;
+    // Display title and comment in the language they were written in
+    const title = review.language === "ar" ? review.title_ar : review.title;
+    const comment =
+        review.language === "ar" ? review.comment_ar : review.comment;
+
+    // Check if the individual review is written in Arabic for RTL support if needed
+    const isReviewArabic = review.language === "ar";
 
     const handleHelpful = () => {
-        router.post(`/review/${review.id}/helpful`, {}, { preserveScroll: true });
+        router.post(
+            `/review/${review.id}/helpful`,
+            {},
+            { preserveScroll: true }
+        );
     };
 
-    const formattedDate = new Date(review.created_at).toLocaleDateString(
-        isArabic ? 'ar-JO' : 'en-US',
-        { year: 'numeric', month: 'long', day: 'numeric' }
-    );
+    const formattedDate = new Intl.DateTimeFormat(
+        isArabic ? "ar-JO" : "en-US",
+        {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }
+    ).format(new Date(review.created_at));
+
+    if (isReported) {
+        return null;
+    }
 
     return (
-        <div className="border-b border-gray-200 py-6 last:border-0">
-            <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                    {/* Avatar */}
-                    <div className="flex-shrink-0 w-10 h-10 bg-brand-purple/10 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-brand-purple" />
-                    </div>
+        <div className="py-8 space-y-3 transition-all duration-500 ease-in-out">
+            {/* User Profile */}
+            <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                    <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-900">
+                    {review.user?.name || "Anonymous"}
+                </span>
+            </div>
 
-                    <div>
-                        {/* User name and verified badge */}
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-gray-900">
-                                {review.user?.name || 'Anonymous'}
-                            </span>
-                            {review.is_verified_purchase && (
-                                <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                    <CheckCircle className="h-3 w-3" />
-                                    {t('shop:reviewsSection.verifiedPurchase')}
-                                </span>
-                            )}
-                        </div>
+            {/* Rating and Title */}
+            <div className="flex items-center gap-3">
+                <StarRatingDisplay rating={review.rating} />
+                {title && (
+                    <h4 className="font-bold text-gray-900 text-sm md:text-base">
+                        {title}
+                    </h4>
+                )}
+            </div>
 
-                        {/* Rating and date */}
-                        <div className="flex items-center gap-3 mb-2">
-                            <StarRatingDisplay rating={review.rating} />
-                            <span className="text-sm text-gray-500">{formattedDate}</span>
-                        </div>
+            {/* Meta info */}
+            <div className="text-sm text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>
+                    {isArabic
+                        ? `تمت المراجعة في الأردن في ${formattedDate}`
+                        : `Reviewed in Jordan on ${formattedDate}`}
+                </span>
+                {review.is_verified_purchase && (
+                    <>
+                        <span className="text-gray-300">|</span>
+                        <span
+                            className="font-bold text-brand-orange"
+                            style={{ color: "#c45500" }}
+                        >
+                            {t("shop:reviewsSection.verifiedPurchase")}
+                        </span>
+                    </>
+                )}
+            </div>
 
-                        {/* Title */}
-                        {title && (
-                            <h4 className="font-medium text-gray-900 mb-1">{title}</h4>
-                        )}
+            {/* Comment */}
+            {comment && (
+                <p
+                    className={`text-gray-800 text-sm md:text-base leading-relaxed whitespace-pre-line max-w-3xl ${
+                        isReviewArabic ? "font-arabic" : ""
+                    }`}
+                    dir={isReviewArabic ? "rtl" : "ltr"}
+                >
+                    {comment}
+                </p>
+            )}
 
-                        {/* Comment */}
-                        {comment && (
-                            <p className="text-gray-600 whitespace-pre-line">{comment}</p>
-                        )}
-
-                        {/* Helpful button */}
-                        <div className="mt-3">
-                            <button
-                                onClick={handleHelpful}
-                                className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-purple transition-colors"
-                            >
-                                <ThumbsUp className="h-4 w-4" />
-                                {t('shop:reviewsSection.helpful')}
-                                {review.helpful_count > 0 && (
-                                    <span className="text-gray-400">
-                                        ({formatNumber(review.helpful_count, language)})
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-                    </div>
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={handleHelpful}
+                        className={`px-6 py-1 text-sm border rounded-lg shadow-sm transition-all duration-200 ${
+                            review.is_helpful
+                                ? "bg-brand-purple-50 border-brand-purple text-brand-purple font-medium"
+                                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                    >
+                        {t("shop:reviewsSection.helpful")}
+                    </button>
+                    {!isReported && (
+                        <button
+                            onClick={() => {
+                                if (
+                                    getRecentReportsCount() >=
+                                    MAX_REPORTS_WEEKLY
+                                ) {
+                                    alert(
+                                        isArabic
+                                            ? "لقد وصلت إلى الحد الأقصى للبلاغات هذا الأسبوع (5 بلاغات)."
+                                            : "You have reached the maximum limit of reports per week (5 reports)."
+                                    );
+                                    return;
+                                }
+                                setIsReporting(true);
+                                saveReportedReview(review.id);
+                                setTimeout(() => {
+                                    setIsReporting(false);
+                                    setIsReported(true);
+                                }, 2000);
+                            }}
+                            className={`text-sm transition-all duration-300 ${
+                                isReporting
+                                    ? "text-green-600 font-medium animate-pulse"
+                                    : "text-gray-500 hover:text-red-500"
+                            }`}
+                        >
+                            {isReporting
+                                ? isArabic
+                                    ? "تم الإبلاغ عن التعليق"
+                                    : "Comment Reported"
+                                : t("shop:reviewsSection.report")}
+                        </button>
+                    )}
                 </div>
 
-                {/* Edit/Delete buttons for own review */}
                 {isOwnReview && (
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onEdit}
                             className="p-2 text-gray-400 hover:text-brand-purple transition-colors"
-                            title={t('shop:reviewsSection.editReview')}
                         >
                             <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                             onClick={onDelete}
                             className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                            title={t('shop:reviewsSection.delete')}
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
                     </div>
                 )}
             </div>
+
+            {review.helpful_count > 0 && (
+                <div className="text-xs text-gray-500">
+                    {t(
+                        isArabic &&
+                            review.helpful_count >= 3 &&
+                            review.helpful_count <= 9
+                            ? "shop:reviewsSection.helpfulCount_few"
+                            : "shop:reviewsSection.helpfulCount",
+                        {
+                            formattedCount: formatNumber(
+                                review.helpful_count,
+                                language
+                            ),
+                        }
+                    )}
+                </div>
+            )}
         </div>
     );
 }
 
 // Rating Summary Component
-function RatingSummary({ reviews, averageRating, language }: {
+function RatingSummary({
+    reviews,
+    averageRating,
+    language,
+}: {
     reviews: Review[];
     averageRating: number;
     language: string;
 }) {
     const { t } = useTranslation();
-    const isArabic = language === 'ar';
+    const isArabic = language === "ar";
 
     // Calculate rating distribution
     const ratingCounts = [5, 4, 3, 2, 1].map((rating) => ({
         rating,
         count: reviews.filter((r) => r.rating === rating).length,
-        percentage: reviews.length > 0
-            ? (reviews.filter((r) => r.rating === rating).length / reviews.length) * 100
-            : 0,
+        percentage:
+            reviews.length > 0
+                ? (reviews.filter((r) => r.rating === rating).length /
+                      reviews.length) *
+                  100
+                : 0,
     }));
 
-    const formattedAverage = new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-    }).format(averageRating);
+    const formattedAverage = new Intl.NumberFormat(
+        isArabic ? "ar-JO" : "en-JO",
+        {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+        }
+    ).format(averageRating);
 
     return (
-        <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-                {/* Average rating */}
-                <div className="text-center md:border-e md:pe-6 md:me-6">
-                    <div className="text-4xl font-bold text-gray-900 mb-1">{formattedAverage}</div>
-                    <StarRatingDisplay rating={Math.round(averageRating)} size="md" />
-                    <p className="text-sm text-gray-500 mt-1">
-                        {t('shop:reviewsSection.basedOn', { count: formatNumber(reviews.length, language) as unknown as number })}
-                    </p>
-                </div>
+        <div className="space-y-4">
+            <div className="flex items-center gap-2">
+                <StarRatingDisplay rating={averageRating} size="md" />
+                <span className="text-lg font-bold text-gray-900">
+                    {formattedAverage} {isArabic ? "من ٥" : "out of 5"}
+                </span>
+            </div>
 
-                {/* Rating bars */}
-                <div className="flex-1 space-y-2">
-                    {ratingCounts.map(({ rating, count, percentage }) => (
-                        <div key={rating} className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 w-3">{formatNumber(rating, language)}</span>
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-yellow-400 rounded-full transition-all"
-                                    style={{ width: `${percentage}%` }}
-                                />
-                            </div>
-                            <span className="text-sm text-gray-500 w-8">
-                                {formatNumber(count, language)}
-                            </span>
+            <p className="text-sm text-gray-500">
+                {t(
+                    isArabic && reviews.length >= 3 && reviews.length <= 9
+                        ? "shop:reviewsSection.basedOn_few"
+                        : "shop:reviewsSection.basedOn",
+                    {
+                        formattedCount: formatNumber(reviews.length, language),
+                    }
+                )}
+            </p>
+
+            {/* Rating bars */}
+            <div className="space-y-3 pt-2">
+                {ratingCounts.map(({ rating, count, percentage }) => (
+                    <button
+                        key={rating}
+                        className="flex items-center gap-4 w-full group text-left hover:text-brand-purple transition-colors"
+                    >
+                        <span className="text-sm font-medium w-16 shrink-0 whitespace-nowrap">
+                            {formatNumber(rating, language)}{" "}
+                            {isArabic ? "نجوم" : "star"}
+                        </span>
+                        <div className="flex-1 h-5 bg-gray-100 rounded border border-gray-200 overflow-hidden relative min-w-[150px] md:min-w-[200px]">
+                            <div
+                                className="h-full bg-brand-orange transition-all duration-500 rounded-sm"
+                                style={{
+                                    width: `${percentage}%`,
+                                    backgroundColor: "#e67a00",
+                                }}
+                            />
                         </div>
-                    ))}
-                </div>
+                        <span className="text-sm text-gray-500 min-w-[32px] text-right group-hover:text-brand-purple">
+                            {formatNumber(Math.round(percentage), language)}%
+                        </span>
+                    </button>
+                ))}
             </div>
         </div>
     );
@@ -359,119 +548,167 @@ export function ReviewSection({
 }: ReviewSectionProps) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
+    const isArabic = language === "ar";
     const [showForm, setShowForm] = useState(false);
     const [editingReview, setEditingReview] = useState<Review | null>(null);
     const [showAllReviews, setShowAllReviews] = useState(false);
 
-    const INITIAL_REVIEWS_COUNT = 3;
-    const displayedReviews = showAllReviews ? reviews : reviews.slice(0, INITIAL_REVIEWS_COUNT);
+    const INITIAL_REVIEWS_COUNT = 5;
+    const displayedReviews = showAllReviews
+        ? reviews
+        : reviews.slice(0, INITIAL_REVIEWS_COUNT);
 
     const handleDeleteReview = (review: Review) => {
-        if (confirm(t('shop:reviewsSection.deleteConfirm'))) {
+        if (confirm(t("shop:reviewsSection.deleteConfirm"))) {
             router.delete(`/review/${review.id}`, { preserveScroll: true });
         }
     };
 
     return (
-        <section className="mt-12 pt-8 border-t">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {t('shop:reviewsSection.title')}
-                {reviews.length > 0 && (
-                    <span className="text-gray-400 font-normal ms-2">
-                        ({formatNumber(reviews.length, language)})
-                    </span>
-                )}
-            </h2>
-
-            {/* Rating Summary */}
-            {reviews.length > 0 && (
-                <RatingSummary
-                    reviews={reviews}
-                    averageRating={product.average_rating}
-                    language={language}
-                />
-            )}
-
-            {/* Write Review Button or Form */}
-            {isAuthenticated ? (
-                <>
-                    {canReview && !showForm && !editingReview && (
-                        <Button onClick={() => setShowForm(true)} className="mb-6">
-                            <Edit2 className="h-4 w-4 me-2" />
-                            {t('shop:reviewsSection.writeReview')}
-                        </Button>
-                    )}
-
-                    {showForm && (
-                        <div className="mb-6">
-                            <ReviewForm
-                                productSlug={product.slug}
+        <section className="mt-16 pt-12 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[350px_1fr] gap-12">
+                <div className="space-y-8">
+                    <div>
+                        {reviews.length > 0 ? (
+                            <RatingSummary
+                                reviews={reviews}
+                                averageRating={product.average_rating}
                                 language={language}
-                                onCancel={() => setShowForm(false)}
                             />
-                        </div>
-                    )}
+                        ) : (
+                            <div className="text-gray-500 mb-6">
+                                {t("shop:reviewsSection.noReviews")}
+                            </div>
+                        )}
+                    </div>
 
-                    {editingReview && (
-                        <div className="mb-6">
-                            <ReviewForm
-                                productSlug={product.slug}
-                                existingReview={editingReview}
-                                language={language}
-                                onCancel={() => setEditingReview(null)}
-                            />
-                        </div>
-                    )}
-                </>
-            ) : (
-                <div className="bg-gray-50 rounded-xl p-6 mb-6 text-center">
-                    <p className="text-gray-600 mb-4">{t('shop:reviewsSection.loginToReview')}</p>
-                    <a href="/login">
-                        <Button>
-                            {t('common:login')}
-                        </Button>
-                    </a>
+                    <div className="pt-8 border-t border-gray-200">
+                        {isAuthenticated ? (
+                            <>
+                                {canReview && !showForm && !editingReview && (
+                                    <Button
+                                        onClick={() => setShowForm(true)}
+                                        variant="outline"
+                                        className="w-full py-2 border-gray-300 hover:bg-gray-50 shadow-sm"
+                                    >
+                                        {t("shop:reviewsSection.writeReview")}
+                                    </Button>
+                                )}
+
+                                {showForm && (
+                                    <div className="mt-6">
+                                        <ReviewForm
+                                            productSlug={product.slug}
+                                            language={language}
+                                            onCancel={() => setShowForm(false)}
+                                        />
+                                    </div>
+                                )}
+
+                                {editingReview && (
+                                    <div className="mt-6">
+                                        <ReviewForm
+                                            productSlug={product.slug}
+                                            existingReview={editingReview}
+                                            language={language}
+                                            onCancel={() =>
+                                                setEditingReview(null)
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {!canReview && !userReview && (
+                                    <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                        {t(
+                                            "shop:reviewsSection.mustPurchaseToReview"
+                                        )}
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <div className="text-center py-4">
+                                <a href="/login">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                    >
+                                        {t("common:login")}
+                                    </Button>
+                                </a>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            )}
 
-            {/* Reviews List */}
-            {reviews.length > 0 ? (
+                {/* Right Column: Review List */}
                 <div>
-                    {displayedReviews.map((review) => (
-                        <ReviewCard
-                            key={review.id}
-                            review={review}
-                            language={language}
-                            isOwnReview={userReview?.id === review.id}
-                            onEdit={() => {
-                                setEditingReview(review);
-                                setShowForm(false);
-                            }}
-                            onDelete={() => handleDeleteReview(review)}
-                        />
-                    ))}
+                    {reviews.length > 0 ? (
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-bold text-gray-900 mb-6">
+                                {t("shop:reviewsSection.topReviewsFrom")}
+                            </h3>
 
-                    {/* Show More/Less Button */}
-                    {reviews.length > INITIAL_REVIEWS_COUNT && (
-                        <div className="mt-6 text-center">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowAllReviews(!showAllReviews)}
-                            >
-                                {showAllReviews
-                                    ? t('shop:reviewsSection.showLess')
-                                    : t('shop:reviewsSection.showMore')}
-                            </Button>
+                            <div className="divide-y divide-gray-200">
+                                {displayedReviews.map((review) => (
+                                    <ReviewCard
+                                        key={review.id}
+                                        review={review}
+                                        language={language}
+                                        isOwnReview={
+                                            userReview?.id === review.id
+                                        }
+                                        onEdit={() => {
+                                            setEditingReview(review);
+                                            setShowForm(false);
+                                            window.scrollTo({
+                                                top:
+                                                    (document
+                                                        .querySelector(
+                                                            "section.mt-16"
+                                                        )
+                                                        ?.getBoundingClientRect()
+                                                        .top ?? 0) +
+                                                    window.scrollY -
+                                                    100,
+                                                behavior: "smooth",
+                                            });
+                                        }}
+                                        onDelete={() =>
+                                            handleDeleteReview(review)
+                                        }
+                                    />
+                                ))}
+                            </div>
+
+                            {reviews.length > INITIAL_REVIEWS_COUNT && (
+                                <div className="mt-8 pt-6 border-t border-gray-200">
+                                    <button
+                                        onClick={() =>
+                                            setShowAllReviews(!showAllReviews)
+                                        }
+                                        className="text-brand-purple hover:underline font-medium"
+                                    >
+                                        {showAllReviews
+                                            ? t("shop:reviewsSection.showLess")
+                                            : t("shop:reviewsSection.showMore")}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                            <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500 font-medium mb-1">
+                                {t("shop:reviewsSection.noReviewsYet")}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                                {t("shop:reviewsSection.beFirstToReview")}
+                            </p>
                         </div>
                     )}
                 </div>
-            ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                    <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 mb-2">{t('shop:reviewsSection.noReviews')}</p>
-                    <p className="text-sm text-gray-400">{t('shop:reviewsSection.beFirstToReview')}</p>
-                </div>
-            )}
+            </div>
         </section>
     );
 }

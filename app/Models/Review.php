@@ -17,6 +17,7 @@ class Review extends Model
         'comment_ar',
         'is_verified_purchase',
         'helpful_count',
+        'language',
     ];
 
     protected function casts(): array
@@ -28,6 +29,8 @@ class Review extends Model
         ];
     }
 
+    protected $appends = ['is_helpful'];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -36,6 +39,20 @@ class Review extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function helpfulVotes()
+    {
+        return $this->hasMany(ReviewHelpfulVote::class);
+    }
+
+    public function getIsHelpfulAttribute(): bool
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return $this->helpfulVotes()->where('user_id', auth()->id())->exists();
     }
 
     /**

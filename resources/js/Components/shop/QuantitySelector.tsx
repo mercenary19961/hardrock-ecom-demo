@@ -1,4 +1,6 @@
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { formatNumber } from "@/lib/utils";
 
 interface QuantitySelectorProps {
     quantity: number;
@@ -15,6 +17,9 @@ export function QuantitySelector({
     max = 99,
     disabled = false,
 }: QuantitySelectorProps) {
+    const { i18n } = useTranslation();
+    const language = i18n.language;
+
     const decrease = () => {
         if (quantity > min) {
             onChange(quantity - 1);
@@ -37,7 +42,9 @@ export function QuantitySelector({
             >
                 <Minus className="h-4 w-4" />
             </button>
-            <span className="w-12 text-center font-medium">{quantity}</span>
+            <span className="w-12 text-center font-medium">
+                {formatNumber(quantity, language)}
+            </span>
             <button
                 type="button"
                 onClick={increase}

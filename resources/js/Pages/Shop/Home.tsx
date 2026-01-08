@@ -1,12 +1,12 @@
-import { Head, Link } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
-import ShopLayout from '@/Layouts/ShopLayout';
-import { ProductGrid } from '@/Components/shop/ProductGrid';
-import { CategoryNav } from '@/Components/shop/CategoryNav';
-import { HeroBanner } from '@/Components/shop/HeroBanner';
-import { FeaturedCategorySection } from '@/Components/shop/FeaturedCategorySection';
-import { Product, Category } from '@/types/models';
-import { ArrowRight, Flame } from 'lucide-react';
+import { Head, Link } from "@inertiajs/react";
+import { useTranslation } from "react-i18next";
+import ShopLayout from "@/Layouts/ShopLayout";
+import { ProductGrid } from "@/Components/shop/ProductGrid";
+import { CategoryNav } from "@/Components/shop/CategoryNav";
+import { HeroBanner } from "@/Components/shop/HeroBanner";
+import { FeaturedCategorySection } from "@/Components/shop/FeaturedCategorySection";
+import { Product, Category } from "@/types/models";
+import { ArrowRight, Flame } from "lucide-react";
 
 interface FeaturedCategory {
     category: Category;
@@ -19,15 +19,19 @@ interface Props {
     featuredCategories: FeaturedCategory[];
 }
 
-export default function Home({ saleProducts, categories, featuredCategories }: Props) {
+export default function Home({
+    saleProducts,
+    categories,
+    featuredCategories,
+}: Props) {
     const { t } = useTranslation();
 
     // Alternate background colors for featured sections
-    const sectionColors = ['bg-white', 'bg-brand-purple-50/30', 'bg-white'];
+    const sectionColors = ["bg-white", "bg-brand-purple-50/30", "bg-white"];
 
     return (
         <ShopLayout>
-            <Head title={t('common:home')} />
+            <Head title={t("common:home")} />
 
             {/* Hero Banner */}
             <HeroBanner />
@@ -38,7 +42,9 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-purple-50/50 via-white to-brand-orange-50/30" />
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3 mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">{t('common:shopByCategory')}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {t("common:shopByCategory")}
+                        </h2>
                         <div className="h-1 flex-1 max-w-24 bg-gradient-to-r from-brand-purple to-brand-orange rounded-full" />
                     </div>
                     <CategoryNav categories={categories} />
@@ -47,15 +53,22 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
 
             {/* Featured Category Sections */}
             {featuredCategories?.map((featured, index) => {
-                const isBuildingBlocks = featured.category.slug === 'building-blocks';
+                const isBuildingBlocks =
+                    featured.category.slug === "building-blocks";
                 return (
                     <FeaturedCategorySection
                         key={featured.category.id}
                         category={featured.category}
                         products={featured.products}
                         bgColor={sectionColors[index % sectionColors.length]}
-                        accentColor={isBuildingBlocks ? 'purple' : (index % 2 === 0 ? 'purple' : 'orange')}
-                        variant={isBuildingBlocks ? 'grid-cards' : 'default'}
+                        accentColor={
+                            isBuildingBlocks
+                                ? "purple"
+                                : index % 2 === 0
+                                ? "purple"
+                                : "orange"
+                        }
+                        variant={isBuildingBlocks ? "grid-cards" : "default"}
                     />
                 );
             })}
@@ -70,19 +83,14 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
                     <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-2xl font-bold text-white">{t('common:onSale')}</h2>
+                                <h2 className="text-2xl font-bold text-white">
+                                    {t("common:onSale")}
+                                </h2>
                                 <span className="bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5">
                                     <Flame className="h-4 w-4" />
-                                    {t('common:hotDeals')}
+                                    {t("common:hotDeals")}
                                 </span>
                             </div>
-                            <Link
-                                href="/search?on_sale=1"
-                                className="text-brand-purple-100 hover:text-white font-medium flex items-center gap-1 transition-colors"
-                            >
-                                {t('common:viewAll')}
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
                         </div>
                         <ProductGrid products={saleProducts} />
                     </div>
@@ -103,19 +111,27 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
                         <span className="text-white/80 text-sm">Demo Mode</span>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-3">
-                        {t('common:demoStore')}
+                        {t("common:demoStore")}
                     </h3>
                     <p className="text-brand-purple-200 max-w-2xl mx-auto mb-6">
-                        {t('common:demoDescription')}
+                        {t("common:demoDescription")}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
-                            <span className="text-brand-purple-300">Admin:</span>
-                            <span className="text-white ml-2">admin@hardrock-demo.com / demo1234</span>
+                            <span className="text-brand-purple-300">
+                                Admin:
+                            </span>
+                            <span className="text-white ml-2">
+                                admin@hardrock-demo.com / demo1234
+                            </span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
-                            <span className="text-brand-purple-300">Customer:</span>
-                            <span className="text-white ml-2">customer@hardrock-demo.com / demo1234</span>
+                            <span className="text-brand-purple-300">
+                                Customer:
+                            </span>
+                            <span className="text-white ml-2">
+                                customer@hardrock-demo.com / demo1234
+                            </span>
                         </div>
                     </div>
                 </div>

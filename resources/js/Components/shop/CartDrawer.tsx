@@ -1,12 +1,12 @@
-import { Fragment } from 'react';
-import { Link } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
-import { Dialog, Transition } from '@headlessui/react';
-import { X, ShoppingBag } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-import { CartItem } from './CartItem';
-import { Button } from '@/Components/ui';
-import { formatPrice, formatNumber } from '@/lib/utils';
+import { Fragment } from "react";
+import { Link } from "@inertiajs/react";
+import { useTranslation } from "react-i18next";
+import { Dialog, Transition } from "@headlessui/react";
+import { X, ShoppingBag } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { CartItem } from "./CartItem";
+import { Button } from "@/Components/ui";
+import { formatPrice, formatNumber } from "@/lib/utils";
 
 interface CartDrawerProps {
     isOpen: boolean;
@@ -50,7 +50,14 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                         <div className="flex items-center justify-between px-4 py-4 border-b">
                                             <Dialog.Title className="text-lg font-semibold flex items-center gap-2">
                                                 <ShoppingBag className="h-5 w-5" />
-                                                {t('common:cart.title')} {t('common:cart.itemCount', { count: formatNumber(cart.total_items, language) as unknown as number })}
+                                                {t("common:cart.title")}{" "}
+                                                {t("common:cart.itemCount", {
+                                                    formattedCount:
+                                                        formatNumber(
+                                                            cart.total_items,
+                                                            language
+                                                        ),
+                                                })}
                                             </Dialog.Title>
                                             <button
                                                 onClick={onClose}
@@ -64,19 +71,26 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                             {cart.items.length === 0 ? (
                                                 <div className="flex flex-col items-center justify-center h-full text-center">
                                                     <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
-                                                    <p className="text-gray-500">{t('common:cart.empty')}</p>
+                                                    <p className="text-gray-500">
+                                                        {t("common:cart.empty")}
+                                                    </p>
                                                     <Link
                                                         href="/"
                                                         className="mt-4 text-gray-900 underline"
                                                         onClick={onClose}
                                                     >
-                                                        {t('common:cart.continueShopping')}
+                                                        {t(
+                                                            "common:cart.continueShopping"
+                                                        )}
                                                     </Link>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-4">
                                                     {cart.items.map((item) => (
-                                                        <CartItem key={item.id} item={item} />
+                                                        <CartItem
+                                                            key={item.id}
+                                                            item={item}
+                                                        />
                                                     ))}
                                                 </div>
                                             )}
@@ -85,21 +99,48 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                         {cart.items.length > 0 && (
                                             <div className="border-t px-4 py-4 space-y-4">
                                                 <div className="flex justify-between text-lg font-semibold">
-                                                    <span>{t('common:cart.subtotal')}</span>
-                                                    <span>{formatPrice(cart.subtotal, language)}</span>
+                                                    <span>
+                                                        {t(
+                                                            "common:cart.subtotal"
+                                                        )}
+                                                    </span>
+                                                    <span>
+                                                        {formatPrice(
+                                                            cart.subtotal,
+                                                            language
+                                                        )}
+                                                    </span>
                                                 </div>
                                                 <p className="text-sm text-gray-500">
-                                                    {t('common:cart.shippingNote')}
+                                                    {t(
+                                                        "common:cart.shippingNote"
+                                                    )}
                                                 </p>
                                                 <div className="space-y-2">
-                                                    <Link href="/checkout" onClick={onClose}>
-                                                        <Button className="w-full" size="lg">
-                                                            {t('common:cart.checkout')}
+                                                    <Link
+                                                        href="/checkout"
+                                                        onClick={onClose}
+                                                    >
+                                                        <Button
+                                                            className="w-full"
+                                                            size="lg"
+                                                        >
+                                                            {t(
+                                                                "common:cart.checkout"
+                                                            )}
                                                         </Button>
                                                     </Link>
-                                                    <Link href="/cart" onClick={onClose}>
-                                                        <Button variant="outline" className="w-full">
-                                                            {t('common:cart.viewCart')}
+                                                    <Link
+                                                        href="/cart"
+                                                        onClick={onClose}
+                                                    >
+                                                        <Button
+                                                            variant="outline"
+                                                            className="w-full"
+                                                        >
+                                                            {t(
+                                                                "common:cart.viewCart"
+                                                            )}
                                                         </Button>
                                                     </Link>
                                                 </div>

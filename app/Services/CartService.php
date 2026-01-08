@@ -115,6 +115,7 @@ class CartService
                     'name_ar' => $item->product->name_ar,
                     'slug' => $item->product->slug,
                     'price' => $item->product->price,
+                    'compare_price' => $item->product->compare_price,
                     'stock' => $item->product->stock,
                     'image' => $item->product->getPrimaryImageUrl(),
                 ],

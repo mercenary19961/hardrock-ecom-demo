@@ -19,6 +19,10 @@ import { CartDrawer } from "@/Components/shop/CartDrawer";
 import { WishlistDrawer } from "@/Components/shop/WishlistDrawer";
 import { SearchBar } from "@/Components/shop/SearchBar";
 import { Category, User as UserType } from "@/types/models";
+import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
+
+import { formatNumber } from "@/lib/utils";
 
 interface ShopLayoutProps {
     children: ReactNode;
@@ -160,7 +164,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 <ShoppingBagIcon className="h-6 w-6" />
                                 {cart.total_items > 0 && (
                                     <span className="absolute -top-1 -right-1 h-5 w-5 bg-brand-orange text-white text-xs rounded-full flex items-center justify-center">
-                                        {cart.total_items}
+                                        {formatNumber(
+                                            cart.total_items,
+                                            language
+                                        )}
                                     </span>
                                 )}
                             </button>
@@ -265,6 +272,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         key={category.id}
                                         href={`/category/${category.slug}`}
                                         className="block py-2 text-gray-700 hover:text-gray-900"
+                                        onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {getCategoryName(category)}
                                     </Link>
@@ -284,17 +292,31 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-10 overflow-x-auto scrollbar-hide">
                         {categories?.map((category) => {
-                            const isOnCategoryPage = window.location.pathname.startsWith('/category/');
+                            const isOnCategoryPage =
+                                window.location.pathname.startsWith(
+                                    "/category/"
+                                );
                             const categoryUrl = `/category/${category.slug}`;
 
                             const handleClick = (e: React.MouseEvent) => {
                                 if (isOnCategoryPage) {
                                     e.preventDefault();
-                                    router.get(categoryUrl, {}, {
-                                        preserveState: false,
-                                        preserveScroll: false,
-                                        only: ['category', 'subcategories', 'products', 'filters', 'productsWithColors', 'productsWithSizes'],
-                                    });
+                                    router.get(
+                                        categoryUrl,
+                                        {},
+                                        {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                            only: [
+                                                "category",
+                                                "subcategories",
+                                                "products",
+                                                "filters",
+                                                "productsWithColors",
+                                                "productsWithSizes",
+                                            ],
+                                        }
+                                    );
                                 }
                             };
 
@@ -514,5 +536,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 }
 
 export default function ShopLayout({ children }: ShopLayoutProps) {
-    return <ShopLayoutContent>{children}</ShopLayoutContent>;
+    return (
+        <CartProvider>
+            <WishlistProvider>
+                <ShopLayoutContent>{children}</ShopLayoutContent>
+            </WishlistProvider>
+        </CartProvider>
+    );
 }
