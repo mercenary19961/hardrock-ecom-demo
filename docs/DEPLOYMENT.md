@@ -191,7 +191,7 @@ railway run php artisan db:seed --class=ProductionSeeder
 
 - [ ] Site loads at https://demo.hardrock-co.com
 - [ ] SSL certificate is valid (padlock icon)
-- [ ] Admin login works: admin@hardrock-co.com / demo1234
+- [ ] Admin login works: admin@hardrock-demo.com / demo1234
 - [ ] Product images display correctly
 - [ ] Cart functionality works
 - [ ] Checkout flow completes

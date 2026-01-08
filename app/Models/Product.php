@@ -91,6 +91,24 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    /**
+     * Recalculate average rating and count from reviews
+     */
+    public function updateRatingStats(): void
+    {
+        $stats = $this->reviews()->selectRaw('AVG(rating) as avg, COUNT(*) as count')->first();
+
+        $this->update([
+            'average_rating' => round($stats->avg ?? 0, 1),
+            'rating_count' => $stats->count ?? 0,
+        ]);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

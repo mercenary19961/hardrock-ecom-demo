@@ -51,7 +51,7 @@ export default function ForgotPassword({ status }: ForgotPasswordProps) {
                             <input
                                 id="email"
                                 type="email"
-                                placeholder="admin@hardrock-co.com"
+                                placeholder="admin@hardrock-demo.com"
                                 autoComplete="email"
                                 autoFocus
                                 required

@@ -56,8 +56,8 @@ npm run dev
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@hardrock-co.com | demo1234 |
-| Customer | customer@hardrock-co.com | demo1234 |
+| Admin | admin@hardrock-demo.com | demo1234 |
+| Customer | customer@hardrock-demo.com | demo1234 |
 
 ---
 

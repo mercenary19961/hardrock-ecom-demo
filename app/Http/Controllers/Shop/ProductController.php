@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +20,7 @@ class ProductController extends Controller
         // Increment view count
         $product->increment('view_count');
 
-        $product->load(['category', 'images']);
+        $product->load(['category', 'images', 'reviews.user']);
 
         $relatedProducts = [];
         if ($product->category_id) {
@@ -38,10 +39,20 @@ class ProductController extends Controller
         }
         $breadcrumbs[] = ['name' => $product->name, 'slug' => $product->slug];
 
+        // Check if logged-in user can review (hasn't reviewed yet)
+        $canReview = false;
+        $userReview = null;
+        if (Auth::check()) {
+            $userReview = $product->reviews->firstWhere('user_id', Auth::id());
+            $canReview = !$userReview;
+        }
+
         return Inertia::render('Shop/Product', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
             'breadcrumbs' => $breadcrumbs,
+            'canReview' => $canReview,
+            'userReview' => $userReview,
         ]);
     }
 

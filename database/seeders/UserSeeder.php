@@ -13,16 +13,16 @@ class UserSeeder extends Seeder
         // Admin user
         User::create([
             'name' => 'Admin User',
-            'email' => 'admin@hardrock-co.com',
+            'email' => 'admin@hardrock-demo.com',
             'role' => 'admin',
             'password' => Hash::make('demo1234'),
             'email_verified_at' => now(),
         ]);
 
-        // Demo customer
+        // Demo customer account (for orders and reviews)
         User::create([
             'name' => 'Demo Customer',
-            'email' => 'customer@hardrock-co.com',
+            'email' => 'customer@hardrock-demo.com',
             'role' => 'customer',
             'password' => Hash::make('demo1234'),
             'email_verified_at' => now(),

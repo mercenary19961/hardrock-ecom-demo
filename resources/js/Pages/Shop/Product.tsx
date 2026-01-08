@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { QuantitySelector } from '@/Components/shop/QuantitySelector';
+import { ReviewSection } from '@/Components/shop/ReviewSection';
 import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { useLocalized } from '@/hooks/useLocalized';
-import { Product as ProductType, Breadcrumb } from '@/types/models';
+import { Product as ProductType, Breadcrumb, Review } from '@/types/models';
 import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
 
@@ -61,9 +62,12 @@ interface Props {
     product: ProductType;
     relatedProducts: ProductType[];
     breadcrumbs: Breadcrumb[];
+    canReview: boolean;
+    userReview: Review | null;
+    auth?: { user: { id: number; name: string; email: string } | null };
 }
 
-function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
+function ProductContent({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { addToCart, loading } = useCart();
@@ -349,9 +353,18 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                     </div>
                 </div>
 
+                {/* Reviews Section */}
+                <ReviewSection
+                    product={product}
+                    reviews={product.reviews || []}
+                    canReview={canReview}
+                    userReview={userReview}
+                    isAuthenticated={!!auth?.user}
+                />
+
                 {/* Related Products */}
                 {relatedProducts.length > 0 && (
-                    <section>
+                    <section className="mt-12">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('shop:relatedProducts')}</h2>
                         <ProductGrid products={relatedProducts} />
                     </section>
@@ -361,13 +374,16 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     );
 }
 
-export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+export default function Product({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
     return (
         <ShopLayout>
             <ProductContent
                 product={product}
                 relatedProducts={relatedProducts}
                 breadcrumbs={breadcrumbs}
+                canReview={canReview}
+                userReview={userReview}
+                auth={auth}
             />
         </ShopLayout>
     );

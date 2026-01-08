@@ -73,6 +73,7 @@ export interface Product {
     images?: ProductImage[];
     primary_image?: ProductImage;
     color_variants?: Product[];
+    reviews?: Review[];
     effective_low_stock_threshold?: number;
     created_at: string;
     updated_at: string;
@@ -137,6 +138,23 @@ export interface Order {
     items?: OrderItem[];
     user?: User;
     status_color?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Review {
+    id: number;
+    product_id: number;
+    user_id: number;
+    rating: number;
+    title: string | null;
+    title_ar: string | null;
+    comment: string | null;
+    comment_ar: string | null;
+    is_verified_purchase: boolean;
+    helpful_count: number;
+    user?: User;
+    product?: Product;
     created_at: string;
     updated_at: string;
 }

@@ -3,7 +3,7 @@
 ## Pre-Demo Checklist
 
 - [ ] Open https://demo.hardrock-co.com in a fresh browser (incognito recommended)
-- [ ] Have admin credentials ready: admin@hardrock-co.com / demo1234
+- [ ] Have admin credentials ready: admin@hardrock-demo.com / demo1234
 - [ ] Clear any previous cart items
 - [ ] Ensure demo data is seeded (products visible)
 

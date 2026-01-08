@@ -151,7 +151,7 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                                 <input
                                     id="email"
                                     type="email"
-                                    placeholder="admin@hardrock-co.com"
+                                    placeholder="admin@hardrock-demo.com"
                                     autoComplete="email"
                                     required
                                     value={data.email}
@@ -233,10 +233,28 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                             </button>
                         </form>
 
-                        {/* Footer */}
-                        <p className="mt-8 text-center text-sm text-muted-foreground">
-                            Team access only
-                        </p>
+                        {/* Sign Up Link */}
+                        <div className="mt-6 text-center">
+                            <p className="text-sm text-muted-foreground">
+                                Don't have an account?{' '}
+                                <Link
+                                    href={route('register')}
+                                    className="text-brand-purple hover:underline font-medium"
+                                >
+                                    Sign up
+                                </Link>
+                            </p>
+                        </div>
+
+                        {/* Back to Homepage */}
+                        <div className="mt-4 text-center">
+                            <Link
+                                href="/"
+                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                ← Back to Homepage
+                            </Link>
+                        </div>
 
                         {/* Mobile Footer Links */}
                         <div className="lg:hidden mt-6 flex justify-center gap-6 text-sm text-muted-foreground">

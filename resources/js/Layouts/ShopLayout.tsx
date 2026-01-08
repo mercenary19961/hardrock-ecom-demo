@@ -319,7 +319,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             {/* Footer */}
             <footer className="bg-brand-slate text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 lg:gap-16">
                         {/* HardRock Brand */}
                         <div>
                             <h3 className="text-lg font-bold mb-4">HardRock</h3>

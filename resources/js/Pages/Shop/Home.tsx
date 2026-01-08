@@ -108,14 +108,14 @@ export default function Home({ saleProducts, categories, featuredCategories }: P
                     <p className="text-brand-purple-200 max-w-2xl mx-auto mb-6">
                         {t('common:demoDescription')}
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                             <span className="text-brand-purple-300">Admin:</span>
-                            <span className="text-white ml-2">admin@hardrock-co.com / demo1234</span>
+                            <span className="text-white ml-2">admin@hardrock-demo.com / demo1234</span>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                             <span className="text-brand-purple-300">Customer:</span>
-                            <span className="text-white ml-2">customer@hardrock-co.com / demo1234</span>
+                            <span className="text-white ml-2">customer@hardrock-demo.com / demo1234</span>
                         </div>
                     </div>
                 </div>
