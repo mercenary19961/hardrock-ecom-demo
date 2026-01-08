@@ -1,33 +1,49 @@
-import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import { useTranslation } from 'react-i18next';
-import ShopLayout from '@/Layouts/ShopLayout';
-import { ProductGrid } from '@/Components/shop/ProductGrid';
-import { QuantitySelector } from '@/Components/shop/QuantitySelector';
-import { ReviewSection } from '@/Components/shop/ReviewSection';
-import { Button, Badge } from '@/Components/ui';
-import { useCart } from '@/contexts/CartContext';
-import { useLocalized } from '@/hooks/useLocalized';
-import { Product as ProductType, Breadcrumb, Review } from '@/types/models';
-import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
+import { useState } from "react";
+import { Head, Link } from "@inertiajs/react";
+import { useTranslation } from "react-i18next";
+import ShopLayout from "@/Layouts/ShopLayout";
+import { ProductGrid } from "@/Components/shop/ProductGrid";
+import { QuantitySelector } from "@/Components/shop/QuantitySelector";
+import { ReviewSection } from "@/Components/shop/ReviewSection";
+import { Button, Badge } from "@/Components/ui";
+import { useCart } from "@/contexts/CartContext";
+import { useLocalized } from "@/hooks/useLocalized";
+import { Product as ProductType, Breadcrumb, Review } from "@/types/models";
+import {
+    formatPrice,
+    formatNumber,
+    getImageUrl,
+    getDiscountPercentage,
+} from "@/lib/utils";
+import { ChevronRight, ShoppingCart, Check, Bell, Star } from "lucide-react";
 
-function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
+function StarRating({
+    rating,
+    count,
+    language,
+}: {
+    rating: number;
+    count: number;
+    language: string;
+}) {
     if (count === 0 || rating == null) return null;
 
     const ratingValue = Number(rating) || 0;
 
     const getStarFill = (starPosition: number) => {
-        if (ratingValue >= starPosition) return 'full';
-        if (ratingValue >= starPosition - 0.5) return 'half';
-        return 'empty';
+        if (ratingValue >= starPosition) return "full";
+        if (ratingValue >= starPosition - 0.5) return "half";
+        return "empty";
     };
 
-    const isArabic = language === 'ar';
-    const formattedRating = new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-    }).format(ratingValue);
+    const isArabic = language === "ar";
+    const formattedRating = new Intl.NumberFormat(
+        isArabic ? "ar-JO" : "en-JO",
+        {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+        }
+    ).format(ratingValue);
 
     return (
         <div className="flex items-center gap-2">
@@ -39,10 +55,12 @@ function StarRating({ rating, count, language }: { rating: number; count: number
                             {/* Background empty star */}
                             <Star className="absolute inset-0 h-full w-full fill-gray-200 text-gray-200" />
                             {/* Filled portion */}
-                            {fill !== 'empty' && (
+                            {fill !== "empty" && (
                                 <div
                                     className="absolute inset-0 overflow-hidden"
-                                    style={{ width: fill === 'half' ? '50%' : '100%' }}
+                                    style={{
+                                        width: fill === "half" ? "50%" : "100%",
+                                    }}
                                 >
                                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                                 </div>
@@ -52,7 +70,15 @@ function StarRating({ rating, count, language }: { rating: number; count: number
                 })}
             </div>
             <span className="text-sm text-gray-600">
-                {formattedRating} ({formatNumber(count, language)} {count === 1 ? (isArabic ? 'تقييم' : 'review') : (isArabic ? 'تقييمات' : 'reviews')})
+                {formattedRating} ({formatNumber(count, language)}{" "}
+                {count === 1
+                    ? isArabic
+                        ? "تقييم"
+                        : "review"
+                    : isArabic
+                    ? "تقييمات"
+                    : "reviews"}
+                )
             </span>
         </div>
     );
@@ -67,18 +93,31 @@ interface Props {
     auth?: { user: { id: number; name: string; email: string } | null };
 }
 
-function ProductContent({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
+function ProductContent({
+    product,
+    relatedProducts,
+    breadcrumbs,
+    canReview,
+    userReview,
+    auth,
+}: Props) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { addToCart, loading } = useCart();
-    const { getProductName, getProductDescription, getProductShortDescription, getCategoryName } = useLocalized();
+    const {
+        getProductName,
+        getProductDescription,
+        getProductShortDescription,
+        getCategoryName,
+    } = useLocalized();
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
     // Check if product has sizes
-    const hasSizes = product.available_sizes && product.available_sizes.length > 0;
+    const hasSizes =
+        product.available_sizes && product.available_sizes.length > 0;
     const sizeStock = product.size_stock || {};
 
     // Get stock for selected size (or total stock if no sizes)
@@ -93,24 +132,27 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
     const productName = getProductName(product);
     const productDescription = getProductDescription(product);
     const productShortDescription = getProductShortDescription(product);
-    const categoryName = product.category ? getCategoryName(product.category) : '';
+    const categoryName = product.category
+        ? getCategoryName(product.category)
+        : "";
 
     // Check localStorage for previously requested notifications
     const storageKey = `notify_product_${product.id}`;
     const [notifyRequested, setNotifyRequested] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(storageKey) === 'true';
+        if (typeof window !== "undefined") {
+            return localStorage.getItem(storageKey) === "true";
         }
         return false;
     });
 
     const handleNotifyRequest = () => {
         setNotifyRequested(true);
-        localStorage.setItem(storageKey, 'true');
+        localStorage.setItem(storageKey, "true");
     };
 
     const images = product.images || [];
-    const hasDiscount = product.compare_price && product.compare_price > product.price;
+    const hasDiscount =
+        product.compare_price && product.compare_price > product.price;
 
     const handleAddToCart = async () => {
         try {
@@ -118,7 +160,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
             setAdded(true);
             setTimeout(() => setAdded(false), 2000);
         } catch (error) {
-            console.error('Failed to add to cart');
+            console.error("Failed to add to cart");
         }
     };
 
@@ -129,9 +171,17 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Breadcrumbs */}
                 <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6 overflow-hidden">
-                    <Link href="/" className="hover:text-gray-900 flex-shrink-0">{t('common:home')}</Link>
+                    <Link
+                        href="/"
+                        className="hover:text-gray-900 flex-shrink-0"
+                    >
+                        {t("common:home")}
+                    </Link>
                     {breadcrumbs.map((crumb, index) => (
-                        <span key={crumb.slug} className="flex items-center gap-2 min-w-0">
+                        <span
+                            key={crumb.slug}
+                            className="flex items-center gap-2 min-w-0"
+                        >
                             <ChevronRight className="h-4 w-4 flex-shrink-0" />
                             {index === breadcrumbs.length - 1 ? (
                                 <span
@@ -141,7 +191,10 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                                     {crumb.name}
                                 </span>
                             ) : (
-                                <Link href={`/category/${crumb.slug}`} className="hover:text-gray-900 whitespace-nowrap flex-shrink-0">
+                                <Link
+                                    href={`/category/${crumb.slug}`}
+                                    className="hover:text-gray-900 whitespace-nowrap flex-shrink-0"
+                                >
                                     {crumb.name}
                                 </Link>
                             )}
@@ -156,17 +209,23 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                         <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden mb-4">
                             {images[selectedImage] ? (
                                 <img
-                                    src={getImageUrl(images[selectedImage].path, product.id, images[selectedImage].sort_order)}
+                                    src={getImageUrl(
+                                        images[selectedImage].path,
+                                        product.id,
+                                        images[selectedImage].sort_order
+                                    )}
                                     alt={productName}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <span className="text-gray-400">No image available</span>
+                                    <span className="text-gray-400">
+                                        No image available
+                                    </span>
                                 </div>
                             )}
                         </div>
-                        {images.length > 1 && (
+                        {images.length > 0 && (
                             <div className="flex gap-3 overflow-x-auto pb-2">
                                 {images.map((image, index) => (
                                     <button
@@ -174,12 +233,16 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                                         onClick={() => setSelectedImage(index)}
                                         className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
                                             selectedImage === index
-                                                ? 'border-brand-purple'
-                                                : 'border-gray-200 hover:border-gray-400'
+                                                ? "border-brand-purple"
+                                                : "border-gray-200 hover:border-gray-400"
                                         }`}
                                     >
                                         <img
-                                            src={getImageUrl(image.path, product.id, image.sort_order)}
+                                            src={getImageUrl(
+                                                image.path,
+                                                product.id,
+                                                image.sort_order
+                                            )}
                                             alt={image.alt_text || productName}
                                             className="w-full h-full object-cover"
                                         />
@@ -202,11 +265,17 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                             </div>
                         )}
 
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{productName}</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            {productName}
+                        </h1>
 
                         {product.rating_count > 0 && (
                             <div className="mb-4">
-                                <StarRating rating={product.average_rating} count={product.rating_count} language={language} />
+                                <StarRating
+                                    rating={product.average_rating}
+                                    count={product.rating_count}
+                                    language={language}
+                                />
                             </div>
                         )}
 
@@ -217,10 +286,18 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                             {hasDiscount && (
                                 <>
                                     <span className="text-xl text-gray-400 line-through">
-                                        {formatPrice(product.compare_price!, language)}
+                                        {formatPrice(
+                                            product.compare_price!,
+                                            language
+                                        )}
                                     </span>
                                     <Badge variant="danger">
-                                        {t('common:savePercent', { percent: getDiscountPercentage(product.price, product.compare_price!) })}
+                                        {t("common:savePercent", {
+                                            percent: getDiscountPercentage(
+                                                product.price,
+                                                product.compare_price!
+                                            ),
+                                        })}
                                     </Badge>
                                 </>
                             )}
@@ -228,14 +305,20 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
 
                         <div className="mb-6">
                             {product.stock > 0 ? (
-                                <Badge variant="success">{t('common:inStock')}</Badge>
+                                <Badge variant="success">
+                                    {t("common:inStock")}
+                                </Badge>
                             ) : (
-                                <Badge variant="danger">{t('common:outOfStock')}</Badge>
+                                <Badge variant="danger">
+                                    {t("common:outOfStock")}
+                                </Badge>
                             )}
                         </div>
 
                         {productShortDescription && (
-                            <p className="text-gray-600 mb-6">{productShortDescription}</p>
+                            <p className="text-gray-600 mb-6">
+                                {productShortDescription}
+                            </p>
                         )}
 
                         {/* Size Selector */}
@@ -243,32 +326,42 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                             <div className="mb-6">
                                 <div className="flex items-center justify-between mb-3">
                                     <h3 className="text-sm font-medium text-gray-900">
-                                        {t('shop:selectSize')}
+                                        {t("shop:selectSize")}
                                     </h3>
                                     {selectedSize && (
                                         <span className="text-sm text-gray-500">
-                                            {t('shop:inStockCount', { count: sizeStock[selectedSize] || 0 })}
+                                            {t("shop:inStockCount", {
+                                                count:
+                                                    sizeStock[selectedSize] ||
+                                                    0,
+                                            })}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {product.available_sizes!.map((size) => {
-                                        const stockForSize = sizeStock[size] || 0;
+                                        const stockForSize =
+                                            sizeStock[size] || 0;
                                         const isOutOfStock = stockForSize === 0;
-                                        const isSelected = selectedSize === size;
+                                        const isSelected =
+                                            selectedSize === size;
 
                                         return (
                                             <button
                                                 key={size}
-                                                onClick={() => !isOutOfStock && setSelectedSize(size)}
+                                                onClick={() =>
+                                                    !isOutOfStock &&
+                                                    setSelectedSize(size)
+                                                }
                                                 disabled={isOutOfStock}
                                                 className={`
                                                     min-w-[3rem] px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
-                                                    ${isSelected
-                                                        ? 'border-brand-purple bg-brand-purple text-white'
-                                                        : isOutOfStock
-                                                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through'
-                                                            : 'border-gray-300 bg-white text-gray-700 hover:border-brand-purple'
+                                                    ${
+                                                        isSelected
+                                                            ? "border-brand-purple bg-brand-purple text-white"
+                                                            : isOutOfStock
+                                                            ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
+                                                            : "border-gray-300 bg-white text-gray-700 hover:border-brand-purple"
                                                     }
                                                 `}
                                             >
@@ -279,7 +372,7 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                                 </div>
                                 {!selectedSize && (
                                     <p className="mt-2 text-sm text-amber-600">
-                                        {t('shop:pleaseSelectSize')}
+                                        {t("shop:pleaseSelectSize")}
                                     </p>
                                 )}
                             </div>
@@ -295,19 +388,24 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                                 />
                                 <Button
                                     onClick={handleAddToCart}
-                                    disabled={loading || added || (hasSizes === true && selectedSize === null)}
+                                    disabled={
+                                        loading ||
+                                        added ||
+                                        (hasSizes === true &&
+                                            selectedSize === null)
+                                    }
                                     size="lg"
                                     className="flex-1"
                                 >
                                     {added ? (
                                         <>
                                             <Check className="me-2 h-5 w-5" />
-                                            {t('common:addedToCart')}
+                                            {t("common:addedToCart")}
                                         </>
                                     ) : (
                                         <>
                                             <ShoppingCart className="me-2 h-5 w-5" />
-                                            {t('common:addToCart')}
+                                            {t("common:addToCart")}
                                         </>
                                     )}
                                 </Button>
@@ -324,18 +422,18 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                                     {notifyRequested ? (
                                         <>
                                             <Check className="me-2 h-5 w-5" />
-                                            {t('shop:requestSubmitted')}
+                                            {t("shop:requestSubmitted")}
                                         </>
                                     ) : (
                                         <>
                                             <Bell className="me-2 h-5 w-5" />
-                                            {t('shop:notifyMe')}
+                                            {t("shop:notifyMe")}
                                         </>
                                     )}
                                 </Button>
                                 {notifyRequested && (
                                     <p className="text-sm text-gray-500 mt-2 text-center">
-                                        {t('shop:notifyMeDescription')}
+                                        {t("shop:notifyMeDescription")}
                                     </p>
                                 )}
                             </div>
@@ -344,7 +442,9 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                         {/* Description */}
                         {productDescription && (
                             <div className="mt-8 pt-8 border-t">
-                                <h2 className="text-lg font-semibold mb-4">{t('shop:description')}</h2>
+                                <h2 className="text-lg font-semibold mb-4">
+                                    {t("shop:description")}
+                                </h2>
                                 <div className="prose prose-sm text-gray-600 whitespace-pre-line">
                                     {productDescription}
                                 </div>
@@ -365,7 +465,9 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
                 {/* Related Products */}
                 {relatedProducts.length > 0 && (
                     <section className="mt-12">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('shop:relatedProducts')}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                            {t("shop:relatedProducts")}
+                        </h2>
                         <ProductGrid products={relatedProducts} />
                     </section>
                 )}
@@ -374,7 +476,14 @@ function ProductContent({ product, relatedProducts, breadcrumbs, canReview, user
     );
 }
 
-export default function Product({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
+export default function Product({
+    product,
+    relatedProducts,
+    breadcrumbs,
+    canReview,
+    userReview,
+    auth,
+}: Props) {
     return (
         <ShopLayout>
             <ProductContent
