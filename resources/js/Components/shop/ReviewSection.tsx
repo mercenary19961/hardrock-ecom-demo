@@ -13,6 +13,9 @@ import {
     Edit2,
     ChevronLeft,
     ChevronRight,
+    LogIn,
+    Flag,
+    MessagesSquare,
 } from "lucide-react";
 
 interface ReviewSectionProps {
@@ -356,9 +359,10 @@ function ReviewCard({
                     <>
                         <span className="text-gray-300">|</span>
                         <span
-                            className="font-bold text-brand-orange"
+                            className="font-bold text-brand-orange flex items-center gap-1"
                             style={{ color: "#c45500" }}
                         >
+                            <CheckCircle className="h-3.5 w-3.5" />
                             {t("shop:reviewsSection.verifiedPurchase")}
                         </span>
                     </>
@@ -382,12 +386,17 @@ function ReviewCard({
                 <div className="flex items-center gap-4">
                     <button
                         onClick={handleHelpful}
-                        className={`px-6 py-1 text-sm border rounded-lg shadow-sm transition-all duration-200 ${
+                        className={`px-6 py-1 text-sm border rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2 ${
                             review.is_helpful
                                 ? "bg-brand-purple-50 border-brand-purple text-brand-purple font-medium"
                                 : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                         }`}
                     >
+                        <ThumbsUp
+                            className={`h-4 w-4 ${
+                                review.is_helpful ? "fill-brand-purple" : ""
+                            }`}
+                        />
                         {t("shop:reviewsSection.helpful")}
                     </button>
                     {!isReported && (
@@ -411,12 +420,13 @@ function ReviewCard({
                                     setIsReported(true);
                                 }, 2000);
                             }}
-                            className={`text-sm transition-all duration-300 ${
+                            className={`text-sm transition-all duration-300 flex items-center gap-1.5 ${
                                 isReporting
                                     ? "text-green-600 font-medium animate-pulse"
                                     : "text-gray-500 hover:text-red-500"
                             }`}
                         >
+                            {!isReporting && <Flag className="h-3.5 w-3.5" />}
                             {isReporting
                                 ? isArabic
                                     ? "تم الإبلاغ عن التعليق"
@@ -531,10 +541,10 @@ function RatingSummary({
                         </span>
                         <div className="flex-1 h-5 bg-gray-100 rounded border border-gray-200 overflow-hidden relative min-w-[150px] md:min-w-[200px]">
                             <div
-                                className="h-full bg-brand-orange transition-all duration-500 rounded-sm"
+                                className="h-full bg-brand-purple transition-all duration-500 rounded-sm"
                                 style={{
                                     width: `${percentage}%`,
-                                    backgroundColor: "#e67a00",
+                                    backgroundColor: "#660ADB",
                                 }}
                             />
                         </div>
@@ -651,8 +661,9 @@ export function ReviewSection({
                                 <a href="/login">
                                     <Button
                                         variant="outline"
-                                        className="w-full py-3"
+                                        className="w-full py-3 flex items-center justify-center gap-2"
                                     >
+                                        <LogIn className="h-4 w-4" />
                                         {t("shop:reviewsSection.loginToReview")}
                                     </Button>
                                 </a>
@@ -665,7 +676,8 @@ export function ReviewSection({
                 <div>
                     {reviews.total > 0 ? (
                         <div className="space-y-2">
-                            <h3 className="text-xl font-bold text-gray-900 mb-6">
+                            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                <MessagesSquare className="h-5 w-5 text-brand-purple" />
                                 {t("shop:reviewsSection.topReviewsFrom")}
                             </h3>
 
