@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ProductSubcategoriesSeeder::class, // Redistribute products from parent categories into subcategories
             SaleProductsSeeder::class,         // Add sale discounts to products
             OrderSeeder::class,
+            ReviewSeeder::class,               // Demo reviews for products
         ]);
     }
 }

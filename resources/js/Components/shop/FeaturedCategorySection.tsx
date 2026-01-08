@@ -53,17 +53,22 @@ function MiniProductCard({ product }: { product: Product }) {
         ? getImageUrl(mainImage.path, product.id, mainImage.sort_order)
         : getImageUrl(null, product.id, 0);
 
+    const productName = getProductName(product);
+
     return (
         <Link href={`/product/${product.slug}`} className="group block">
-            <div className="aspect-square bg-white rounded-lg overflow-hidden mb-2">
+            <div className="aspect-square bg-white rounded-lg overflow-hidden mb-2 border border-gray-200 group-hover:border-gray-300 transition-colors">
                 <img
                     src={imageUrl}
-                    alt={getProductName(product)}
+                    alt={productName}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                 />
             </div>
-            <p className="text-sm text-gray-900 group-hover:text-gray-500 line-clamp-2 transition-colors">
-                {getProductName(product)}
+            <p
+                className="text-sm text-gray-900 group-hover:text-gray-500 truncate transition-colors"
+                title={productName}
+            >
+                {productName}
             </p>
         </Link>
     );

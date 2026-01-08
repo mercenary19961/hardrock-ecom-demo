@@ -30,16 +30,11 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
     'kids': Baby,
 };
 
-// Map category slugs to background colors
-const categoryColors: Record<string, string> = {
-    'electronics': 'bg-blue-100 text-blue-600 group-hover:bg-blue-200',
-    'skincare': 'bg-pink-100 text-pink-600 group-hover:bg-pink-200',
-    'building-blocks': 'bg-amber-100 text-amber-600 group-hover:bg-amber-200',
-    'fashion': 'bg-purple-100 text-purple-600 group-hover:bg-purple-200',
-    'home-kitchen': 'bg-green-100 text-green-600 group-hover:bg-green-200',
-    'sports': 'bg-orange-100 text-orange-600 group-hover:bg-orange-200',
-    'stationery': 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200',
-    'kids': 'bg-rose-100 text-rose-600 group-hover:bg-rose-200',
+// Brand colors for glassmorphism effect
+const brandStyle = {
+    bg: 'from-brand-purple/10 to-brand-purple-400/20',
+    icon: 'text-brand-orange group-hover:text-brand-orange-600',
+    glow: 'group-hover:shadow-brand-purple/30'
 };
 
 export function CategoryNav({ categories }: CategoryNavProps) {
@@ -49,20 +44,24 @@ export function CategoryNav({ categories }: CategoryNavProps) {
         <nav className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
             {categories.map((category) => {
                 const IconComponent = categoryIcons[category.slug] || ShoppingBag;
-                const colorClasses = categoryColors[category.slug] || 'bg-gray-100 text-gray-600 group-hover:bg-gray-200';
 
                 return (
                     <Link
                         key={category.id}
                         href={`/category/${category.slug}`}
-                        className="group flex flex-col items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-brand-purple-200 hover:shadow-md transition-all"
+                        className={`group relative flex flex-col items-center gap-3 p-4 rounded-2xl border border-white/60 bg-white/40 backdrop-blur-md shadow-sm hover:shadow-lg ${brandStyle.glow} transition-all duration-300 hover:scale-105 hover:-translate-y-1`}
                     >
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${colorClasses}`}>
-                            <IconComponent className="w-7 h-7" />
+                        {/* Glassmorphism icon container */}
+                        <div className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${brandStyle.bg} backdrop-blur-sm border border-white/50 flex items-center justify-center shadow-inner transition-all duration-300 group-hover:scale-110 group-hover:shadow-md`}>
+                            {/* Inner glow effect */}
+                            <div className="absolute inset-0 rounded-xl bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <IconComponent className={`w-7 h-7 relative z-10 transition-colors duration-300 ${brandStyle.icon}`} />
                         </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-brand-purple text-center line-clamp-2 transition-colors">
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-black text-center line-clamp-2 transition-colors duration-300">
                             {getCategoryName(category)}
                         </span>
+                        {/* Subtle bottom accent line */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-brand-purple to-brand-orange group-hover:w-1/2 transition-all duration-300 rounded-full" />
                     </Link>
                 );
             })}

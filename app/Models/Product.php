@@ -32,6 +32,11 @@ class Product extends Model
         'average_rating',
         'rating_count',
         'view_count',
+        'color',
+        'color_hex',
+        'available_sizes',
+        'size_stock',
+        'product_group',
     ];
 
     protected function casts(): array
@@ -42,6 +47,8 @@ class Product extends Model
             'average_rating' => 'decimal:1',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'available_sizes' => 'array',
+            'size_stock' => 'array',
         ];
     }
 
@@ -82,6 +89,24 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    /**
+     * Recalculate average rating and count from reviews
+     */
+    public function updateRatingStats(): void
+    {
+        $stats = $this->reviews()->selectRaw('AVG(rating) as avg, COUNT(*) as count')->first();
+
+        $this->update([
+            'average_rating' => round($stats->avg ?? 0, 1),
+            'rating_count' => $stats->count ?? 0,
+        ]);
     }
 
     public function scopeActive($query)
@@ -160,5 +185,68 @@ class Product extends Model
 
         // Otherwise use storage path
         return asset('storage/' . $path);
+    }
+
+    /**
+     * Check if this product has variants (is part of a product group)
+     */
+    public function hasVariants(): bool
+    {
+        return !empty($this->product_group);
+    }
+
+    /**
+     * Check if this product has size options
+     */
+    public function hasSizes(): bool
+    {
+        return !empty($this->available_sizes);
+    }
+
+    /**
+     * Get all color variants of this product (products in the same group)
+     */
+    public function colorVariants()
+    {
+        if (!$this->product_group) {
+            return collect([$this]);
+        }
+
+        return static::where('product_group', $this->product_group)
+            ->where('is_active', true)
+            ->orderBy('color')
+            ->get();
+    }
+
+    /**
+     * Get stock for a specific size
+     */
+    public function getStockForSize(?string $size): int
+    {
+        if (!$size || !$this->size_stock) {
+            return $this->stock;
+        }
+
+        return $this->size_stock[$size] ?? 0;
+    }
+
+    /**
+     * Get total stock across all sizes
+     */
+    public function getTotalSizeStock(): int
+    {
+        if (!$this->size_stock) {
+            return $this->stock;
+        }
+
+        return array_sum($this->size_stock);
+    }
+
+    /**
+     * Check if a specific size is in stock
+     */
+    public function isSizeInStock(?string $size): bool
+    {
+        return $this->getStockForSize($size) > 0;
     }
 }

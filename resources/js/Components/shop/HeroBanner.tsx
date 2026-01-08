@@ -41,7 +41,7 @@ const slides: Slide[] = [
         id: 4,
         desktopImage: '/images/banners/desktop/slide-4-fashion.webp',
         mobileImage: '/images/banners/mobile/slide-4-fashion.webp',
-        link: '/category/fashion-accessories',
+        link: '/category/fashion?has_discount=1&sort=sale',
         alt: 'Trendy Fashion & Accessories',
         altAr: 'الموضة والإكسسوارات العصرية',
     },

@@ -7,6 +7,7 @@ use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -36,7 +37,15 @@ Route::name('shop.')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+        // Review routes
+        Route::post('/product/{product}/review', [ReviewController::class, 'store'])->name('review.store');
+        Route::patch('/review/{review}', [ReviewController::class, 'update'])->name('review.update');
+        Route::delete('/review/{review}', [ReviewController::class, 'destroy'])->name('review.destroy');
     });
+
+    // Review helpful (can be anonymous)
+    Route::post('/review/{review}/helpful', [ReviewController::class, 'helpful'])->name('review.helpful');
 });
 
 // Dashboard redirect (Breeze expects this route)

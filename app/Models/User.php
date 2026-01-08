@@ -54,4 +54,22 @@ class User extends Authenticatable
     {
         return $this->role === 'customer';
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Check if user has purchased a specific product
+     */
+    public function hasPurchased(int $productId): bool
+    {
+        return $this->orders()
+            ->whereHas('items', function ($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->where('status', 'delivered')
+            ->exists();
+    }
 }

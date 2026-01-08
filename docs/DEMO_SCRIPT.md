@@ -3,7 +3,7 @@
 ## Pre-Demo Checklist
 
 - [ ] Open https://demo.hardrock-co.com in a fresh browser (incognito recommended)
-- [ ] Have admin credentials ready: admin@hardrock-co.com / demo1234
+- [ ] Have admin credentials ready: admin@hardrock-demo.com / demo1234
 - [ ] Clear any previous cart items
 - [ ] Ensure demo data is seeded (products visible)
 
@@ -125,11 +125,15 @@
 
 | Feature | Where to Show | Talking Point |
 |---------|---------------|---------------|
+| Bilingual Support | Language toggle (AR button) | "Full Arabic/English with RTL support" |
 | Responsive Design | Resize browser | "Works on all devices" |
-| Fast Performance | Page navigation | "Server-side rendering with client interactivity" |
+| SPA Navigation | Category switching | "No page refreshes when browsing categories" |
+| Glassmorphism UI | Homepage category icons | "Modern, polished design elements" |
+| Advanced Filters | Category page filters | "Price range, availability, variants" |
+| Wishlist | Heart icon | "Persistent wishlist with cart integration" |
 | Real-time Updates | Cart total | "No page refreshes needed" |
+| Product Variants | Fashion products | "Size and color options" |
 | Image Management | Admin product edit | "Easy multi-image upload" |
-| Order Tracking | Admin orders | "Complete order lifecycle" |
 | Search | Header search bar | "Instant product search" |
 
 ---
@@ -143,7 +147,7 @@
 > "Stock levels are tracked automatically. When an order is placed, inventory is decremented. Admins can set stock levels and get notified when running low."
 
 **Q: Can we add [Custom Feature]?**
-> "Absolutely. This is a starting point - we can add customer accounts, wishlists, reviews, discount codes, or any feature the project needs."
+> "Absolutely. This is a starting point - we already have wishlists and product variants. We can add reviews, discount codes, or any feature the project needs."
 
 **Q: How long to customize for our brand?**
 > "Basic branding (colors, logo, content) can be done quickly. More complex customizations depend on the specific requirements."

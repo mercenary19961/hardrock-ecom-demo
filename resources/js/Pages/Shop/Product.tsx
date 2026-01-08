@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import ShopLayout from '@/Layouts/ShopLayout';
 import { ProductGrid } from '@/Components/shop/ProductGrid';
 import { QuantitySelector } from '@/Components/shop/QuantitySelector';
+import { ReviewSection } from '@/Components/shop/ReviewSection';
 import { Button, Badge } from '@/Components/ui';
 import { useCart } from '@/contexts/CartContext';
 import { useLocalized } from '@/hooks/useLocalized';
-import { Product as ProductType, Breadcrumb } from '@/types/models';
+import { Product as ProductType, Breadcrumb, Review } from '@/types/models';
 import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
 import { ChevronRight, ShoppingCart, Check, Bell, Star } from 'lucide-react';
 
@@ -61,9 +62,12 @@ interface Props {
     product: ProductType;
     relatedProducts: ProductType[];
     breadcrumbs: Breadcrumb[];
+    canReview: boolean;
+    userReview: Review | null;
+    auth?: { user: { id: number; name: string; email: string } | null };
 }
 
-function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
+function ProductContent({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { addToCart, loading } = useCart();
@@ -71,6 +75,19 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
+    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
+    // Check if product has sizes
+    const hasSizes = product.available_sizes && product.available_sizes.length > 0;
+    const sizeStock = product.size_stock || {};
+
+    // Get stock for selected size (or total stock if no sizes)
+    const getAvailableStock = () => {
+        if (!hasSizes || !selectedSize) {
+            return product.stock;
+        }
+        return sizeStock[selectedSize] || 0;
+    };
 
     // Get localized content
     const productName = getProductName(product);
@@ -221,17 +238,64 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                             <p className="text-gray-600 mb-6">{productShortDescription}</p>
                         )}
 
+                        {/* Size Selector */}
+                        {hasSizes && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-sm font-medium text-gray-900">
+                                        {t('shop:selectSize')}
+                                    </h3>
+                                    {selectedSize && (
+                                        <span className="text-sm text-gray-500">
+                                            {t('shop:inStockCount', { count: sizeStock[selectedSize] || 0 })}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {product.available_sizes!.map((size) => {
+                                        const stockForSize = sizeStock[size] || 0;
+                                        const isOutOfStock = stockForSize === 0;
+                                        const isSelected = selectedSize === size;
+
+                                        return (
+                                            <button
+                                                key={size}
+                                                onClick={() => !isOutOfStock && setSelectedSize(size)}
+                                                disabled={isOutOfStock}
+                                                className={`
+                                                    min-w-[3rem] px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
+                                                    ${isSelected
+                                                        ? 'border-brand-purple bg-brand-purple text-white'
+                                                        : isOutOfStock
+                                                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through'
+                                                            : 'border-gray-300 bg-white text-gray-700 hover:border-brand-purple'
+                                                    }
+                                                `}
+                                            >
+                                                {size}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {!selectedSize && (
+                                    <p className="mt-2 text-sm text-amber-600">
+                                        {t('shop:pleaseSelectSize')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Add to Cart or Notify Me */}
                         {product.stock > 0 ? (
                             <div className="flex items-center gap-4 mb-8">
                                 <QuantitySelector
                                     quantity={quantity}
                                     onChange={setQuantity}
-                                    max={product.stock}
+                                    max={getAvailableStock()}
                                 />
                                 <Button
                                     onClick={handleAddToCart}
-                                    disabled={loading || added}
+                                    disabled={loading || added || (hasSizes === true && selectedSize === null)}
                                     size="lg"
                                     className="flex-1"
                                 >
@@ -289,9 +353,18 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
                     </div>
                 </div>
 
+                {/* Reviews Section */}
+                <ReviewSection
+                    product={product}
+                    reviews={product.reviews || []}
+                    canReview={canReview}
+                    userReview={userReview}
+                    isAuthenticated={!!auth?.user}
+                />
+
                 {/* Related Products */}
                 {relatedProducts.length > 0 && (
-                    <section>
+                    <section className="mt-12">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('shop:relatedProducts')}</h2>
                         <ProductGrid products={relatedProducts} />
                     </section>
@@ -301,13 +374,16 @@ function ProductContent({ product, relatedProducts, breadcrumbs }: Props) {
     );
 }
 
-export default function Product({ product, relatedProducts, breadcrumbs }: Props) {
+export default function Product({ product, relatedProducts, breadcrumbs, canReview, userReview, auth }: Props) {
     return (
         <ShopLayout>
             <ProductContent
                 product={product}
                 relatedProducts={relatedProducts}
                 breadcrumbs={breadcrumbs}
+                canReview={canReview}
+                userReview={userReview}
+                auth={auth}
             />
         </ShopLayout>
     );

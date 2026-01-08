@@ -12,7 +12,8 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $customer = User::where('email', 'customer@hardrock-co.com')->first();
+        // Use customer account for demo orders
+        $customer = User::where('email', 'customer@hardrock-demo.com')->first();
         $products = Product::take(10)->get();
 
         if (!$customer || $products->isEmpty()) {

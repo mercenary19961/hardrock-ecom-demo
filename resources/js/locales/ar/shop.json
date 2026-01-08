@@ -33,14 +33,18 @@
         "newArrivals": "وصل حديثاً",
         "price": "السعر",
         "discount": "الخصم",
-        "availability": "التوفر"
+        "availability": "التوفر",
+        "color": "اللون",
+        "size": "المقاس"
     },
     "filterLabels": {
         "latestProducts": "أحدث المنتجات",
         "allProducts": "جميع المنتجات",
         "allItems": "جميع المنتجات",
         "inStockOnly": "المتوفر فقط",
-        "discountOff": "خصم {{percent}}%+"
+        "discountOff": "خصم {{percent}}%+",
+        "hasColorOptions": "منتجات بخيارات الألوان",
+        "hasSizeOptions": "منتجات بخيارات المقاسات"
     },
     "quickFilters": {
         "under25": "حتى ٢٥ دينار",
@@ -83,5 +87,42 @@
     "removedFromWishlist": "تمت الإزالة من المفضلة",
     "min": "الحد الأدنى",
     "max": "الحد الأقصى",
-    "apply": "تطبيق"
+    "apply": "تطبيق",
+    "selectSize": "اختر المقاس",
+    "pleaseSelectSize": "يرجى اختيار المقاس",
+    "inStockCount": "{{count}} متوفر",
+    "size": "المقاس",
+    "color": "اللون",
+    "reviewsSection": {
+        "title": "تقييمات العملاء",
+        "noReviews": "لا توجد تقييمات بعد",
+        "beFirstToReview": "كن أول من يقيّم هذا المنتج",
+        "writeReview": "اكتب تقييم",
+        "editReview": "تعديل تقييمك",
+        "yourReview": "تقييمك",
+        "rating": "التقييم",
+        "title": "العنوان (اختياري)",
+        "titlePlaceholder": "لخّص تجربتك",
+        "comment": "تقييمك",
+        "commentPlaceholder": "شاركنا رأيك حول هذا المنتج...",
+        "submit": "إرسال التقييم",
+        "update": "تحديث التقييم",
+        "cancel": "إلغاء",
+        "delete": "حذف",
+        "deleteConfirm": "هل أنت متأكد من حذف تقييمك؟",
+        "verifiedPurchase": "مشتري موثق",
+        "helpful": "مفيد",
+        "helpfulCount": "{{count}} وجدوا هذا مفيداً",
+        "loginToReview": "يرجى تسجيل الدخول لكتابة تقييم",
+        "reviewSubmitted": "شكراً لك على تقييمك!",
+        "reviewUpdated": "تم تحديث تقييمك",
+        "reviewDeleted": "تم حذف تقييمك",
+        "ratingRequired": "يرجى اختيار تقييم",
+        "outOf5": "من ٥",
+        "basedOn": "بناءً على {{count}} تقييم",
+        "filterByRating": "تصفية حسب التقييم",
+        "allRatings": "جميع التقييمات",
+        "showMore": "عرض المزيد من التقييمات",
+        "showLess": "عرض أقل"
+    }
 }
