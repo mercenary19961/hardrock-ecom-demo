@@ -39,7 +39,7 @@ Route::name('shop.')->group(function () {
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
         // Review routes
-        Route::post('/product/{product}/review', [ReviewController::class, 'store'])->name('review.store');
+        Route::post('/product/{product:slug}/review', [ReviewController::class, 'store'])->name('review.store');
         Route::patch('/review/{review}', [ReviewController::class, 'update'])->name('review.update');
         Route::delete('/review/{review}', [ReviewController::class, 'destroy'])->name('review.destroy');
     });

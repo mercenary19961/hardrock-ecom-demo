@@ -94,7 +94,6 @@
     "size": "Size",
     "color": "Color",
     "reviewsSection": {
-        "title": "Customer Reviews",
         "noReviews": "No reviews yet",
         "beFirstToReview": "Be the first to review this product",
         "writeReview": "Write a Review",
@@ -112,17 +111,20 @@
         "deleteConfirm": "Are you sure you want to delete your review?",
         "verifiedPurchase": "Verified Purchase",
         "helpful": "Helpful",
-        "helpfulCount": "{{count}} found this helpful",
+        "helpfulCount": "{{formattedCount}} found this helpful",
         "loginToReview": "Please login to write a review",
         "reviewSubmitted": "Thank you for your review!",
         "reviewUpdated": "Your review has been updated",
         "reviewDeleted": "Your review has been deleted",
         "ratingRequired": "Please select a rating",
         "outOf5": "out of 5",
-        "basedOn": "Based on {{count}} reviews",
+        "basedOn": "Based on {{formattedCount}} reviews",
         "filterByRating": "Filter by rating",
         "allRatings": "All ratings",
         "showMore": "Show More Reviews",
-        "showLess": "Show Less"
+        "showLess": "Show Less",
+        "report": "Report",
+        "topReviewsFrom": "Top reviews from Jordan",
+        "mustPurchaseToReview": "Only customers who have purchased this product can leave a review."
     }
 }

@@ -39,12 +39,12 @@ class ProductController extends Controller
         }
         $breadcrumbs[] = ['name' => $product->name, 'slug' => $product->slug];
 
-        // Check if logged-in user can review (hasn't reviewed yet)
+        // Check if logged-in user can review (must have purchased and not reviewed yet)
         $canReview = false;
         $userReview = null;
         if (Auth::check()) {
             $userReview = $product->reviews->firstWhere('user_id', Auth::id());
-            $canReview = !$userReview;
+            $canReview = !$userReview && Auth::user()->hasPurchased($product->id);
         }
 
         return Inertia::render('Shop/Product', [

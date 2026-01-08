@@ -30,12 +30,6 @@ function StarRating({
 
     const ratingValue = Number(rating) || 0;
 
-    const getStarFill = (starPosition: number) => {
-        if (ratingValue >= starPosition) return "full";
-        if (ratingValue >= starPosition - 0.5) return "half";
-        return "empty";
-    };
-
     const isArabic = language === "ar";
     const formattedRating = new Intl.NumberFormat(
         isArabic ? "ar-JO" : "en-JO",
@@ -49,17 +43,21 @@ function StarRating({
         <div className="flex items-center gap-2">
             <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => {
-                    const fill = getStarFill(star);
+                    const fill = Math.min(
+                        1,
+                        Math.max(0, ratingValue - (star - 1))
+                    );
                     return (
                         <div key={star} className="relative h-5 w-5">
                             {/* Background empty star */}
                             <Star className="absolute inset-0 h-full w-full fill-gray-200 text-gray-200" />
-                            {/* Filled portion */}
-                            {fill !== "empty" && (
+                            {/* Precisely filled portion */}
+                            {fill > 0 && (
                                 <div
                                     className="absolute inset-0 overflow-hidden"
                                     style={{
-                                        width: fill === "half" ? "50%" : "100%",
+                                        width: `${fill * 100}%`,
+                                        left: 0,
                                     }}
                                 >
                                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
@@ -71,12 +69,12 @@ function StarRating({
             </div>
             <span className="text-sm text-gray-600">
                 {formattedRating} ({formatNumber(count, language)}{" "}
-                {count === 1
-                    ? isArabic
-                        ? "تقييم"
-                        : "review"
-                    : isArabic
-                    ? "تقييمات"
+                {isArabic
+                    ? count >= 3 && count <= 9
+                        ? "تقييمات"
+                        : "تقييم"
+                    : count === 1
+                    ? "review"
                     : "reviews"}
                 )
             </span>

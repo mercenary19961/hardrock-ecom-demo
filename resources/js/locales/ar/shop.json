@@ -94,7 +94,6 @@
     "size": "المقاس",
     "color": "اللون",
     "reviewsSection": {
-        "title": "تقييمات العملاء",
         "noReviews": "لا توجد تقييمات بعد",
         "beFirstToReview": "كن أول من يقيّم هذا المنتج",
         "writeReview": "اكتب تقييم",
@@ -110,19 +109,24 @@
         "cancel": "إلغاء",
         "delete": "حذف",
         "deleteConfirm": "هل أنت متأكد من حذف تقييمك؟",
-        "verifiedPurchase": "مشتري موثق",
+        "verifiedPurchase": "عملية شراء موثقة",
         "helpful": "مفيد",
-        "helpfulCount": "{{count}} وجدوا هذا مفيداً",
+        "helpfulCount": "{{formattedCount}} شخص وجد هذا مفيداً",
+        "helpfulCount_few": "{{formattedCount}} أشخاص وجدوا هذا مفيداً",
         "loginToReview": "يرجى تسجيل الدخول لكتابة تقييم",
         "reviewSubmitted": "شكراً لك على تقييمك!",
         "reviewUpdated": "تم تحديث تقييمك",
         "reviewDeleted": "تم حذف تقييمك",
         "ratingRequired": "يرجى اختيار تقييم",
         "outOf5": "من ٥",
-        "basedOn": "بناءً على {{count}} تقييم",
+        "basedOn": "بناءً على {{formattedCount}} تقييم",
+        "basedOn_few": "بناءً على {{formattedCount}} تقييمات",
         "filterByRating": "تصفية حسب التقييم",
         "allRatings": "جميع التقييمات",
         "showMore": "عرض المزيد من التقييمات",
-        "showLess": "عرض أقل"
+        "showLess": "عرض أقل",
+        "report": "إبلاغ",
+        "topReviewsFrom": "أهم المراجعات من الأردن",
+        "mustPurchaseToReview": "فقط العملاء الذين اشتروا هذا المنتج يمكنهم ترك تقييم."
     }
 }

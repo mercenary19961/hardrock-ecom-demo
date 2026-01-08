@@ -159,6 +159,8 @@ export interface Review {
     comment_ar: string | null;
     is_verified_purchase: boolean;
     helpful_count: number;
+    is_helpful: boolean;
+    language: string;
     user?: User;
     product?: Product;
     created_at: string;

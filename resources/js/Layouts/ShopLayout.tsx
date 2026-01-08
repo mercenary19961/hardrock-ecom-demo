@@ -22,6 +22,8 @@ import { Category, User as UserType } from "@/types/models";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 
+import { formatNumber } from "@/lib/utils";
+
 interface ShopLayoutProps {
     children: ReactNode;
 }
@@ -162,7 +164,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 <ShoppingBagIcon className="h-6 w-6" />
                                 {cart.total_items > 0 && (
                                     <span className="absolute -top-1 -right-1 h-5 w-5 bg-brand-orange text-white text-xs rounded-full flex items-center justify-center">
-                                        {cart.total_items}
+                                        {formatNumber(
+                                            cart.total_items,
+                                            language
+                                        )}
                                     </span>
                                 )}
                             </button>

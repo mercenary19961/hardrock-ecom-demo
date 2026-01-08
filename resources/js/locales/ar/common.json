@@ -38,7 +38,7 @@
     "topRated": "الأعلى تقييماً",
     "wishlist": {
         "title": "قائمة الرغبات",
-        "itemCount": "({{count}})",
+        "itemCount": "({{formattedCount}})",
         "empty": "قائمة رغباتك فارغة",
         "startShopping": "ابدأ التسوق",
         "clearWishlist": "مسح القائمة",
@@ -47,7 +47,7 @@
     },
     "cart": {
         "title": "السلة",
-        "itemCount": "({{count}})",
+        "itemCount": "({{formattedCount}})",
         "empty": "سلتك فارغة",
         "continueShopping": "متابعة التسوق",
         "subtotal": "المجموع الفرعي",

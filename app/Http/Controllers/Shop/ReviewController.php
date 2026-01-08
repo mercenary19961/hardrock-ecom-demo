@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\ReviewHelpfulVote;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,8 +33,10 @@ class ReviewController extends Controller
             return back()->withErrors(['review' => 'You have already reviewed this product.']);
         }
 
-        // Check if verified purchase
-        $isVerifiedPurchase = $user->hasPurchased($product->id);
+        // Check if verified purchase (Required to review)
+        if (!$user->hasPurchased($product->id)) {
+            return back()->withErrors(['review' => 'You must purchase this product to leave a review.']);
+        }
 
         Review::create([
             'product_id' => $product->id,
@@ -43,7 +46,8 @@ class ReviewController extends Controller
             'title_ar' => $validated['title_ar'],
             'comment' => $validated['comment'],
             'comment_ar' => $validated['comment_ar'],
-            'is_verified_purchase' => $isVerifiedPurchase,
+            'is_verified_purchase' => true,
+            'language' => $request->input('language', 'en'),
         ]);
 
         // Update product rating stats
@@ -93,7 +97,25 @@ class ReviewController extends Controller
 
     public function helpful(Review $review): RedirectResponse
     {
-        $review->increment('helpful_count');
+        if (!Auth::check()) {
+            return back()->with('error', 'Please login to mark reviews as helpful.');
+        }
+
+        $userId = Auth::id();
+        $vote = ReviewHelpfulVote::where('review_id', $review->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($vote) {
+            $vote->delete();
+            $review->decrement('helpful_count');
+        } else {
+            ReviewHelpfulVote::create([
+                'review_id' => $review->id,
+                'user_id' => $userId,
+            ]);
+            $review->increment('helpful_count');
+        }
 
         return back();
     }
