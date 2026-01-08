@@ -8,7 +8,12 @@ import { ReviewSection } from "@/Components/shop/ReviewSection";
 import { Button, Badge } from "@/Components/ui";
 import { useCart } from "@/contexts/CartContext";
 import { useLocalized } from "@/hooks/useLocalized";
-import { Product as ProductType, Breadcrumb, Review } from "@/types/models";
+import {
+    Product as ProductType,
+    Breadcrumb,
+    Review,
+    PaginatedData,
+} from "@/types/models";
 import {
     formatPrice,
     formatNumber,
@@ -84,6 +89,8 @@ function StarRating({
 
 interface Props {
     product: ProductType;
+    reviews: PaginatedData<Review>;
+    ratingDistribution: Record<number, number>;
     relatedProducts: ProductType[];
     breadcrumbs: Breadcrumb[];
     canReview: boolean;
@@ -93,6 +100,8 @@ interface Props {
 
 function ProductContent({
     product,
+    reviews,
+    ratingDistribution,
     relatedProducts,
     breadcrumbs,
     canReview,
@@ -454,7 +463,8 @@ function ProductContent({
                 {/* Reviews Section */}
                 <ReviewSection
                     product={product}
-                    reviews={product.reviews || []}
+                    reviews={reviews}
+                    ratingDistribution={ratingDistribution}
                     canReview={canReview}
                     userReview={userReview}
                     isAuthenticated={!!auth?.user}
@@ -476,6 +486,8 @@ function ProductContent({
 
 export default function Product({
     product,
+    reviews,
+    ratingDistribution,
     relatedProducts,
     breadcrumbs,
     canReview,
@@ -486,6 +498,8 @@ export default function Product({
         <ShopLayout>
             <ProductContent
                 product={product}
+                reviews={reviews}
+                ratingDistribution={ratingDistribution}
                 relatedProducts={relatedProducts}
                 breadcrumbs={breadcrumbs}
                 canReview={canReview}

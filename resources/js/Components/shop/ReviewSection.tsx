@@ -1,14 +1,24 @@
 import { useState, useEffect } from "react";
-import { useForm, router } from "@inertiajs/react";
+import { useForm, router, Link } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/Components/ui";
-import { Review, Product } from "@/types/models";
+import { Review, Product, PaginatedData } from "@/types/models";
 import { formatNumber } from "@/lib/utils";
-import { Star, ThumbsUp, CheckCircle, User, Trash2, Edit2 } from "lucide-react";
+import {
+    Star,
+    ThumbsUp,
+    CheckCircle,
+    User,
+    Trash2,
+    Edit2,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 
 interface ReviewSectionProps {
     product: Product;
-    reviews: Review[];
+    reviews: PaginatedData<Review>;
+    ratingDistribution: Record<number, number>;
     canReview: boolean;
     userReview: Review | null;
     isAuthenticated: boolean;
@@ -457,28 +467,28 @@ function ReviewCard({
 
 // Rating Summary Component
 function RatingSummary({
-    reviews,
+    ratingDistribution,
     averageRating,
+    ratingCount,
     language,
 }: {
-    reviews: Review[];
+    ratingDistribution: Record<number, number>;
     averageRating: number;
+    ratingCount: number;
     language: string;
 }) {
     const { t } = useTranslation();
     const isArabic = language === "ar";
 
-    // Calculate rating distribution
-    const ratingCounts = [5, 4, 3, 2, 1].map((rating) => ({
-        rating,
-        count: reviews.filter((r) => r.rating === rating).length,
-        percentage:
-            reviews.length > 0
-                ? (reviews.filter((r) => r.rating === rating).length /
-                      reviews.length) *
-                  100
-                : 0,
-    }));
+    // Format rating distribution for display
+    const ratingCounts = [5, 4, 3, 2, 1].map((rating) => {
+        const count = ratingDistribution[rating] || 0;
+        return {
+            rating,
+            count,
+            percentage: ratingCount > 0 ? (count / ratingCount) * 100 : 0,
+        };
+    });
 
     const formattedAverage = new Intl.NumberFormat(
         isArabic ? "ar-JO" : "en-JO",
@@ -499,21 +509,21 @@ function RatingSummary({
 
             <p className="text-sm text-gray-500">
                 {t(
-                    isArabic && reviews.length >= 3 && reviews.length <= 9
+                    isArabic && ratingCount >= 3 && ratingCount <= 9
                         ? "shop:reviewsSection.basedOn_few"
                         : "shop:reviewsSection.basedOn",
                     {
-                        formattedCount: formatNumber(reviews.length, language),
+                        formattedCount: formatNumber(ratingCount, language),
                     }
                 )}
             </p>
 
             {/* Rating bars */}
             <div className="space-y-3 pt-2">
-                {ratingCounts.map(({ rating, count, percentage }) => (
-                    <button
+                {ratingCounts.map(({ rating, percentage }) => (
+                    <div
                         key={rating}
-                        className="flex items-center gap-4 w-full group text-left hover:text-brand-purple transition-colors"
+                        className="flex items-center gap-4 w-full group text-left"
                     >
                         <span className="text-sm font-medium w-16 shrink-0 whitespace-nowrap">
                             {formatNumber(rating, language)}{" "}
@@ -528,10 +538,10 @@ function RatingSummary({
                                 }}
                             />
                         </div>
-                        <span className="text-sm text-gray-500 min-w-[32px] text-right group-hover:text-brand-purple">
+                        <span className="text-sm text-gray-500 min-w-[32px] text-right">
                             {formatNumber(Math.round(percentage), language)}%
                         </span>
-                    </button>
+                    </div>
                 ))}
             </div>
         </div>
@@ -542,6 +552,7 @@ function RatingSummary({
 export function ReviewSection({
     product,
     reviews,
+    ratingDistribution,
     canReview,
     userReview,
     isAuthenticated,
@@ -551,16 +562,24 @@ export function ReviewSection({
     const isArabic = language === "ar";
     const [showForm, setShowForm] = useState(false);
     const [editingReview, setEditingReview] = useState<Review | null>(null);
-    const [showAllReviews, setShowAllReviews] = useState(false);
-
-    const INITIAL_REVIEWS_COUNT = 5;
-    const displayedReviews = showAllReviews
-        ? reviews
-        : reviews.slice(0, INITIAL_REVIEWS_COUNT);
 
     const handleDeleteReview = (review: Review) => {
         if (confirm(t("shop:reviewsSection.deleteConfirm"))) {
             router.delete(`/review/${review.id}`, { preserveScroll: true });
+        }
+    };
+
+    const handlePageChange = (url: string | null) => {
+        if (url) {
+            router.get(
+                url,
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ["reviews"],
+                }
+            );
         }
     };
 
@@ -569,10 +588,11 @@ export function ReviewSection({
             <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[350px_1fr] gap-12">
                 <div className="space-y-8">
                     <div>
-                        {reviews.length > 0 ? (
+                        {product.rating_count > 0 ? (
                             <RatingSummary
-                                reviews={reviews}
+                                ratingDistribution={ratingDistribution}
                                 averageRating={product.average_rating}
+                                ratingCount={product.rating_count}
                                 language={language}
                             />
                         ) : (
@@ -631,9 +651,9 @@ export function ReviewSection({
                                 <a href="/login">
                                     <Button
                                         variant="outline"
-                                        className="w-full"
+                                        className="w-full py-3"
                                     >
-                                        {t("common:login")}
+                                        {t("shop:reviewsSection.loginToReview")}
                                     </Button>
                                 </a>
                             </div>
@@ -643,14 +663,14 @@ export function ReviewSection({
 
                 {/* Right Column: Review List */}
                 <div>
-                    {reviews.length > 0 ? (
+                    {reviews.total > 0 ? (
                         <div className="space-y-2">
                             <h3 className="text-xl font-bold text-gray-900 mb-6">
                                 {t("shop:reviewsSection.topReviewsFrom")}
                             </h3>
 
                             <div className="divide-y divide-gray-200">
-                                {displayedReviews.map((review) => (
+                                {reviews.data.map((review) => (
                                     <ReviewCard
                                         key={review.id}
                                         review={review}
@@ -681,18 +701,176 @@ export function ReviewSection({
                                 ))}
                             </div>
 
-                            {reviews.length > INITIAL_REVIEWS_COUNT && (
-                                <div className="mt-8 pt-6 border-t border-gray-200">
-                                    <button
-                                        onClick={() =>
-                                            setShowAllReviews(!showAllReviews)
-                                        }
-                                        className="text-brand-purple hover:underline font-medium"
-                                    >
-                                        {showAllReviews
-                                            ? t("shop:reviewsSection.showLess")
-                                            : t("shop:reviewsSection.showMore")}
-                                    </button>
+                            {/* Pagination */}
+                            {reviews.last_page > 1 && (
+                                <div className="mt-12 pt-8 border-t border-gray-200 flex items-center justify-between">
+                                    <div className="flex-1 flex justify-between sm:hidden">
+                                        <Button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    reviews.links[0].url
+                                                )
+                                            }
+                                            disabled={!reviews.links[0].url}
+                                            variant="outline"
+                                        >
+                                            {t("common:previous")}
+                                        </Button>
+                                        <Button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    reviews.links[
+                                                        reviews.links.length - 1
+                                                    ].url
+                                                )
+                                            }
+                                            disabled={
+                                                !reviews.links[
+                                                    reviews.links.length - 1
+                                                ].url
+                                            }
+                                            variant="outline"
+                                        >
+                                            {t("common:next")}
+                                        </Button>
+                                    </div>
+                                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-sm text-gray-700">
+                                                {isArabic ? (
+                                                    <>
+                                                        عرض من{" "}
+                                                        <span className="font-medium">
+                                                            {formatNumber(
+                                                                reviews.from,
+                                                                language
+                                                            )}
+                                                        </span>{" "}
+                                                        إلى{" "}
+                                                        <span className="font-medium">
+                                                            {formatNumber(
+                                                                reviews.to,
+                                                                language
+                                                            )}
+                                                        </span>{" "}
+                                                        من أصل{" "}
+                                                        <span className="font-medium">
+                                                            {formatNumber(
+                                                                reviews.total,
+                                                                language
+                                                            )}
+                                                        </span>{" "}
+                                                        مراجعة
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Showing{" "}
+                                                        <span className="font-medium">
+                                                            {reviews.from}
+                                                        </span>{" "}
+                                                        to{" "}
+                                                        <span className="font-medium">
+                                                            {reviews.to}
+                                                        </span>{" "}
+                                                        of{" "}
+                                                        <span className="font-medium">
+                                                            {reviews.total}
+                                                        </span>{" "}
+                                                        reviews
+                                                    </>
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <nav
+                                                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                                                aria-label="Pagination"
+                                            >
+                                                {reviews.links.map(
+                                                    (link, index) => {
+                                                        // Handle entities in labels (like &laquo; Previous)
+                                                        let label = link.label;
+                                                        if (index === 0)
+                                                            label = isArabic
+                                                                ? "التالي"
+                                                                : "Previous";
+                                                        if (
+                                                            index ===
+                                                            reviews.links
+                                                                .length -
+                                                                1
+                                                        )
+                                                            label = isArabic
+                                                                ? "السابق"
+                                                                : "Next";
+
+                                                        const isIcon =
+                                                            index === 0 ||
+                                                            index ===
+                                                                reviews.links
+                                                                    .length -
+                                                                    1;
+
+                                                        return (
+                                                            <button
+                                                                key={index}
+                                                                onClick={() =>
+                                                                    handlePageChange(
+                                                                        link.url
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    !link.url ||
+                                                                    link.active
+                                                                }
+                                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
+                                                                    link.active
+                                                                        ? "z-10 bg-brand-purple border-brand-purple text-white cursor-default"
+                                                                        : !link.url
+                                                                        ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+                                                                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                                                                } ${
+                                                                    index === 0
+                                                                        ? "rounded-l-md"
+                                                                        : ""
+                                                                } ${
+                                                                    index ===
+                                                                    reviews
+                                                                        .links
+                                                                        .length -
+                                                                        1
+                                                                        ? "rounded-r-md"
+                                                                        : ""
+                                                                }`}
+                                                            >
+                                                                {isIcon ? (
+                                                                    index ===
+                                                                    0 ? (
+                                                                        isArabic ? (
+                                                                            <ChevronRight className="h-4 w-4" />
+                                                                        ) : (
+                                                                            <ChevronLeft className="h-4 w-4" />
+                                                                        )
+                                                                    ) : isArabic ? (
+                                                                        <ChevronLeft className="h-4 w-4" />
+                                                                    ) : (
+                                                                        <ChevronRight className="h-4 w-4" />
+                                                                    )
+                                                                ) : (
+                                                                    formatNumber(
+                                                                        parseInt(
+                                                                            label
+                                                                        ) || 0,
+                                                                        language
+                                                                    ) || label
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    }
+                                                )}
+                                            </nav>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>

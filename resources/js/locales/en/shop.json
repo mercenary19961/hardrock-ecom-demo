@@ -112,7 +112,7 @@
         "verifiedPurchase": "Verified Purchase",
         "helpful": "Helpful",
         "helpfulCount": "{{formattedCount}} found this helpful",
-        "loginToReview": "Please login to write a review",
+        "loginToReview": "Login to submit a review",
         "reviewSubmitted": "Thank you for your review!",
         "reviewUpdated": "Your review has been updated",
         "reviewDeleted": "Your review has been deleted",

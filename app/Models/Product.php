@@ -249,4 +249,24 @@ class Product extends Model
     {
         return $this->getStockForSize($size) > 0;
     }
+
+    /**
+     * Get review count distribution for each star level (1-5)
+     */
+    public function getRatingDistribution(): array
+    {
+        $counts = $this->reviews()
+            ->selectRaw('rating, count(*) as count')
+            ->groupBy('rating')
+            ->pluck('count', 'rating')
+            ->toArray();
+
+        // Ensure all ratings 1-5 exist in the array, even with 0 count
+        $distribution = [];
+        for ($i = 5; $i >= 1; $i--) {
+            $distribution[$i] = $counts[$i] ?? 0;
+        }
+
+        return $distribution;
+    }
 }

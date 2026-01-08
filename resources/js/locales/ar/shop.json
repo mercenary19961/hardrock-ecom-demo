@@ -113,7 +113,7 @@
         "helpful": "مفيد",
         "helpfulCount": "{{formattedCount}} شخص وجد هذا مفيداً",
         "helpfulCount_few": "{{formattedCount}} أشخاص وجدوا هذا مفيداً",
-        "loginToReview": "يرجى تسجيل الدخول لكتابة تقييم",
+        "loginToReview": "سجل الدخول من أجل إضافة تقييم",
         "reviewSubmitted": "شكراً لك على تقييمك!",
         "reviewUpdated": "تم تحديث تقييمك",
         "reviewDeleted": "تم حذف تقييمك",
