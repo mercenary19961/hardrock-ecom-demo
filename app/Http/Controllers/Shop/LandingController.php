@@ -90,19 +90,31 @@ class LandingController extends Controller
             $filters['max_price'] = $maxPrice;
         }
 
-        // Minimum discount filter (10%, 20%, 30%, etc.)
+        // Discount range filter (10-19%, 20-29%, etc.)
+        // Uses [min%, max%) range - inclusive lower, exclusive upper
         if ($request->filled('min_discount')) {
             $minDiscount = (int) $request->get('min_discount');
+            $maxDiscount = $request->filled('max_discount') ? (int) $request->get('max_discount') : 100;
+
             if ($minDiscount > 0 && $minDiscount <= 100) {
-                // Calculate minimum discount percentage
-                // discount % = ((compare_price - price) / compare_price) * 100 >= $minDiscount
-                // This means: compare_price - price >= compare_price * ($minDiscount / 100)
-                // Or: price <= compare_price * (1 - $minDiscount / 100)
-                $multiplier = 1 - ($minDiscount / 100);
+                // Filter products within the discount range
+                // discount % = ((compare_price - price) / compare_price) * 100
+                // Rearranged: price = compare_price * (1 - discount/100)
+                // For range [min, max): min <= discount < max
+                $lowerMultiplier = 1 - ($minDiscount / 100);
+                $upperMultiplier = 1 - ($maxDiscount / 100);
+
                 $query->whereNotNull('compare_price')
                     ->whereColumn('compare_price', '>', 'price')
-                    ->whereRaw('price <= compare_price * ?', [$multiplier]);
+                    ->whereRaw('price <= compare_price * ?', [$lowerMultiplier]);
+
+                // Only apply upper bound if not open-ended (70%+)
+                if ($maxDiscount < 100) {
+                    $query->whereRaw('price > compare_price * ?', [$upperMultiplier]);
+                }
+
                 $filters['min_discount'] = $minDiscount;
+                $filters['max_discount'] = $maxDiscount;
             }
         }
 
@@ -192,6 +204,66 @@ class LandingController extends Controller
             ->whereNotNull('available_sizes')
             ->count();
 
+        // Get available discount brackets in this category
+        // Using ranges like [10%, 20%), [20%, 30%), etc. to avoid gaps
+        // Display labels show "10-19%", "20-29%" but actual filter is [10%, 20%)
+        $discountRanges = [
+            ['min' => 10, 'max' => 20, 'label_max' => 19],
+            ['min' => 20, 'max' => 30, 'label_max' => 29],
+            ['min' => 30, 'max' => 40, 'label_max' => 39],
+            ['min' => 40, 'max' => 50, 'label_max' => 49],
+            ['min' => 50, 'max' => 60, 'label_max' => 59],
+            ['min' => 60, 'max' => 70, 'label_max' => 69],
+            ['min' => 70, 'max' => 100, 'label_max' => 100], // 70%+ for anything 70 and above
+        ];
+        $availableDiscountBrackets = [];
+
+        foreach ($discountRanges as $range) {
+            // discount % = (compare_price - price) / compare_price * 100
+            // Rearranged: price = compare_price * (1 - discount/100)
+            // For range [min, max): min <= discount < max
+            // Lower bound (min discount): price <= compare_price * (1 - min/100)
+            // Upper bound (max discount): price > compare_price * (1 - max/100)
+            $lowerMultiplier = 1 - ($range['min'] / 100);
+            $upperMultiplier = 1 - ($range['max'] / 100);
+
+            $query = Product::whereIn('category_id', $categoryIds)
+                ->active()
+                ->whereNotNull('compare_price')
+                ->whereColumn('compare_price', '>', 'price');
+
+            // Range [min%, max%) - inclusive lower, exclusive upper
+            $query->whereRaw('price <= compare_price * ?', [$lowerMultiplier]);
+
+            if ($range['max'] < 100) {
+                // Normal range: apply upper bound (exclusive)
+                $query->whereRaw('price > compare_price * ?', [$upperMultiplier]);
+            }
+            // For 70%+, no upper bound
+
+            $count = $query->count();
+
+            if ($count > 0) {
+                $availableDiscountBrackets[] = [
+                    'min' => $range['min'],
+                    'max' => $range['max'], // Actual filter max (exclusive upper bound)
+                    'label_max' => $range['label_max'], // Display label max (e.g., 19 for "10-19%")
+                    'count' => $count,
+                ];
+            }
+        }
+
+        // Also get max discount for backward compatibility
+        $maxDiscount = Product::whereIn('category_id', $categoryIds)
+            ->active()
+            ->whereNotNull('compare_price')
+            ->whereColumn('compare_price', '>', 'price')
+            ->toBase()
+            ->selectRaw('MAX(((compare_price - price) * 1.0) / compare_price * 100) as max_discount')
+            ->value('max_discount');
+
+        $maxDiscount = (float) ($maxDiscount ?? 0);
+
         return Inertia::render('Shop/Category', [
             'category' => $category,
             'products' => $products,
@@ -205,6 +277,8 @@ class LandingController extends Controller
             ],
             'productsWithColors' => $productsWithColors,
             'productsWithSizes' => $productsWithSizes,
+            'maxDiscount' => $maxDiscount,
+            'availableDiscountBrackets' => $availableDiscountBrackets,
         ]);
     }
 }

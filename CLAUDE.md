@@ -370,7 +370,7 @@ The category page uses a simplified filter approach with toggle checkboxes for v
 | Availability | Checkbox | In stock only |
 | Has Color Options | Checkbox | Products with color variants |
 | Has Size Options | Checkbox | Products with size variants |
-| Discount | Checkbox | Products on sale |
+| Discount | Dynamic Checkboxes | Discount range brackets (10-19%, 20-29%, etc.) |
 
 **Filter Order (Desktop & Mobile):**
 1. New Arrivals
@@ -378,7 +378,60 @@ The category page uses a simplified filter approach with toggle checkboxes for v
 3. Availability
 4. Color Options (conditional - only shows if products have colors)
 5. Size Options (conditional - only shows if products have sizes)
-6. Discount
+6. Discount (dynamic brackets based on available discounts)
+
+### Discount Bracket System
+
+Discount filters show **only brackets that have products** in the current category. Uses **half-open intervals `[min%, max%)`** to avoid gaps.
+
+**Bracket Structure:**
+| Range | Display Label | Filter Logic |
+|-------|---------------|--------------|
+| `[10%, 20%)` | "10-19% Off" | 10% ≤ discount < 20% |
+| `[20%, 30%)` | "20-29% Off" | 20% ≤ discount < 30% |
+| `[30%, 40%)` | "30-39% Off" | 30% ≤ discount < 40% |
+| `[40%, 50%)` | "40-49% Off" | 40% ≤ discount < 50% |
+| `[50%, 60%)` | "50-59% Off" | 50% ≤ discount < 60% |
+| `[60%, 70%)` | "60-69% Off" | 60% ≤ discount < 70% |
+| `[70%, 100%)` | "70%+ Off" | 70% ≤ discount |
+
+**Backend Data Structure:**
+```php
+$availableDiscountBrackets = [
+    ['min' => 10, 'max' => 20, 'label_max' => 19, 'count' => 5],
+    ['min' => 40, 'max' => 50, 'label_max' => 49, 'count' => 3],
+    // Only includes brackets with products
+];
+```
+
+- `min`: Lower bound (inclusive) for filtering
+- `max`: Upper bound (exclusive) for filtering
+- `label_max`: Display value for label (e.g., 19 for "10-19%")
+- `count`: Number of products in this bracket
+
+**SQL Logic (half-open interval):**
+```php
+// discount % = ((compare_price - price) / compare_price) * 100
+// Rearranged: price = compare_price * (1 - discount/100)
+
+$lowerMultiplier = 1 - ($minDiscount / 100);  // e.g., 0.9 for 10%
+$upperMultiplier = 1 - ($maxDiscount / 100);  // e.g., 0.8 for 20%
+
+// Range [min%, max%) - inclusive lower, exclusive upper
+$query->whereRaw('price <= compare_price * ?', [$lowerMultiplier]);
+if ($maxDiscount < 100) {
+    $query->whereRaw('price > compare_price * ?', [$upperMultiplier]);
+}
+```
+
+**Frontend Filter State:**
+```typescript
+interface Filters {
+    min_discount?: number;  // Lower bound (inclusive)
+    max_discount?: number;  // Upper bound (exclusive)
+    // ... other filters
+}
+```
 
 ### Backend Filtering (`LandingController.php`)
 
@@ -423,6 +476,19 @@ Naming convention: `{category-slug}-{language}.webp`
 - Example: `electronics-en.webp`, `electronics-ar.webp`
 
 All 8 categories have both English and Arabic banner versions.
+
+### Discount Filter Translation Keys (shop.json)
+
+```json
+"filterLabels": {
+    "discountRange": "{{min}}-{{max}}% Off" / "خصم {{min}}-{{max}}%",
+    "discountRangeOpen": "{{min}}%+ Off" / "خصم {{min}}%+"
+},
+"activeFilters": {
+    "discountRange": "{{min}}-{{max}}% Off" / "خصم {{min}}-{{max}}%",
+    "discountRangeOpen": "{{min}}%+ Off" / "خصم {{min}}%+"
+}
+```
 
 ---
 
@@ -497,7 +563,17 @@ const handleClick = (e: React.MouseEvent) => {
         router.get(categoryUrl, {}, {
             preserveState: false,
             preserveScroll: false,
-            only: ['category', 'subcategories', 'products', 'filters', 'productsWithColors', 'productsWithSizes'],
+            only: [
+                'category',
+                'subcategories',
+                'products',
+                'filters',
+                'priceRange',
+                'productsWithColors',
+                'productsWithSizes',
+                'maxDiscount',
+                'availableDiscountBrackets',
+            ],
         });
     }
 };
@@ -508,6 +584,8 @@ const handleClick = (e: React.MouseEvent) => {
 - On other pages: Normal navigation with full page load
 
 The `only` option tells Inertia to only fetch specified props from the server, making navigation faster and smoother.
+
+**Important:** When adding new category page props to `LandingController.php`, also add them to the `only` array in `ShopLayout.tsx` to ensure SPA navigation receives the updated data.
 
 ---
 
@@ -717,3 +795,30 @@ Add `overflow-hidden` to parent containers when children extend beyond bounds.
 - Mobile: 2x2 grid (`grid-cols-2`)
 - Desktop: 4 columns (`md:grid-cols-4`)
 - Shop categories: 2-column subgrid on desktop (`md:grid md:grid-cols-2`)
+
+### SPA Navigation State Sync
+When using Inertia's `router.get()` with `only` option, React local state may not update automatically. Use `useEffect` with comprehensive dependencies to reset local state when props change:
+
+```typescript
+// Category.tsx - Reset filter state when category changes via SPA navigation
+useEffect(() => {
+    setLocalFilters({
+        new_arrivals: filters.new_arrivals || false,
+        min_price: filters.min_price,
+        max_price: filters.max_price,
+        min_discount: filters.min_discount,
+        max_discount: filters.max_discount,
+        // ... other filters
+    });
+    setSliderMin(filters.min_price || priceRange.min);
+    setSliderMax(filters.max_price || priceRange.max);
+}, [category.id, priceRange.min, priceRange.max, filters.min_price, filters.max_price, filters.min_discount, filters.max_discount, /* ... */]);
+```
+
+**Key:** Include `category.id` as a dependency to trigger reset when navigating between categories.
+
+### Discount Range Math (Half-Open Intervals)
+When filtering by percentage ranges, use half-open intervals `[min%, max%)` to avoid gaps:
+- **Problem:** Products with x9.xx% discounts (e.g., 49.09%) fall between brackets when using inclusive bounds
+- **Solution:** Lower bound inclusive, upper bound exclusive
+- **Example:** 49.09% discount matches `[40%, 50%)` bracket because `49.09 >= 40` AND `49.09 < 50`

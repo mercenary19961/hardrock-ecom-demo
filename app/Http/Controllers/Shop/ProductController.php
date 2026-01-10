@@ -20,7 +20,14 @@ class ProductController extends Controller
         // Increment view count
         $product->increment('view_count');
 
-        $product->load(['category', 'images', 'reviews.user']);
+        $product->load(['category', 'images']);
+
+        $reviews = $product->reviews()
+            ->with('user')
+            ->paginate(3)
+            ->withQueryString();
+
+        $ratingDistribution = $product->getRatingDistribution();
 
         $relatedProducts = [];
         if ($product->category_id) {
@@ -43,12 +50,14 @@ class ProductController extends Controller
         $canReview = false;
         $userReview = null;
         if (Auth::check()) {
-            $userReview = $product->reviews->firstWhere('user_id', Auth::id());
+            $userReview = $product->reviews()->where('user_id', Auth::id())->first();
             $canReview = !$userReview && Auth::user()->hasPurchased($product->id);
         }
 
         return Inertia::render('Shop/Product', [
             'product' => $product,
+            'reviews' => $reviews,
+            'ratingDistribution' => $ratingDistribution,
             'relatedProducts' => $relatedProducts,
             'breadcrumbs' => $breadcrumbs,
             'canReview' => $canReview,

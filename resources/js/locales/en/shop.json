@@ -43,6 +43,8 @@
         "allItems": "All Items",
         "inStockOnly": "In Stock Only",
         "discountOff": "{{percent}}%+ Off",
+        "discountRange": "{{min}}-{{max}}% Off",
+        "discountRangeOpen": "{{min}}%+ Off",
         "hasColorOptions": "Products with Color Options",
         "hasSizeOptions": "Products with Size Options"
     },
@@ -60,6 +62,8 @@
         "min": "Min: {{price}}",
         "max": "Max: {{price}}",
         "discountOff": "{{percent}}%+ Off",
+        "discountRange": "{{min}}-{{max}}% Off",
+        "discountRangeOpen": "{{min}}%+ Off",
         "inStockOnly": "In Stock Only"
     },
     "hero": {
@@ -112,7 +116,7 @@
         "verifiedPurchase": "Verified Purchase",
         "helpful": "Helpful",
         "helpfulCount": "{{formattedCount}} found this helpful",
-        "loginToReview": "Please login to write a review",
+        "loginToReview": "Login to submit a review",
         "reviewSubmitted": "Thank you for your review!",
         "reviewUpdated": "Your review has been updated",
         "reviewDeleted": "Your review has been deleted",
@@ -124,7 +128,7 @@
         "showMore": "Show More Reviews",
         "showLess": "Show Less",
         "report": "Report",
-        "topReviewsFrom": "Top reviews from Jordan",
+        "topReviewsFrom": "Top reviews",
         "mustPurchaseToReview": "Only customers who have purchased this product can leave a review."
     }
 }

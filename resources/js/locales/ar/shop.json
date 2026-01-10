@@ -43,6 +43,8 @@
         "allItems": "جميع المنتجات",
         "inStockOnly": "المتوفر فقط",
         "discountOff": "خصم {{percent}}%+",
+        "discountRange": "خصم {{min}}-{{max}}%",
+        "discountRangeOpen": "خصم {{min}}%+",
         "hasColorOptions": "منتجات بخيارات الألوان",
         "hasSizeOptions": "منتجات بخيارات المقاسات"
     },
@@ -60,6 +62,8 @@
         "min": "الحد الأدنى: {{price}}",
         "max": "الحد الأقصى: {{price}}",
         "discountOff": "خصم {{percent}}%+",
+        "discountRange": "خصم {{min}}-{{max}}%",
+        "discountRangeOpen": "خصم {{min}}%+",
         "inStockOnly": "المتوفر فقط"
     },
     "hero": {
@@ -113,7 +117,7 @@
         "helpful": "مفيد",
         "helpfulCount": "{{formattedCount}} شخص وجد هذا مفيداً",
         "helpfulCount_few": "{{formattedCount}} أشخاص وجدوا هذا مفيداً",
-        "loginToReview": "يرجى تسجيل الدخول لكتابة تقييم",
+        "loginToReview": "سجل الدخول من أجل إضافة تقييم",
         "reviewSubmitted": "شكراً لك على تقييمك!",
         "reviewUpdated": "تم تحديث تقييمك",
         "reviewDeleted": "تم حذف تقييمك",
@@ -126,7 +130,7 @@
         "showMore": "عرض المزيد من التقييمات",
         "showLess": "عرض أقل",
         "report": "إبلاغ",
-        "topReviewsFrom": "أهم المراجعات من الأردن",
+        "topReviewsFrom": "أهم المراجعات",
         "mustPurchaseToReview": "فقط العملاء الذين اشتروا هذا المنتج يمكنهم ترك تقييم."
     }
 }
