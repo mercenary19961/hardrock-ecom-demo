@@ -4,7 +4,7 @@ import ShopLayout from "@/Layouts/ShopLayout";
 import { Button, Input, Card, CardHeader, CardContent } from "@/Components/ui";
 import { Cart, User } from "@/types/models";
 import { formatPrice } from "@/lib/utils";
-import { Truck, RotateCcw, Clock, ArrowLeft } from "lucide-react";
+import { Truck, RotateCcw, Clock, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface Props {
     cart: Cart;
@@ -13,8 +13,9 @@ interface Props {
 }
 
 export default function Checkout({ cart, stockErrors, user }: Props) {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const language = i18n.language;
+    const isRTL = language === "ar";
     const { data, setData, post, processing, errors } = useForm({
         customer_name: user?.name || "",
         customer_email: user?.email || "",
@@ -35,33 +36,38 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
     const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
     const total = cart.subtotal + deliveryFee;
 
+    const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+
     return (
         <ShopLayout>
-            <Head title="Checkout" />
+            <Head title={t("checkout:title")} />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">
-                        Checkout
+                        {t("checkout:title")}
                     </h1>
                     <Link
                         href="/cart"
                         className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
                     >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Cart
+                        <BackArrow className="h-4 w-4" />
+                        {t("checkout:backToCart")}
                     </Link>
                 </div>
 
                 {stockErrors.length > 0 && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                         <h3 className="text-red-800 font-semibold mb-2">
-                            Stock Issues
+                            {t("checkout:stockIssues")}
                         </h3>
                         {stockErrors.map((error, index) => (
                             <p key={index} className="text-red-700 text-sm">
-                                {error.product}: Only {error.available}{" "}
-                                available (you requested {error.requested})
+                                {t("checkout:stockError", {
+                                    product: error.product,
+                                    available: error.available,
+                                    requested: error.requested,
+                                })}
                             </p>
                         ))}
                     </div>
@@ -75,7 +81,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                             <Card>
                                 <CardHeader>
                                     <h2 className="text-lg font-semibold">
-                                        Contact Information
+                                        {t("checkout:contactInfo")}
                                     </h2>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -83,7 +89,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         <Input
                                             id="customer_name"
                                             name="customer_name"
-                                            label="Full Name"
+                                            label={t("checkout:form.name")}
                                             value={data.customer_name}
                                             onChange={(e) =>
                                                 setData(
@@ -92,14 +98,16 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                                 )
                                             }
                                             error={errors.customer_name}
-                                            placeholder="e.g., Ahmad Mohammad"
+                                            placeholder={t(
+                                                "checkout:placeholders.name"
+                                            )}
                                             autoComplete="name"
                                             required
                                         />
                                         <Input
                                             id="customer_email"
                                             name="customer_email"
-                                            label="Email"
+                                            label={t("checkout:form.email")}
                                             type="email"
                                             value={data.customer_email}
                                             onChange={(e) =>
@@ -109,7 +117,9 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                                 )
                                             }
                                             error={errors.customer_email}
-                                            placeholder="e.g., ahmad@example.com"
+                                            placeholder={t(
+                                                "checkout:placeholders.email"
+                                            )}
                                             autoComplete="email"
                                             required
                                         />
@@ -117,7 +127,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     <Input
                                         id="customer_phone"
                                         name="customer_phone"
-                                        label="Phone Number"
+                                        label={t("checkout:form.phone")}
                                         type="tel"
                                         value={data.customer_phone}
                                         onChange={(e) =>
@@ -127,9 +137,12 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             )
                                         }
                                         error={errors.customer_phone}
-                                        placeholder="e.g., 079 123 4567"
+                                        placeholder={t(
+                                            "checkout:placeholders.phone"
+                                        )}
                                         autoComplete="tel"
                                         required
+                                        dir="ltr"
                                     />
                                 </CardContent>
                             </Card>
@@ -138,14 +151,14 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                             <Card>
                                 <CardHeader>
                                     <h2 className="text-lg font-semibold">
-                                        Delivery Address
+                                        {t("checkout:deliveryAddress")}
                                     </h2>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <Input
                                         id="delivery_area"
                                         name="delivery_area"
-                                        label="Area / Neighborhood"
+                                        label={t("checkout:form.area")}
                                         value={data.delivery_area}
                                         onChange={(e) =>
                                             setData(
@@ -154,14 +167,16 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             )
                                         }
                                         error={errors.delivery_area}
-                                        placeholder="e.g., Khalda, Abdoun, Sweifieh"
+                                        placeholder={t(
+                                            "checkout:placeholders.area"
+                                        )}
                                         autoComplete="address-level2"
                                         required
                                     />
                                     <Input
                                         id="delivery_street"
                                         name="delivery_street"
-                                        label="Street Name"
+                                        label={t("checkout:form.street")}
                                         value={data.delivery_street}
                                         onChange={(e) =>
                                             setData(
@@ -170,14 +185,16 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             )
                                         }
                                         error={errors.delivery_street}
-                                        placeholder="e.g., King Abdullah II Street"
+                                        placeholder={t(
+                                            "checkout:placeholders.street"
+                                        )}
                                         autoComplete="street-address"
                                         required
                                     />
                                     <Input
                                         id="delivery_building"
                                         name="delivery_building"
-                                        label="Building / Floor / Apartment"
+                                        label={t("checkout:form.building")}
                                         value={data.delivery_building}
                                         onChange={(e) =>
                                             setData(
@@ -186,7 +203,9 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             )
                                         }
                                         error={errors.delivery_building}
-                                        placeholder="e.g., Building 15, Floor 3, Apt 5"
+                                        placeholder={t(
+                                            "checkout:placeholders.building"
+                                        )}
                                         autoComplete="address-line2"
                                         required
                                     />
@@ -195,7 +214,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             htmlFor="delivery_notes"
                                             className="block text-sm font-medium text-gray-700 mb-1"
                                         >
-                                            Delivery Instructions (optional)
+                                            {t("checkout:form.deliveryNotes")}
                                         </label>
                                         <textarea
                                             id="delivery_notes"
@@ -209,7 +228,9 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             }
                                             rows={2}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none text-sm"
-                                            placeholder="e.g., Ring the doorbell twice, leave at the door, etc."
+                                            placeholder={t(
+                                                "checkout:placeholders.deliveryNotes"
+                                            )}
                                         />
                                     </div>
                                 </CardContent>
@@ -222,7 +243,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         htmlFor="order_notes"
                                         className="text-lg font-semibold"
                                     >
-                                        Order Notes (optional)
+                                        {t("checkout:orderNotes")}
                                     </label>
                                 </CardHeader>
                                 <CardContent>
@@ -235,7 +256,9 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         }
                                         rows={3}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
-                                        placeholder="Special instructions for your order..."
+                                        placeholder={t(
+                                            "checkout:placeholders.notes"
+                                        )}
                                     />
                                 </CardContent>
                             </Card>
@@ -246,50 +269,57 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                             <Card className="sticky top-24">
                                 <CardHeader>
                                     <h2 className="text-lg font-semibold">
-                                        Order Summary
+                                        {t("checkout:orderSummary")}
                                     </h2>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-3 mb-6">
-                                        {cart.items.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                className="flex justify-between text-sm"
-                                            >
-                                                <span className="text-gray-600">
-                                                    {item.product.name} ×{" "}
-                                                    {item.quantity}
-                                                </span>
-                                                <div className="text-right">
-                                                    {item.product
-                                                        .compare_price &&
-                                                        item.product
-                                                            .compare_price >
-                                                            item.product
-                                                                .price && (
-                                                            <span className="block text-xs text-gray-400 line-through">
-                                                                {formatPrice(
-                                                                    item.product
-                                                                        .compare_price *
-                                                                        item.quantity,
-                                                                    language
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                    <span>
-                                                        {formatPrice(
-                                                            item.subtotal,
-                                                            language
-                                                        )}
+                                        {cart.items.map((item) => {
+                                            const productName =
+                                                isRTL && item.product.name_ar
+                                                    ? item.product.name_ar
+                                                    : item.product.name;
+                                            return (
+                                                <div
+                                                    key={item.id}
+                                                    className="flex justify-between text-sm"
+                                                >
+                                                    <span className="text-gray-600">
+                                                        {productName} ×{" "}
+                                                        {item.quantity}
                                                     </span>
+                                                    <div className="text-right">
+                                                        {item.product
+                                                            .compare_price &&
+                                                            item.product
+                                                                .compare_price >
+                                                                item.product
+                                                                    .price && (
+                                                                <span className="block text-xs text-gray-400 line-through">
+                                                                    {formatPrice(
+                                                                        item
+                                                                            .product
+                                                                            .compare_price *
+                                                                            item.quantity,
+                                                                        language
+                                                                    )}
+                                                                </span>
+                                                            )}
+                                                        <span>
+                                                            {formatPrice(
+                                                                item.subtotal,
+                                                                language
+                                                            )}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                     <div className="border-t pt-4 space-y-2">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">
-                                                Subtotal
+                                                {t("checkout:subtotal")}
                                             </span>
                                             <span>
                                                 {formatPrice(
@@ -300,11 +330,11 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">
-                                                Delivery
+                                                {t("checkout:deliveryFee")}
                                             </span>
                                             {deliveryFee === 0 ? (
                                                 <span className="text-green-600">
-                                                    Free
+                                                    {t("checkout:free")}
                                                 </span>
                                             ) : (
                                                 <span>
@@ -316,7 +346,7 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             )}
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-semibold">
-                                            <span>Total</span>
+                                            <span>{t("checkout:total")}</span>
                                             <span>
                                                 {formatPrice(total, language)}
                                             </span>
@@ -330,11 +360,10 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                             processing || stockErrors.length > 0
                                         }
                                     >
-                                        Place Order (Demo)
+                                        {t("checkout:placeOrder")}
                                     </Button>
                                     <p className="text-xs text-gray-500 text-center mt-2">
-                                        This is a demo. No payment will be
-                                        processed.
+                                        {t("checkout:demoDisclaimer")}
                                     </p>
                                 </CardContent>
                             </Card>
@@ -345,14 +374,15 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     <Truck className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">
-                                            Free Delivery
+                                            {t("checkout:freeDelivery")}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            On orders over{" "}
-                                            {formatPrice(
-                                                FREE_DELIVERY_THRESHOLD,
-                                                language
-                                            )}
+                                            {t("checkout:freeDeliveryDesc", {
+                                                amount: formatPrice(
+                                                    FREE_DELIVERY_THRESHOLD,
+                                                    language
+                                                ),
+                                            })}
                                         </p>
                                     </div>
                                 </div>
@@ -360,11 +390,10 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     <Clock className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">
-                                            Fast Delivery
+                                            {t("checkout:fastDelivery")}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            Same day or next day delivery.
-                                            Available Saturday to Thursday.
+                                            {t("checkout:fastDeliveryDesc")}
                                         </p>
                                     </div>
                                 </div>
@@ -372,11 +401,10 @@ export default function Checkout({ cart, stockErrors, user }: Props) {
                                     <RotateCcw className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">
-                                            Easy Returns
+                                            {t("checkout:easyReturns")}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            14-day return policy for unused
-                                            items
+                                            {t("checkout:easyReturnsDesc")}
                                         </p>
                                     </div>
                                 </div>
