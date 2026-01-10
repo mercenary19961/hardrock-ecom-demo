@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -25,14 +26,38 @@ class CheckoutService
 
             // Calculate totals
             $subtotal = $cart->subtotal;
-            $total = $subtotal;
+            $discount = 0;
+            $couponId = null;
+            $couponCode = null;
+
+            // Apply coupon if present in session
+            $appliedCoupon = session('applied_coupon');
+            if ($appliedCoupon) {
+                $coupon = Coupon::find($appliedCoupon['id']);
+                if ($coupon && !$coupon->getValidationError($user, $subtotal)) {
+                    $discount = $coupon->calculateDiscount($subtotal);
+                    $couponId = $coupon->id;
+                    $couponCode = $coupon->code;
+
+                    // Increment coupon usage
+                    $coupon->incrementUsage($user);
+
+                    // Clear coupon from session
+                    session()->forget('applied_coupon');
+                }
+            }
+
+            $total = $subtotal - $discount;
 
             // Create order
             $order = Order::create([
                 'user_id' => $user?->id,
+                'coupon_id' => $couponId,
+                'coupon_code' => $couponCode,
                 'status' => 'pending',
                 'subtotal' => $subtotal,
                 'tax' => 0,
+                'discount' => $discount,
                 'total' => $total,
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],

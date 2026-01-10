@@ -13,6 +13,8 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'coupon_id',
+        'coupon_code',
         'order_number',
         'status',
         'payment_method',
@@ -22,6 +24,7 @@ class Order extends Model
         'subtotal',
         'tax',
         'shipping_fee',
+        'discount',
         'total',
         'customer_name',
         'customer_email',
@@ -39,11 +42,17 @@ class Order extends Model
             'subtotal' => 'decimal:2',
             'tax' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
+            'discount' => 'decimal:2',
             'total' => 'decimal:2',
             'shipping_address' => 'array',
             'billing_address' => 'array',
             'paid_at' => 'datetime',
         ];
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     protected static function boot(): void

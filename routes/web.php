@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\CouponController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
@@ -29,6 +30,11 @@ Route::name('shop.')->group(function () {
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    // Coupon routes
+    Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
+    Route::post('/coupon/remove', [CouponController::class, 'remove'])->name('coupon.remove');
+    Route::get('/coupon/current', [CouponController::class, 'current'])->name('coupon.current');
 
     // Order confirmation (accessible to anyone who just placed an order)
     Route::get('/order/{order}/confirmation', [OrderController::class, 'confirmation'])->name('order.confirmation');
