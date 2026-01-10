@@ -312,8 +312,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                                 "subcategories",
                                                 "products",
                                                 "filters",
+                                                "priceRange",
                                                 "productsWithColors",
                                                 "productsWithSizes",
+                                                "maxDiscount",
+                                                "availableDiscountBrackets",
                                             ],
                                         }
                                     );
