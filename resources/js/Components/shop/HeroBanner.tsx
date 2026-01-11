@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "@inertiajs/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Slide {
     id: number;
@@ -15,35 +15,36 @@ interface Slide {
 const slides: Slide[] = [
     {
         id: 1,
-        desktopImage: '/images/banners/desktop/slide-1-electronics.webp',
-        mobileImage: '/images/banners/mobile/slide-1-electronics.webp',
-        link: '/category/electronics',
-        alt: 'Latest Tech, Best Prices',
-        altAr: 'أحدث التقنيات بأفضل الأسعار',
+        desktopImage: "/images/banners/desktop/slide-1-electronics.webp",
+        mobileImage: "/images/banners/mobile/slide-1-electronics.webp",
+        link: "/category/electronics",
+        alt: "Latest Tech, Best Prices",
+        altAr: "أحدث التقنيات بأفضل الأسعار",
     },
     {
         id: 2,
-        desktopImage: '/images/banners/desktop/slide-2-skincare.webp',
-        mobileImage: '/images/banners/mobile/slide-2-skincare.webp',
-        link: '/category/skincare',
-        alt: 'Premium Skincare Products',
-        altAr: 'منتجات العناية بالبشرة الفاخرة',
+        desktopImage: "/images/banners/desktop/slide-2-skincare.webp",
+        mobileImage: "/images/banners/mobile/slide-2-skincare.webp",
+        link: "/category/skincare",
+        alt: "Premium Skincare Products",
+        altAr: "منتجات العناية بالبشرة الفاخرة",
     },
     {
         id: 3,
-        desktopImage: '/images/banners/desktop/slide-3-kids.webp',
-        mobileImage: '/images/banners/mobile/slide-3-kids.webp',
-        link: '/category/building-blocks',
-        alt: 'Building Blocks & Kids Toys',
-        altAr: 'ألعاب البناء والألعاب التعليمية',
+        desktopImage: "/images/banners/desktop/slide-3-kids.webp",
+        mobileImage: "/images/banners/mobile/slide-3-kids.webp",
+        link: "/category/building-blocks",
+        alt: "Building Blocks & Kids Toys",
+        altAr: "ألعاب البناء والألعاب التعليمية",
     },
     {
         id: 4,
-        desktopImage: '/images/banners/desktop/slide-4-fashion.webp',
-        mobileImage: '/images/banners/mobile/slide-4-fashion.webp',
-        link: '/category/fashion?has_discount=1&sort=sale',
-        alt: 'Trendy Fashion & Accessories',
-        altAr: 'الموضة والإكسسوارات العصرية',
+        desktopImage:
+            "/images/banners/desktop/e-commerce-banner-desktop-size-clothe.webp",
+        mobileImage: "/images/banners/mobile/slide-4-fashion.webp",
+        link: "/category/fashion?has_discount=1&sort=sale",
+        alt: "Trendy Fashion & Accessories",
+        altAr: "الموضة والإكسسوارات العصرية",
     },
 ];
 
@@ -54,7 +55,7 @@ const getAvailableSlides = () => {
 
 export function HeroBanner() {
     const { language } = useLanguage();
-    const isArabic = language === 'ar';
+    const isArabic = language === "ar";
     const availableSlides = getAvailableSlides();
 
     const [currentIndex, setCurrentIndex] = useState(2); // Start at third slide (kids toys)
@@ -65,7 +66,10 @@ export function HeroBanner() {
     }, [availableSlides.length]);
 
     const goToPrev = useCallback(() => {
-        setCurrentIndex((prev) => (prev - 1 + availableSlides.length) % availableSlides.length);
+        setCurrentIndex(
+            (prev) =>
+                (prev - 1 + availableSlides.length) % availableSlides.length
+        );
     }, [availableSlides.length]);
 
     const goToSlide = (index: number) => {
@@ -86,15 +90,15 @@ export function HeroBanner() {
     // Handle keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft') {
+            if (e.key === "ArrowLeft") {
                 isArabic ? goToNext() : goToPrev();
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === "ArrowRight") {
                 isArabic ? goToPrev() : goToNext();
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, [goToNext, goToPrev, isArabic]);
 
     const currentSlide = availableSlides[currentIndex];
@@ -113,16 +117,18 @@ export function HeroBanner() {
                         {/* Mobile Image */}
                         <img
                             src={currentSlide.mobileImage}
-                            alt={isArabic ? currentSlide.altAr : currentSlide.alt}
+                            alt={
+                                isArabic ? currentSlide.altAr : currentSlide.alt
+                            }
                             className="w-full h-auto object-cover"
-                            style={{ aspectRatio: '768/500' }}
+                            style={{ aspectRatio: "768/500" }}
                         />
                     </picture>
                     {/* Desktop aspect ratio override */}
                     <style>{`
                         @media (min-width: 768px) {
                             section.relative img {
-                                aspect-ratio: 1920/600 !important;
+                                aspect-ratio: 1920/246 !important;
                             }
                         }
                     `}</style>
@@ -166,8 +172,8 @@ export function HeroBanner() {
                             onClick={() => goToSlide(index)}
                             className={`w-3 h-3 rounded-full transition-colors ${
                                 index === currentIndex
-                                    ? 'bg-gray-900'
-                                    : 'bg-brand-purple hover:bg-brand-purple-400'
+                                    ? "bg-gray-900"
+                                    : "bg-brand-purple hover:bg-brand-purple-400"
                             }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />
