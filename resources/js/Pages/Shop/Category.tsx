@@ -23,6 +23,17 @@ import {
     Check,
     Palette,
     Ruler,
+    SlidersHorizontal,
+    Smartphone,
+    Sparkles,
+    ToyBrick,
+    Watch,
+    ChefHat,
+    Trophy,
+    GraduationCap,
+    Baby,
+    ShoppingBag,
+    Home,
 } from "lucide-react";
 import { formatPrice, formatNumber } from "@/lib/utils";
 import { useLocalized } from "@/hooks/useLocalized";
@@ -36,6 +47,18 @@ const categoryBannerMap: Record<string, string> = {
     sports: "category-sports-outdoors-hero",
     stationery: "category-books-stationery-hero",
     kids: "category-baby-kids-hero",
+};
+
+// Map category slugs to icons
+const categoryIcons: Record<string, React.ElementType> = {
+    electronics: Smartphone,
+    skincare: Sparkles,
+    "building-blocks": ToyBrick,
+    fashion: Watch,
+    "home-kitchen": ChefHat,
+    sports: Trophy,
+    stationery: GraduationCap,
+    kids: Baby,
 };
 
 type FilterCategory =
@@ -74,7 +97,12 @@ interface Props {
     productsWithColors: number;
     productsWithSizes: number;
     maxDiscount: number;
-    availableDiscountBrackets: Array<{ min: number; max: number; label_max: number; count: number }>;
+    availableDiscountBrackets: Array<{
+        min: number;
+        max: number;
+        label_max: number;
+        count: number;
+    }>;
 }
 
 // Collapsible filter section component
@@ -748,8 +776,9 @@ export default function Category({
                         <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
                             <Link
                                 href="/"
-                                className="hover:text-gray-900 transition-colors"
+                                className="hover:text-gray-900 transition-colors flex items-center gap-1"
                             >
+                                <Home className="h-4 w-4" />
                                 {t("shop:hero.home")}
                             </Link>
                             <ChevronRight className="h-4 w-4" />
@@ -757,17 +786,42 @@ export default function Category({
                                 <>
                                     <Link
                                         href={`/category/${parentCategory.slug}`}
-                                        className="hover:text-gray-900 transition-colors"
+                                        className="hover:text-gray-900 transition-colors flex items-center gap-1"
                                     >
+                                        {(() => {
+                                            const ParentBannerIcon =
+                                                categoryIcons[
+                                                    parentCategory.slug
+                                                ] || ShoppingBag;
+                                            return (
+                                                <ParentBannerIcon className="h-4 w-4" />
+                                            );
+                                        })()}
                                         {getCategoryName(parentCategory)}
                                     </Link>
                                     <ChevronRight className="h-4 w-4" />
-                                    <span className="text-gray-900 font-medium">
+                                    <span className="text-gray-900 font-medium flex items-center gap-1">
+                                        {(() => {
+                                            const CategoryIcon =
+                                                categoryIcons[category.slug] ||
+                                                ShoppingBag;
+                                            return (
+                                                <CategoryIcon className="h-4 w-4" />
+                                            );
+                                        })()}
                                         {getCategoryName(category)}
                                     </span>
                                 </>
                             ) : (
-                                <span className="text-gray-900 font-medium">
+                                <span className="text-gray-900 font-medium flex items-center gap-1">
+                                    {(() => {
+                                        const CategoryIcon =
+                                            categoryIcons[category.slug] ||
+                                            ShoppingBag;
+                                        return (
+                                            <CategoryIcon className="h-4 w-4" />
+                                        );
+                                    })()}
                                     {getCategoryName(category)}
                                 </span>
                             )}
@@ -836,6 +890,13 @@ export default function Category({
                                         : "text-gray-500 hover:text-gray-900"
                                 }`}
                             >
+                                {(() => {
+                                    const ParentIcon =
+                                        categoryIcons[
+                                            displayParentCategory.slug
+                                        ] || ShoppingBag;
+                                    return <ParentIcon className="w-4 h-4" />;
+                                })()}
                                 <span>
                                     {t("shop:subcategories.all", {
                                         category: getCategoryName(
@@ -856,6 +917,8 @@ export default function Category({
                             {subcategories.map((sub) => {
                                 const isCurrentSubcategory =
                                     isSubcategory && sub.id === category.id;
+                                const SubIcon =
+                                    categoryIcons[sub.slug] || ShoppingBag;
                                 return (
                                     <Link
                                         key={sub.id}
@@ -867,6 +930,7 @@ export default function Category({
                                                 : "text-gray-500 hover:text-gray-900"
                                         }`}
                                     >
+                                        <SubIcon className="w-4 h-4" />
                                         <span>{getCategoryName(sub)}</span>
                                         {isCurrentSubcategory && (
                                             <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">
@@ -894,9 +958,12 @@ export default function Category({
                     <aside className="hidden lg:block w-64 flex-shrink-0">
                         <div className="sticky top-24">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-gray-900">
-                                    {t("shop:filters")}
-                                </h2>
+                                <div className="flex items-center gap-2">
+                                    <SlidersHorizontal className="h-5 w-5 text-gray-500" />
+                                    <h2 className="font-semibold text-gray-900">
+                                        {t("shop:filters")}
+                                    </h2>
+                                </div>
                                 {hasActiveFilters && (
                                     <span className="bg-brand-purple text-white text-xs px-2 py-0.5 rounded-full">
                                         {formatNumber(
@@ -1002,7 +1069,8 @@ export default function Category({
 
                         {/* Desktop: Product Count, Sort, and Quick Filters in one row */}
                         <div className="hidden lg:flex items-center gap-3 mb-6">
-                            <span className="text-sm text-gray-500 flex-shrink-0">
+                            <span className="text-sm text-gray-500 flex items-center gap-1.5 flex-shrink-0">
+                                <Package className="w-4 h-4 text-gray-500" />
                                 {formatNumber(products.total, language)}{" "}
                                 {products.total === 1
                                     ? t("shop:product")
@@ -1171,7 +1239,8 @@ export default function Category({
                                                           ),
                                                           // Display max is filter_max - 1 (e.g., 50 -> 49 for "40-49%")
                                                           max: formatNumber(
-                                                              filters.max_discount - 1,
+                                                              filters.max_discount -
+                                                                  1,
                                                               language
                                                           ),
                                                       }
@@ -1427,8 +1496,10 @@ export default function Category({
                                                 key={option.min}
                                                 onClick={() =>
                                                     applyFilters({
-                                                        min_discount: option.min,
-                                                        max_discount: option.max,
+                                                        min_discount:
+                                                            option.min,
+                                                        max_discount:
+                                                            option.max,
                                                     })
                                                 }
                                                 className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${

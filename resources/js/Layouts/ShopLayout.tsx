@@ -23,6 +23,32 @@ import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 
 import { formatNumber } from "@/lib/utils";
+import {
+    Smartphone,
+    Sparkles,
+    ToyBrick,
+    Watch,
+    ChefHat,
+    Trophy,
+    GraduationCap,
+    Baby,
+    ShoppingBag,
+} from "lucide-react";
+
+// Map category slugs to icons
+const categoryIcons: Record<
+    string,
+    React.ComponentType<{ className?: string }>
+> = {
+    electronics: Smartphone,
+    skincare: Sparkles,
+    "building-blocks": ToyBrick,
+    fashion: Watch,
+    "home-kitchen": ChefHat,
+    sports: Trophy,
+    stationery: GraduationCap,
+    kids: Baby,
+};
 
 interface ShopLayoutProps {
     children: ReactNode;
@@ -290,13 +316,15 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                 }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-10 overflow-x-auto scrollbar-hide">
+                    <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-12 overflow-x-auto scrollbar-hide">
                         {categories?.map((category) => {
                             const isOnCategoryPage =
                                 window.location.pathname.startsWith(
                                     "/category/"
                                 );
                             const categoryUrl = `/category/${category.slug}`;
+                            const IconComponent =
+                                categoryIcons[category.slug] || ShoppingBag;
 
                             const handleClick = (e: React.MouseEvent) => {
                                 if (isOnCategoryPage) {
@@ -328,9 +356,21 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                     key={category.id}
                                     href={categoryUrl}
                                     onClick={handleClick}
-                                    className="text-sm text-gray-600 hover:text-gray-900 font-medium whitespace-nowrap flex-shrink-0"
+                                    className={`group flex items-center gap-2 text-sm font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                                        window.location.pathname === categoryUrl
+                                            ? "text-brand-purple"
+                                            : "text-gray-600 hover:text-gray-900"
+                                    }`}
                                 >
-                                    {getCategoryName(category)}
+                                    <IconComponent
+                                        className={`w-4 h-4 ${
+                                            window.location.pathname ===
+                                            categoryUrl
+                                                ? "text-brand-purple"
+                                                : "text-gray-400 group-hover:text-brand-orange"
+                                        }`}
+                                    />
+                                    <span>{getCategoryName(category)}</span>
                                 </Link>
                             );
                         })}

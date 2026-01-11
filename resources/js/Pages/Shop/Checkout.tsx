@@ -262,8 +262,9 @@ export default function Checkout({
                 // WhatsApp number (without + sign for URL)
                 const whatsappNumber = "962791700034";
 
-                // Create WhatsApp URL
-                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                // Create WhatsApp URL (using api.whatsapp.com for better reliability)
+                console.log("WhatsApp Message Debug:", message);
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(
                     message
                 )}`;
 

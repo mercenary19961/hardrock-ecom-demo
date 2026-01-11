@@ -15,7 +15,7 @@ interface Slide {
 const slides: Slide[] = [
     {
         id: 1,
-        desktopImage: "/images/banners/desktop/slide-1-electronics.webp",
+        desktopImage: "/images/banners/desktop/slide-1-electronics-2.webp",
         mobileImage: "/images/banners/mobile/slide-1-electronics.webp",
         link: "/category/electronics",
         alt: "Latest Tech, Best Prices",
@@ -23,7 +23,7 @@ const slides: Slide[] = [
     },
     {
         id: 2,
-        desktopImage: "/images/banners/desktop/slide-2-skincare.webp",
+        desktopImage: "/images/banners/desktop/slide-2-skincare-2.webp",
         mobileImage: "/images/banners/mobile/slide-2-skincare.webp",
         link: "/category/skincare",
         alt: "Premium Skincare Products",
@@ -31,7 +31,7 @@ const slides: Slide[] = [
     },
     {
         id: 3,
-        desktopImage: "/images/banners/desktop/slide-3-kids.webp",
+        desktopImage: "/images/banners/desktop/slide-3-kids-2.webp",
         mobileImage: "/images/banners/mobile/slide-3-kids.webp",
         link: "/category/building-blocks",
         alt: "Building Blocks & Kids Toys",
@@ -39,8 +39,7 @@ const slides: Slide[] = [
     },
     {
         id: 4,
-        desktopImage:
-            "/images/banners/desktop/e-commerce-banner-desktop-size-clothe.webp",
+        desktopImage: "/images/banners/desktop/slide-4-fashion-2.webp",
         mobileImage: "/images/banners/mobile/slide-4-fashion.webp",
         link: "/category/fashion?has_discount=1&sort=sale",
         alt: "Trendy Fashion & Accessories",
