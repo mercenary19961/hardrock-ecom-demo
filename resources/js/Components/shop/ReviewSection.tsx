@@ -890,7 +890,7 @@ export function ReviewSection({
                         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
                             <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                             <p className="text-gray-500 font-medium mb-1">
-                                {t("shop:reviewsSection.noReviewsYet")}
+                                {t("shop:reviewsSection.noReviews")}
                             </p>
                             <p className="text-sm text-gray-400">
                                 {t("shop:reviewsSection.beFirstToReview")}
