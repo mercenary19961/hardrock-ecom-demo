@@ -221,7 +221,7 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                         </div>
 
                                         {items.length > 0 && (
-                                            <div className="border-t px-4 py-4 flex flex-col gap-3">
+                                            <div className="border-t px-4 py-4 flex flex-col gap-2">
                                                 <Button
                                                     className="w-full flex items-center justify-center gap-2 bg-brand-purple hover:bg-brand-purple-700"
                                                     onClick={() => {

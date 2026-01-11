@@ -116,13 +116,13 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                         "common:cart.shippingNote"
                                                     )}
                                                 </p>
-                                                <div className="space-y-2">
+                                                <div className="space-y-4">
                                                     <Link
                                                         href="/checkout"
                                                         onClick={onClose}
                                                     >
                                                         <Button
-                                                            className="w-full"
+                                                            className="w-full mb-2"
                                                             size="lg"
                                                         >
                                                             {t(
@@ -136,8 +136,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                                                     >
                                                         <Button
                                                             variant="outline"
-                                                            className="w-full"
+                                                            className="w-full flex items-center justify-center gap-2"
                                                         >
+                                                            <ShoppingBag className="h-4 w-4" />
                                                             {t(
                                                                 "common:cart.viewCart"
                                                             )}
