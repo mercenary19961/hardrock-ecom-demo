@@ -17,6 +17,13 @@ import {
     Loader2,
     MessageCircle,
     CheckCircle,
+    ShoppingBag,
+    Zap,
+    User as UserIcon,
+    Phone,
+    MapPin,
+    ClipboardList,
+    Package,
 } from "lucide-react";
 import axios from "axios";
 
@@ -347,9 +354,10 @@ export default function Checkout({
                 </div>
             )}
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                        <ShoppingBag className="h-8 w-8 text-brand-purple" />
                         {t("checkout:title")}
                     </h1>
                     <Link
@@ -384,7 +392,8 @@ export default function Checkout({
                         <div>
                             <Card>
                                 <CardHeader>
-                                    <h2 className="text-lg font-semibold">
+                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                        <Zap className="h-5 w-5 text-brand-orange" />
                                         {t("checkout:quickOrder")}
                                     </h2>
                                     <p className="text-sm text-gray-500 mt-1">
@@ -392,62 +401,77 @@ export default function Checkout({
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <Input
-                                        id="customer_name"
-                                        name="customer_name"
-                                        label={t("checkout:form.name")}
-                                        value={formData.customer_name}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "customer_name",
-                                                e.target.value
-                                            )
-                                        }
-                                        error={formErrors.customer_name}
-                                        placeholder={t(
-                                            "checkout:placeholders.name"
-                                        )}
-                                        autoComplete="name"
-                                        required
-                                    />
-                                    <Input
-                                        id="customer_phone"
-                                        name="customer_phone"
-                                        label={t("checkout:form.phone")}
-                                        type="tel"
-                                        value={formData.customer_phone}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "customer_phone",
-                                                e.target.value
-                                            )
-                                        }
-                                        error={formErrors.customer_phone}
-                                        placeholder={t(
-                                            "checkout:placeholders.phone"
-                                        )}
-                                        autoComplete="tel"
-                                        required
-                                        dir="ltr"
-                                    />
-                                    <Input
-                                        id="delivery_area"
-                                        name="delivery_area"
-                                        label={t("checkout:form.area")}
-                                        value={formData.delivery_area}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "delivery_area",
-                                                e.target.value
-                                            )
-                                        }
-                                        error={formErrors.delivery_area}
-                                        placeholder={t(
-                                            "checkout:placeholders.area"
-                                        )}
-                                        autoComplete="address-level2"
-                                        required
-                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                            <UserIcon className="h-4 w-4 text-gray-500" />
+                                            {t("checkout:form.name")}
+                                        </label>
+                                        <Input
+                                            id="customer_name"
+                                            name="customer_name"
+                                            value={formData.customer_name}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "customer_name",
+                                                    e.target.value
+                                                )
+                                            }
+                                            error={formErrors.customer_name}
+                                            placeholder={t(
+                                                "checkout:placeholders.name"
+                                            )}
+                                            autoComplete="name"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-gray-500" />
+                                            {t("checkout:form.phone")}
+                                        </label>
+                                        <Input
+                                            id="customer_phone"
+                                            name="customer_phone"
+                                            type="tel"
+                                            value={formData.customer_phone}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "customer_phone",
+                                                    e.target.value
+                                                )
+                                            }
+                                            error={formErrors.customer_phone}
+                                            placeholder={t(
+                                                "checkout:placeholders.phone"
+                                            )}
+                                            autoComplete="tel"
+                                            required
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                            <MapPin className="h-4 w-4 text-gray-500" />
+                                            {t("checkout:form.area")}
+                                        </label>
+                                        <Input
+                                            id="delivery_area"
+                                            name="delivery_area"
+                                            value={formData.delivery_area}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    "delivery_area",
+                                                    e.target.value
+                                                )
+                                            }
+                                            error={formErrors.delivery_area}
+                                            placeholder={t(
+                                                "checkout:placeholders.area"
+                                            )}
+                                            autoComplete="address-level2"
+                                            required
+                                        />
+                                    </div>
                                 </CardContent>
                             </Card>
 
@@ -498,7 +522,8 @@ export default function Checkout({
                         <div>
                             <Card className="sticky top-24">
                                 <CardHeader>
-                                    <h2 className="text-lg font-semibold">
+                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                        <ClipboardList className="h-5 w-5 text-brand-purple" />
                                         {t("checkout:orderSummary")}
                                     </h2>
                                 </CardHeader>
@@ -512,13 +537,16 @@ export default function Checkout({
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    className="flex justify-between text-sm"
+                                                    className="flex justify-between gap-4 text-sm"
                                                 >
-                                                    <span className="text-gray-600">
-                                                        {productName} ×{" "}
-                                                        {item.quantity}
-                                                    </span>
-                                                    <div className="text-right">
+                                                    <div className="flex items-start gap-2 text-gray-600 flex-1 min-w-0">
+                                                        <Package className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                                        <span>
+                                                            {productName} ×{" "}
+                                                            {item.quantity}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0 whitespace-nowrap">
                                                         {item.product
                                                             .compare_price &&
                                                             item.product
