@@ -1,0 +1,100 @@
+{
+    "title": "حسابي",
+    "tabs": {
+        "overview": "نظرة عامة",
+        "orders": "الطلبات",
+        "coupons": "الكوبونات",
+        "settings": "الإعدادات"
+    },
+    "stats": {
+        "totalOrders": "إجمالي الطلبات",
+        "totalSpent": "إجمالي الإنفاق",
+        "pendingOrders": "قيد الانتظار",
+        "availableCoupons": "الكوبونات"
+    },
+    "overview": {
+        "recentOrders": "الطلبات الأخيرة",
+        "availableCoupons": "الكوبونات المتاحة",
+        "accountInfo": "معلومات الحساب",
+        "viewAll": "عرض الكل",
+        "noOrders": "لا توجد طلبات بعد",
+        "noCoupons": "لا توجد كوبونات متاحة"
+    },
+    "orders": {
+        "title": "طلباتي",
+        "empty": "لا توجد طلبات بعد",
+        "emptyDesc": "ابدأ التسوق لرؤية طلباتك هنا",
+        "startShopping": "ابدأ التسوق",
+        "viewDetails": "عرض التفاصيل",
+        "orderDetails": "تفاصيل الطلب",
+        "orderNumber": "رقم الطلب",
+        "date": "التاريخ",
+        "status": "الحالة",
+        "items": "المنتجات",
+        "subtotal": "المجموع الفرعي",
+        "total": "الإجمالي",
+        "close": "إغلاق",
+        "moreItems": "منتجات أخرى"
+    },
+    "orderStatus": {
+        "pending": "قيد الانتظار",
+        "processing": "قيد المعالجة",
+        "shipped": "تم الشحن",
+        "delivered": "تم التوصيل",
+        "cancelled": "ملغي"
+    },
+    "coupons": {
+        "title": "كوبوناتي",
+        "empty": "لا توجد كوبونات متاحة",
+        "emptyDesc": "تحقق لاحقاً للحصول على عروض خاصة",
+        "off": "خصم",
+        "copy": "نسخ الكود",
+        "minOrder": "الحد الأدنى {{amount}}",
+        "expiresToday": "ينتهي اليوم!",
+        "expiresIn": "ينتهي خلال {{days}} أيام"
+    },
+    "settings": {
+        "editProfile": "تعديل الملف الشخصي",
+        "changePassword": "تغيير كلمة المرور",
+        "dangerZone": "منطقة الخطر",
+        "deleteWarning": "بمجرد حذف حسابك، لا يمكن التراجع. يرجى التأكد من قرارك.",
+        "deleteAccount": "حذف الحساب",
+        "saveChanges": "حفظ التغييرات",
+        "updatePassword": "تحديث كلمة المرور",
+        "noChanges": "لا توجد تغييرات للحفظ",
+        "deleteConfirmTitle": "حذف الحساب؟",
+        "deleteConfirmDesc": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك نهائياً.",
+        "deleteIrreversible": "هذا الإجراء لا يمكن التراجع عنه:",
+        "deleteWarning1": "سيتم حذف جميع معلوماتك الشخصية",
+        "deleteWarning2": "سيتم إزالة سجل طلباتك",
+        "deleteWarning3": "سيتم فقدان أي كوبونات غير مستخدمة",
+        "typeToConfirm": "اكتب للتأكيد من الحذف",
+        "typeExactly": "اكتب بالضبط:",
+        "cancel": "إلغاء",
+        "confirmDelete": "نعم، احذف حسابي"
+    },
+    "fields": {
+        "name": "الاسم الكامل",
+        "email": "البريد الإلكتروني",
+        "phone": "رقم الهاتف",
+        "memberSince": "عضو منذ",
+        "notSet": "غير محدد",
+        "currentPassword": "كلمة المرور الحالية",
+        "newPassword": "كلمة المرور الجديدة",
+        "confirmPassword": "تأكيد كلمة المرور",
+        "password": "كلمة المرور"
+    },
+    "placeholders": {
+        "phone": "مثال: ٠٧٩ ١٢٣ ٤٥٦٧",
+        "confirmPassword": "أدخل كلمة المرور للتأكيد"
+    },
+    "validation": {
+        "nameRequired": "الاسم مطلوب",
+        "nameTwoWords": "يرجى إدخال الاسم الأول والأخير",
+        "nameWordLength": "يجب أن يتكون كل اسم من حرفين على الأقل",
+        "nameHint": "أدخل الاسم الأول والأخير (حرفين على الأقل لكل منهما)",
+        "phoneInvalid": "يرجى إدخال رقم هاتف صحيح",
+        "passwordHint": "٨ أحرف على الأقل",
+        "passwordMismatch": "كلمات المرور غير متطابقة"
+    }
+}

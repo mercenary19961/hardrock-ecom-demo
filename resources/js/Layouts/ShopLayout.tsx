@@ -33,6 +33,12 @@ import {
     GraduationCap,
     Baby,
     ShoppingBag,
+    User as UserLucide,
+    Package,
+    Settings,
+    LogOut,
+    Shield,
+    Ticket,
 } from "lucide-react";
 
 // Map category slugs to icons
@@ -205,37 +211,62 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         <UserIcon className="h-6 w-6" />
                                         <ChevronDownIcon className="h-4 w-4" />
                                     </button>
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                                        <div className="py-2">
-                                            <p className="px-4 py-2 text-sm text-gray-500 border-b">
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                                        <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-brand-purple/5 to-brand-orange/5 rounded-t-xl">
+                                            <p className="font-semibold text-gray-900">
                                                 {auth.user.name}
                                             </p>
+                                            <p className="text-xs text-gray-500 truncate">
+                                                {auth.user.email}
+                                            </p>
+                                        </div>
+                                        <div className="py-2">
                                             {auth.user.role === "admin" && (
                                                 <Link
                                                     href="/admin"
-                                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-purple/5 hover:text-brand-purple transition-colors"
                                                 >
+                                                    <Shield className="h-4 w-4" />
                                                     {t("nav:adminPanel")}
                                                 </Link>
                                             )}
                                             <Link
-                                                href="/orders"
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                href="/profile"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-purple/5 hover:text-brand-purple transition-colors"
                                             >
+                                                <UserLucide className="h-4 w-4" />
+                                                {t("nav:profile")}
+                                            </Link>
+                                            <Link
+                                                href="/profile?tab=orders"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-purple/5 hover:text-brand-purple transition-colors"
+                                            >
+                                                <Package className="h-4 w-4" />
                                                 {t("nav:orders")}
                                             </Link>
                                             <Link
-                                                href="/profile"
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                href="/profile?tab=coupons"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-purple/5 hover:text-brand-purple transition-colors"
                                             >
-                                                {t("nav:profile")}
+                                                <Ticket className="h-4 w-4" />
+                                                {t("nav:coupons")}
                                             </Link>
+                                            <Link
+                                                href="/profile?tab=settings"
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-purple/5 hover:text-brand-purple transition-colors"
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                                {t("nav:settings")}
+                                            </Link>
+                                        </div>
+                                        <div className="border-t border-gray-100 py-2">
                                             <Link
                                                 href="/logout"
                                                 method="post"
                                                 as="button"
-                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                             >
+                                                <LogOut className="h-4 w-4" />
                                                 {t("nav:logout")}
                                             </Link>
                                         </div>

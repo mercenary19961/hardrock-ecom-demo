@@ -8,6 +8,7 @@ use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\ProfileController as ShopProfileController;
 use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -67,11 +68,13 @@ Route::middleware('auth')->get('/dashboard', function () {
     return redirect('/');
 })->name('dashboard');
 
-// Profile routes (from Breeze)
+// Profile routes (Shop profile with tabs)
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
+    Route::patch('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ShopProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [ShopProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
 
 // Admin routes

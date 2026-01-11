@@ -7,11 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatPrice(price: number, language: string = 'en'): string {
     const isArabic = language === 'ar';
-    // Show decimals only if the price has fractions
+    // Hide decimals for amounts >= 1000, otherwise show only if price has fractions
+    const hideDecimals = price >= 1000;
     const hasDecimals = price % 1 !== 0;
     const formatted = new Intl.NumberFormat(isArabic ? 'ar-JO' : 'en-JO', {
-        minimumFractionDigits: hasDecimals ? 2 : 0,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: hideDecimals ? 0 : (hasDecimals ? 2 : 0),
+        maximumFractionDigits: hideDecimals ? 0 : 2,
     }).format(price);
 
     // Add currency label based on language
