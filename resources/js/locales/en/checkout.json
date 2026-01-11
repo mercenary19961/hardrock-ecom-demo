@@ -1,31 +1,24 @@
 {
     "title": "Checkout",
     "backToCart": "Back to Cart",
-    "contactInfo": "Contact Information",
-    "deliveryAddress": "Delivery Address",
-    "orderNotes": "Order Notes (optional)",
-    "placeOrder": "Place Order (Demo)",
-    "processing": "Processing...",
-    "demoDisclaimer": "This is a demo. No payment will be processed.",
+    "quickOrder": "Quick Order",
+    "quickOrderDesc": "Fill in your details and we'll contact you via WhatsApp",
+    "orderViaWhatsApp": "Order via WhatsApp",
+    "whatsAppNote": "You'll be redirected to WhatsApp to confirm your order",
     "form": {
         "name": "Full Name",
-        "email": "Email",
         "phone": "Phone Number",
-        "area": "Area / Neighborhood",
-        "street": "Street Name",
-        "building": "Building / Floor / Apartment",
-        "deliveryNotes": "Delivery Instructions (optional)",
-        "notes": "Any special instructions for your order..."
+        "area": "Area / Neighborhood"
     },
     "placeholders": {
         "name": "e.g., Ahmad Mohammad",
-        "email": "e.g., ahmad@example.com",
         "phone": "e.g., 079 123 4567",
-        "area": "e.g., Khalda, Abdoun, Sweifieh",
-        "street": "e.g., King Abdullah II Street",
-        "building": "e.g., Building 15, Floor 3, Apt 5",
-        "deliveryNotes": "e.g., Ring the doorbell twice, leave at the door, etc.",
-        "notes": "Special instructions for your order..."
+        "area": "e.g., Khalda, Abdoun, Sweifieh"
+    },
+    "validation": {
+        "nameRequired": "Please enter your name",
+        "phoneRequired": "Please enter your phone number",
+        "areaRequired": "Please enter your area"
     },
     "orderSummary": "Order Summary",
     "subtotal": "Subtotal",
@@ -67,5 +60,9 @@
     "orderNumber": "Order Number",
     "date": "Date",
     "viewAllOrders": "View All Orders",
-    "demoNotice": "This is a demo order. No actual products will be shipped."
+    "demoNotice": "This is a demo order. No actual products will be shipped.",
+    "processing": "Processing...",
+    "orderSent": "Order Sent!",
+    "orderSentDesc": "Your order has been placed. Please complete the WhatsApp message to confirm.",
+    "backToHome": "Back to Home"
 }

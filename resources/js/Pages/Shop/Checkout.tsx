@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
 import { Button, Input, Card, CardHeader, CardContent } from "@/Components/ui";
@@ -15,6 +15,8 @@ import {
     X,
     Check,
     Loader2,
+    MessageCircle,
+    CheckCircle,
 } from "lucide-react";
 import axios from "axios";
 
@@ -44,16 +46,17 @@ export default function Checkout({
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const isRTL = language === "ar";
-    const { data, setData, post, processing, errors } = useForm({
+
+    // Simplified form data - only essential fields
+    const [formData, setFormData] = useState({
         customer_name: user?.name || "",
-        customer_email: user?.email || "",
         customer_phone: "",
         delivery_area: "",
-        delivery_street: "",
-        delivery_building: "",
-        delivery_notes: "",
-        notes: "",
     });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
     // Coupon state
     const [couponCode, setCouponCode] = useState("");
@@ -63,9 +66,154 @@ export default function Checkout({
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const FREE_DELIVERY_THRESHOLD = 100;
+    const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
+    const discount = appliedCoupon?.discount || 0;
+    const total = cart.subtotal + deliveryFee - discount;
+
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {};
+
+        if (!formData.customer_name.trim()) {
+            errors.customer_name = t("checkout:validation.nameRequired");
+        }
+        if (!formData.customer_phone.trim()) {
+            errors.customer_phone = t("checkout:validation.phoneRequired");
+        }
+        if (!formData.delivery_area.trim()) {
+            errors.delivery_area = t("checkout:validation.areaRequired");
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const generateWhatsAppMessage = (orderNum: string): string => {
+        const lines: string[] = [];
+
+        // Header - no emojis, using text formatting
+        if (isRTL) {
+            lines.push(`*[طلب جديد #${orderNum}]*`);
+            lines.push("من متجر HardRock");
+            lines.push("");
+            lines.push("*معلومات العميل:*");
+            lines.push(`- الاسم: ${formData.customer_name}`);
+            lines.push(`- الهاتف: ${formData.customer_phone}`);
+            lines.push(`- المنطقة: ${formData.delivery_area}`);
+            lines.push("");
+            lines.push("*تفاصيل الطلب:*");
+        } else {
+            lines.push(`*[New Order #${orderNum}]*`);
+            lines.push("from HardRock Store");
+            lines.push("");
+            lines.push("*Customer Information:*");
+            lines.push(`- Name: ${formData.customer_name}`);
+            lines.push(`- Phone: ${formData.customer_phone}`);
+            lines.push(`- Area: ${formData.delivery_area}`);
+            lines.push("");
+            lines.push("*Order Details:*");
+        }
+
+        // Order items
+        cart.items.forEach((item, index) => {
+            const productName =
+                isRTL && item.product.name_ar
+                    ? item.product.name_ar
+                    : item.product.name;
+            const itemTotal = formatPrice(item.subtotal, language);
+            lines.push(`${index + 1}. ${productName}`);
+            lines.push(`   x${item.quantity} = ${itemTotal}`);
+        });
+
+        lines.push("");
+        lines.push("---");
+
+        // Totals
+        if (isRTL) {
+            lines.push(`المجموع الفرعي: ${formatPrice(cart.subtotal, language)}`);
+            if (deliveryFee === 0) {
+                lines.push("التوصيل: مجاني");
+            } else {
+                lines.push(`التوصيل: ${formatPrice(deliveryFee, language)}`);
+            }
+            if (discount > 0) {
+                lines.push(
+                    `الخصم (${appliedCoupon?.code}): -${formatPrice(discount, language)}`
+                );
+            }
+            lines.push("");
+            lines.push(`*الإجمالي: ${formatPrice(total, language)}*`);
+        } else {
+            lines.push(`Subtotal: ${formatPrice(cart.subtotal, language)}`);
+            if (deliveryFee === 0) {
+                lines.push("Delivery: FREE");
+            } else {
+                lines.push(`Delivery: ${formatPrice(deliveryFee, language)}`);
+            }
+            if (discount > 0) {
+                lines.push(
+                    `Discount (${appliedCoupon?.code}): -${formatPrice(discount, language)}`
+                );
+            }
+            lines.push("");
+            lines.push(`*Total: ${formatPrice(total, language)}*`);
+        }
+
+        return lines.join("\n");
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        post("/checkout");
+
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // Create order in database
+            const response = await axios.post("/checkout/whatsapp", {
+                customer_name: formData.customer_name,
+                customer_phone: formData.customer_phone,
+                delivery_area: formData.delivery_area,
+            });
+
+            if (response.data.success) {
+                const orderNum = response.data.order_number;
+                setOrderNumber(orderNum);
+
+                // Generate WhatsApp message with order number
+                const message = generateWhatsAppMessage(orderNum);
+
+                // WhatsApp number (without + sign for URL)
+                const whatsappNumber = "962791700034";
+
+                // Create WhatsApp URL
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+                // Open WhatsApp in new tab
+                window.open(whatsappUrl, "_blank");
+
+                // Refresh cart data (cart was cleared on server)
+                router.reload({ only: ["cart"] });
+
+                // Show success modal
+                setShowSuccessModal(true);
+            }
+        } catch (error) {
+            console.error("Checkout error:", error);
+            // Still show error to user
+            if (axios.isAxiosError(error) && error.response?.data?.message) {
+                alert(error.response.data.message);
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleGoHome = () => {
+        router.visit("/");
     };
 
     const applyCoupon = async () => {
@@ -88,7 +236,6 @@ export default function Checkout({
                 const errorKey = error.response.data.error;
                 const minOrderAmount = error.response.data.min_order_amount;
 
-                // Map error keys to translation keys
                 const errorMap: Record<string, string> = {
                     coupon_not_found: "not_found",
                     coupon_inactive: "inactive",
@@ -128,20 +275,14 @@ export default function Checkout({
             setAppliedCoupon(null);
             setCouponError(null);
         } catch {
-            // Silently fail - coupon might already be removed
+            // Silently fail
         } finally {
             setCouponLoading(false);
         }
     };
 
-    const FREE_DELIVERY_THRESHOLD = 100;
-    const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
-    const discount = appliedCoupon?.discount || 0;
-    const total = cart.subtotal + deliveryFee - discount;
-
     const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
-    // Get coupon name based on language
     const getCouponName = () => {
         if (!appliedCoupon) return "";
         return isRTL && appliedCoupon.name_ar
@@ -149,7 +290,6 @@ export default function Checkout({
             : appliedCoupon.name;
     };
 
-    // Get coupon description
     const getCouponDescription = () => {
         if (!appliedCoupon) return "";
         if (appliedCoupon.type === "percentage") {
@@ -162,11 +302,52 @@ export default function Checkout({
         });
     };
 
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        // Clear error when user starts typing
+        if (formErrors[field]) {
+            setFormErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
     return (
         <ShopLayout>
             <Head title={t("checkout:title")} />
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle className="h-10 w-10 text-green-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            {t("checkout:orderSent")}
+                        </h2>
+                        <p className="text-gray-600 mb-2">
+                            {t("checkout:orderSentDesc")}
+                        </p>
+                        {orderNumber && (
+                            <p className="text-sm text-gray-500 mb-6">
+                                {t("checkout:orderNumber")}: <span className="font-semibold">{orderNumber}</span>
+                            </p>
+                        )}
+                        <Button
+                            onClick={handleGoHome}
+                            size="lg"
+                            className="w-full"
+                        >
+                            {t("checkout:backToHome")}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">
                         {t("checkout:title")}
@@ -198,69 +379,50 @@ export default function Checkout({
                 )}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Form */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {/* Contact */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Simplified Form - Left Side */}
+                        <div>
                             <Card>
                                 <CardHeader>
                                     <h2 className="text-lg font-semibold">
-                                        {t("checkout:contactInfo")}
+                                        {t("checkout:quickOrder")}
                                     </h2>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {t("checkout:quickOrderDesc")}
+                                    </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            id="customer_name"
-                                            name="customer_name"
-                                            label={t("checkout:form.name")}
-                                            value={data.customer_name}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "customer_name",
-                                                    e.target.value
-                                                )
-                                            }
-                                            error={errors.customer_name}
-                                            placeholder={t(
-                                                "checkout:placeholders.name"
-                                            )}
-                                            autoComplete="name"
-                                            required
-                                        />
-                                        <Input
-                                            id="customer_email"
-                                            name="customer_email"
-                                            label={t("checkout:form.email")}
-                                            type="email"
-                                            value={data.customer_email}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "customer_email",
-                                                    e.target.value
-                                                )
-                                            }
-                                            error={errors.customer_email}
-                                            placeholder={t(
-                                                "checkout:placeholders.email"
-                                            )}
-                                            autoComplete="email"
-                                            required
-                                        />
-                                    </div>
+                                    <Input
+                                        id="customer_name"
+                                        name="customer_name"
+                                        label={t("checkout:form.name")}
+                                        value={formData.customer_name}
+                                        onChange={(e) =>
+                                            handleInputChange(
+                                                "customer_name",
+                                                e.target.value
+                                            )
+                                        }
+                                        error={formErrors.customer_name}
+                                        placeholder={t(
+                                            "checkout:placeholders.name"
+                                        )}
+                                        autoComplete="name"
+                                        required
+                                    />
                                     <Input
                                         id="customer_phone"
                                         name="customer_phone"
                                         label={t("checkout:form.phone")}
                                         type="tel"
-                                        value={data.customer_phone}
+                                        value={formData.customer_phone}
                                         onChange={(e) =>
-                                            setData(
+                                            handleInputChange(
                                                 "customer_phone",
                                                 e.target.value
                                             )
                                         }
-                                        error={errors.customer_phone}
+                                        error={formErrors.customer_phone}
                                         placeholder={t(
                                             "checkout:placeholders.phone"
                                         )}
@@ -268,127 +430,71 @@ export default function Checkout({
                                         required
                                         dir="ltr"
                                     />
-                                </CardContent>
-                            </Card>
-
-                            {/* Delivery Address */}
-                            <Card>
-                                <CardHeader>
-                                    <h2 className="text-lg font-semibold">
-                                        {t("checkout:deliveryAddress")}
-                                    </h2>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
                                     <Input
                                         id="delivery_area"
                                         name="delivery_area"
                                         label={t("checkout:form.area")}
-                                        value={data.delivery_area}
+                                        value={formData.delivery_area}
                                         onChange={(e) =>
-                                            setData(
+                                            handleInputChange(
                                                 "delivery_area",
                                                 e.target.value
                                             )
                                         }
-                                        error={errors.delivery_area}
+                                        error={formErrors.delivery_area}
                                         placeholder={t(
                                             "checkout:placeholders.area"
                                         )}
                                         autoComplete="address-level2"
                                         required
                                     />
-                                    <Input
-                                        id="delivery_street"
-                                        name="delivery_street"
-                                        label={t("checkout:form.street")}
-                                        value={data.delivery_street}
-                                        onChange={(e) =>
-                                            setData(
-                                                "delivery_street",
-                                                e.target.value
-                                            )
-                                        }
-                                        error={errors.delivery_street}
-                                        placeholder={t(
-                                            "checkout:placeholders.street"
-                                        )}
-                                        autoComplete="street-address"
-                                        required
-                                    />
-                                    <Input
-                                        id="delivery_building"
-                                        name="delivery_building"
-                                        label={t("checkout:form.building")}
-                                        value={data.delivery_building}
-                                        onChange={(e) =>
-                                            setData(
-                                                "delivery_building",
-                                                e.target.value
-                                            )
-                                        }
-                                        error={errors.delivery_building}
-                                        placeholder={t(
-                                            "checkout:placeholders.building"
-                                        )}
-                                        autoComplete="address-line2"
-                                        required
-                                    />
-                                    <div>
-                                        <label
-                                            htmlFor="delivery_notes"
-                                            className="block text-sm font-medium text-gray-700 mb-1"
-                                        >
-                                            {t("checkout:form.deliveryNotes")}
-                                        </label>
-                                        <textarea
-                                            id="delivery_notes"
-                                            name="delivery_notes"
-                                            value={data.delivery_notes}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "delivery_notes",
-                                                    e.target.value
-                                                )
-                                            }
-                                            rows={2}
-                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none text-sm"
-                                            placeholder={t(
-                                                "checkout:placeholders.deliveryNotes"
-                                            )}
-                                        />
-                                    </div>
                                 </CardContent>
                             </Card>
 
-                            {/* Notes */}
-                            <Card>
-                                <CardHeader>
-                                    <label
-                                        htmlFor="order_notes"
-                                        className="text-lg font-semibold"
-                                    >
-                                        {t("checkout:orderNotes")}
-                                    </label>
-                                </CardHeader>
-                                <CardContent>
-                                    <textarea
-                                        id="order_notes"
-                                        name="notes"
-                                        value={data.notes}
-                                        onChange={(e) =>
-                                            setData("notes", e.target.value)
-                                        }
-                                        rows={3}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
-                                        placeholder={t(
-                                            "checkout:placeholders.notes"
-                                        )}
-                                    />
-                                </CardContent>
-                            </Card>
+                            {/* Delivery Info */}
+                            <div className="mt-4 bg-gray-50 rounded-xl p-4 space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <Truck className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {t("checkout:freeDelivery")}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {t("checkout:freeDeliveryDesc", {
+                                                amount: formatPrice(
+                                                    FREE_DELIVERY_THRESHOLD,
+                                                    language
+                                                ),
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <Clock className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {t("checkout:fastDelivery")}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {t("checkout:fastDeliveryDesc")}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <RotateCcw className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {t("checkout:easyReturns")}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {t("checkout:easyReturnsDesc")}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Order Summary */}
+                        {/* Order Summary - Right Side */}
                         <div>
                             <Card className="sticky top-24">
                                 <CardHeader>
@@ -591,63 +697,30 @@ export default function Checkout({
                                             </span>
                                         </div>
                                     </div>
+
                                     <Button
                                         type="submit"
                                         size="lg"
-                                        className="w-full mt-6"
-                                        disabled={
-                                            processing || stockErrors.length > 0
-                                        }
+                                        className="w-full mt-6 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                        disabled={stockErrors.length > 0 || isSubmitting}
                                     >
-                                        {t("checkout:placeOrder")}
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                {t("checkout:processing")}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <MessageCircle className="h-5 w-5" />
+                                                {t("checkout:orderViaWhatsApp")}
+                                            </>
+                                        )}
                                     </Button>
                                     <p className="text-xs text-gray-500 text-center mt-2">
-                                        {t("checkout:demoDisclaimer")}
+                                        {t("checkout:whatsAppNote")}
                                     </p>
                                 </CardContent>
                             </Card>
-
-                            {/* Delivery & Returns Policy */}
-                            <div className="mt-4 bg-gray-50 rounded-xl p-4 space-y-3">
-                                <div className="flex items-start gap-3">
-                                    <Truck className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {t("checkout:freeDelivery")}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {t("checkout:freeDeliveryDesc", {
-                                                amount: formatPrice(
-                                                    FREE_DELIVERY_THRESHOLD,
-                                                    language
-                                                ),
-                                            })}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <Clock className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {t("checkout:fastDelivery")}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {t("checkout:fastDeliveryDesc")}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <RotateCcw className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {t("checkout:easyReturns")}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {t("checkout:easyReturnsDesc")}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </form>

@@ -30,6 +30,7 @@ Route::name('shop.')->group(function () {
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/whatsapp', [CheckoutController::class, 'whatsappOrder'])->name('checkout.whatsapp');
 
     // Coupon routes
     Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
