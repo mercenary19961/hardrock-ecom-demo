@@ -1028,10 +1028,10 @@ export default function Checkout({
                                                 </span>
                                                 <span>
                                                     {isRTL
-                                                        ? `${formatPrice(
+                                                        ? `-${formatPrice(
                                                               discount,
                                                               language
-                                                          )}-`
+                                                          )}`
                                                         : `JOD -${
                                                               discount % 1 !== 0
                                                                   ? discount.toFixed(
