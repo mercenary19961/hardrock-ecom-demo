@@ -30,6 +30,19 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
+// Helper functions for Arabic numeral conversion
+const toArabicNumerals = (str: string): string => {
+    const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    return str.replace(/[0-9]/g, (digit) => arabicDigits[parseInt(digit)]);
+};
+
+const toEnglishNumerals = (str: string): string => {
+    const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    return str.replace(/[٠-٩]/g, (digit) =>
+        arabicDigits.indexOf(digit).toString()
+    );
+};
+
 interface AppliedCoupon {
     id: number;
     code: string;
@@ -91,8 +104,11 @@ export default function Checkout({
 
     // Available coupons state
     const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
-    const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
-    const [loadingAvailableCoupons, setLoadingAvailableCoupons] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>(
+        []
+    );
+    const [loadingAvailableCoupons, setLoadingAvailableCoupons] =
+        useState(false);
 
     const FREE_DELIVERY_THRESHOLD = 100;
     const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
@@ -158,7 +174,9 @@ export default function Checkout({
 
         // Totals
         if (isRTL) {
-            lines.push(`المجموع الفرعي: ${formatPrice(cart.subtotal, language)}`);
+            lines.push(
+                `المجموع الفرعي: ${formatPrice(cart.subtotal, language)}`
+            );
             if (deliveryFee === 0) {
                 lines.push("التوصيل: مجاني");
             } else {
@@ -166,7 +184,10 @@ export default function Checkout({
             }
             if (discount > 0) {
                 lines.push(
-                    `الخصم (${appliedCoupon?.code}): -${formatPrice(discount, language)}`
+                    `الخصم (${appliedCoupon?.code}): -${formatPrice(
+                        discount,
+                        language
+                    )}`
                 );
             }
             lines.push("");
@@ -180,7 +201,10 @@ export default function Checkout({
             }
             if (discount > 0) {
                 lines.push(
-                    `Discount (${appliedCoupon?.code}): -${formatPrice(discount, language)}`
+                    `Discount (${appliedCoupon?.code}): -${formatPrice(
+                        discount,
+                        language
+                    )}`
                 );
             }
             lines.push("");
@@ -218,7 +242,9 @@ export default function Checkout({
                 const whatsappNumber = "962791700034";
 
                 // Create WhatsApp URL
-                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+                    message
+                )}`;
 
                 // Open WhatsApp in new tab
                 window.open(whatsappUrl, "_blank");
@@ -232,8 +258,14 @@ export default function Checkout({
         } catch (error) {
             console.error("Checkout error:", error);
             // Still show error to user
-            if (axios.isAxiosError(error) && error.response?.data?.message) {
-                alert(error.response.data.message);
+            if (axios.isAxiosError(error) && error.response?.data) {
+                const errorData = error.response.data;
+                const errorMessage = errorData.debug
+                    ? `${errorData.message}\n\nDebug: ${errorData.debug}`
+                    : errorData.message;
+                alert(errorMessage);
+            } else {
+                alert("Failed to process order. Please try again.");
             }
         } finally {
             setIsSubmitting(false);
@@ -391,7 +423,10 @@ export default function Checkout({
                         </p>
                         {orderNumber && (
                             <p className="text-sm text-gray-500 mb-6">
-                                {t("checkout:orderNumber")}: <span className="font-semibold">{orderNumber}</span>
+                                {t("checkout:orderNumber")}:{" "}
+                                <span className="font-semibold">
+                                    {orderNumber}
+                                </span>
                             </p>
                         )}
                         <Button
@@ -453,7 +488,7 @@ export default function Checkout({
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                        <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                                             <UserIcon className="h-4 w-4 text-gray-500" />
                                             {t("checkout:form.name")}
                                         </label>
@@ -476,32 +511,50 @@ export default function Checkout({
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                        <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                                             <Phone className="h-4 w-4 text-gray-500" />
                                             {t("checkout:form.phone")}
                                         </label>
                                         <Input
                                             id="customer_phone"
                                             name="customer_phone"
-                                            type="tel"
-                                            value={formData.customer_phone}
-                                            onChange={(e) =>
+                                            type="text"
+                                            inputMode="tel"
+                                            style={{
+                                                direction: "ltr",
+                                                textAlign: isRTL
+                                                    ? "right"
+                                                    : "left",
+                                            }}
+                                            value={
+                                                isRTL
+                                                    ? toArabicNumerals(
+                                                          formData.customer_phone
+                                                      )
+                                                    : formData.customer_phone
+                                            }
+                                            onChange={(e) => {
+                                                // Convert Arabic numerals to English for storage
+                                                const value = isRTL
+                                                    ? toEnglishNumerals(
+                                                          e.target.value
+                                                      )
+                                                    : e.target.value;
                                                 handleInputChange(
                                                     "customer_phone",
-                                                    e.target.value
-                                                )
-                                            }
+                                                    value
+                                                );
+                                            }}
                                             error={formErrors.customer_phone}
                                             placeholder={t(
                                                 "checkout:placeholders.phone"
                                             )}
                                             autoComplete="tel"
                                             required
-                                            dir="ltr"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                                        <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                                             <MapPin className="h-4 w-4 text-gray-500" />
                                             {t("checkout:form.area")}
                                         </label>
@@ -633,13 +686,17 @@ export default function Checkout({
                                                 <div className="flex items-center gap-2">
                                                     <Tag className="h-4 w-4 text-gray-500" />
                                                     <span className="text-sm font-medium text-gray-700">
-                                                        {t("checkout:coupon.title")}
+                                                        {t(
+                                                            "checkout:coupon.title"
+                                                        )}
                                                     </span>
                                                 </div>
                                                 {!appliedCoupon && (
                                                     <button
                                                         type="button"
-                                                        onClick={toggleAvailableCoupons}
+                                                        onClick={
+                                                            toggleAvailableCoupons
+                                                        }
                                                         className="text-xs text-brand-purple hover:text-brand-purple-600 font-medium flex items-center gap-1"
                                                     >
                                                         {loadingAvailableCoupons ? (
@@ -647,7 +704,9 @@ export default function Checkout({
                                                         ) : (
                                                             <>
                                                                 <Ticket className="h-3 w-3" />
-                                                                {t("checkout:coupon.viewCoupons")}
+                                                                {t(
+                                                                    "checkout:coupon.viewCoupons"
+                                                                )}
                                                                 {showAvailableCoupons ? (
                                                                     <ChevronUp className="h-3 w-3" />
                                                                 ) : (
@@ -660,82 +719,168 @@ export default function Checkout({
                                             </div>
 
                                             {/* Available Coupons Popup */}
-                                            {showAvailableCoupons && !appliedCoupon && (
-                                                <>
-                                                    {/* Backdrop to close popup */}
-                                                    <div
-                                                        className="fixed inset-0 z-10"
-                                                        onClick={() => setShowAvailableCoupons(false)}
-                                                    />
-                                                    <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-2 max-h-64 overflow-y-auto">
-                                                        {availableCoupons.length === 0 ? (
-                                                            <p className="text-sm text-gray-500 text-center py-2">
-                                                                {t("checkout:coupon.noCoupons")}
-                                                            </p>
-                                                        ) : (
-                                                            [...availableCoupons]
-                                                                .sort((a, b) => {
-                                                                    const aMeetsMin = !a.min_order_amount || cart.subtotal >= a.min_order_amount;
-                                                                    const bMeetsMin = !b.min_order_amount || cart.subtotal >= b.min_order_amount;
-                                                                    if (aMeetsMin && !bMeetsMin) return -1;
-                                                                    if (!aMeetsMin && bMeetsMin) return 1;
-                                                                    return 0;
-                                                                })
-                                                                .map((coupon) => {
-                                                                const meetsMinOrder = !coupon.min_order_amount || cart.subtotal >= coupon.min_order_amount;
-                                                                return (
-                                                                    <button
-                                                                        key={coupon.id}
-                                                                        type="button"
-                                                                        onClick={() => meetsMinOrder && selectCoupon(coupon.code)}
-                                                                        disabled={!meetsMinOrder}
-                                                                        className={`w-full text-left p-2 rounded-lg border transition-colors ${
-                                                                            meetsMinOrder
-                                                                                ? "border-gray-200 bg-white hover:border-brand-purple hover:bg-brand-purple/5 cursor-pointer"
-                                                                                : "border-gray-100 bg-gray-50 opacity-60"
-                                                                        }`}
-                                                                    >
-                                                                        <div className="flex items-start justify-between gap-2">
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                            {showAvailableCoupons &&
+                                                !appliedCoupon && (
+                                                    <>
+                                                        {/* Backdrop to close popup */}
+                                                        <div
+                                                            className="fixed inset-0 z-10"
+                                                            onClick={() =>
+                                                                setShowAvailableCoupons(
+                                                                    false
+                                                                )
+                                                            }
+                                                        />
+                                                        <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-2 max-h-64 overflow-y-auto">
+                                                            {availableCoupons.length ===
+                                                            0 ? (
+                                                                <p className="text-sm text-gray-500 text-center py-2">
+                                                                    {t(
+                                                                        "checkout:coupon.noCoupons"
+                                                                    )}
+                                                                </p>
+                                                            ) : (
+                                                                [
+                                                                    ...availableCoupons,
+                                                                ]
+                                                                    .sort(
+                                                                        (
+                                                                            a,
+                                                                            b
+                                                                        ) => {
+                                                                            const aMeetsMin =
+                                                                                !a.min_order_amount ||
+                                                                                cart.subtotal >=
+                                                                                    a.min_order_amount;
+                                                                            const bMeetsMin =
+                                                                                !b.min_order_amount ||
+                                                                                cart.subtotal >=
+                                                                                    b.min_order_amount;
+                                                                            if (
+                                                                                aMeetsMin &&
+                                                                                !bMeetsMin
+                                                                            )
+                                                                                return -1;
+                                                                            if (
+                                                                                !aMeetsMin &&
+                                                                                bMeetsMin
+                                                                            )
+                                                                                return 1;
+                                                                            return 0;
+                                                                        }
+                                                                    )
+                                                                    .map(
+                                                                        (
+                                                                            coupon
+                                                                        ) => {
+                                                                            const meetsMinOrder =
+                                                                                !coupon.min_order_amount ||
+                                                                                cart.subtotal >=
+                                                                                    coupon.min_order_amount;
+                                                                            return (
+                                                                                <button
+                                                                                    key={
+                                                                                        coupon.id
+                                                                                    }
+                                                                                    type="button"
+                                                                                    onClick={() =>
+                                                                                        meetsMinOrder &&
+                                                                                        selectCoupon(
+                                                                                            coupon.code
+                                                                                        )
+                                                                                    }
+                                                                                    disabled={
+                                                                                        !meetsMinOrder
+                                                                                    }
+                                                                                    className={`w-full text-left p-2 rounded-lg border transition-colors ${
                                                                                         meetsMinOrder
-                                                                                            ? "text-brand-purple bg-brand-purple/10"
-                                                                                            : "text-gray-400 bg-gray-200"
-                                                                                    }`}>
-                                                                                        {coupon.code}
-                                                                                    </span>
-                                                                                    <span className={`text-xs font-medium ${
-                                                                                        meetsMinOrder ? "text-green-600" : "text-gray-400"
-                                                                                    }`}>
-                                                                                        {coupon.type === "percentage"
-                                                                                            ? `${coupon.value}% ${t("checkout:coupon.off")}`
-                                                                                            : `${formatPrice(coupon.value, language)} ${t("checkout:coupon.off")}`
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                                <p className={`text-xs mt-1 ${meetsMinOrder ? "text-gray-600" : "text-gray-400"}`}>
-                                                                                    {isRTL && coupon.name_ar ? coupon.name_ar : coupon.name}
-                                                                                </p>
-                                                                                {coupon.min_order_amount && coupon.min_order_amount > 0 && (
-                                                                                    <p className={`text-xs mt-0.5 ${
-                                                                                        meetsMinOrder ? "text-gray-400" : "text-red-500 font-medium"
-                                                                                    }`}>
-                                                                                        {t("checkout:coupon.minOrder", {
-                                                                                            amount: formatPrice(coupon.min_order_amount, language),
-                                                                                        })}
-                                                                                        {!meetsMinOrder && ` (${t("checkout:coupon.notMet")})`}
-                                                                                    </p>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </button>
-                                                                );
-                                                            })
-                                                        )}
-                                                    </div>
-                                                </>
-                                            )}
+                                                                                            ? "border-gray-200 bg-white hover:border-brand-purple hover:bg-brand-purple/5 cursor-pointer"
+                                                                                            : "border-gray-100 bg-gray-50 opacity-60"
+                                                                                    }`}
+                                                                                >
+                                                                                    <div className="flex items-start justify-between gap-2">
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <span
+                                                                                                    className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                                                                                        meetsMinOrder
+                                                                                                            ? "text-brand-purple bg-brand-purple/10"
+                                                                                                            : "text-gray-400 bg-gray-200"
+                                                                                                    }`}
+                                                                                                >
+                                                                                                    {
+                                                                                                        coupon.code
+                                                                                                    }
+                                                                                                </span>
+                                                                                                <span
+                                                                                                    className={`text-xs font-medium ${
+                                                                                                        meetsMinOrder
+                                                                                                            ? "text-green-600"
+                                                                                                            : "text-gray-400"
+                                                                                                    }`}
+                                                                                                >
+                                                                                                    {coupon.type ===
+                                                                                                    "percentage"
+                                                                                                        ? `${
+                                                                                                              coupon.value
+                                                                                                          }% ${t(
+                                                                                                              "checkout:coupon.off"
+                                                                                                          )}`
+                                                                                                        : `${formatPrice(
+                                                                                                              coupon.value,
+                                                                                                              language
+                                                                                                          )} ${t(
+                                                                                                              "checkout:coupon.off"
+                                                                                                          )}`}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <p
+                                                                                                className={`text-xs mt-1 ${
+                                                                                                    meetsMinOrder
+                                                                                                        ? "text-gray-600"
+                                                                                                        : "text-gray-400"
+                                                                                                }`}
+                                                                                            >
+                                                                                                {isRTL &&
+                                                                                                coupon.name_ar
+                                                                                                    ? coupon.name_ar
+                                                                                                    : coupon.name}
+                                                                                            </p>
+                                                                                            {coupon.min_order_amount &&
+                                                                                                coupon.min_order_amount >
+                                                                                                    0 && (
+                                                                                                    <p
+                                                                                                        className={`text-xs mt-0.5 ${
+                                                                                                            meetsMinOrder
+                                                                                                                ? "text-gray-400"
+                                                                                                                : "text-red-500 font-medium"
+                                                                                                        }`}
+                                                                                                    >
+                                                                                                        {t(
+                                                                                                            "checkout:coupon.minOrder",
+                                                                                                            {
+                                                                                                                amount: formatPrice(
+                                                                                                                    coupon.min_order_amount,
+                                                                                                                    language
+                                                                                                                ),
+                                                                                                            }
+                                                                                                        )}
+                                                                                                        {!meetsMinOrder &&
+                                                                                                            ` (${t(
+                                                                                                                "checkout:coupon.notMet"
+                                                                                                            )})`}
+                                                                                                    </p>
+                                                                                                )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        }
+                                                                    )
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
                                         </div>
 
                                         {appliedCoupon ? (
@@ -802,8 +947,12 @@ export default function Checkout({
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    setCouponCode("");
-                                                                    setCouponError(null);
+                                                                    setCouponCode(
+                                                                        ""
+                                                                    );
+                                                                    setCouponError(
+                                                                        null
+                                                                    );
                                                                 }}
                                                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                                             >
@@ -879,9 +1028,17 @@ export default function Checkout({
                                                 </span>
                                                 <span>
                                                     {isRTL
-                                                        ? `${formatPrice(discount, language)}-`
-                                                        : `JOD -${discount % 1 !== 0 ? discount.toFixed(2) : discount}`
-                                                    }
+                                                        ? `${formatPrice(
+                                                              discount,
+                                                              language
+                                                          )}-`
+                                                        : `JOD -${
+                                                              discount % 1 !== 0
+                                                                  ? discount.toFixed(
+                                                                        2
+                                                                    )
+                                                                  : discount
+                                                          }`}
                                                 </span>
                                             </div>
                                         )}
@@ -897,7 +1054,10 @@ export default function Checkout({
                                         type="submit"
                                         size="lg"
                                         className="w-full mt-6 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                                        disabled={stockErrors.length > 0 || isSubmitting}
+                                        disabled={
+                                            stockErrors.length > 0 ||
+                                            isSubmitting
+                                        }
                                     >
                                         {isSubmitting ? (
                                             <>
