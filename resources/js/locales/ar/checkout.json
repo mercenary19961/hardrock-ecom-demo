@@ -37,6 +37,11 @@
         "percentOff": "خصم {{percent}}%",
         "fixedOff": "خصم {{amount}}",
         "youSave": "وفرت {{amount}}",
+        "viewCoupons": "عرض الكوبونات",
+        "noCoupons": "لا توجد كوبونات متاحة",
+        "off": "خصم",
+        "minOrder": "الحد الأدنى {{amount}}",
+        "notMet": "غير مستوفى",
         "errors": {
             "not_found": "رمز الكوبون غير صالح",
             "inactive": "هذا الكوبون لم يعد نشطاً",

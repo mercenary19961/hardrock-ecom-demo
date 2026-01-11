@@ -37,6 +37,11 @@
         "percentOff": "{{percent}}% off",
         "fixedOff": "{{amount}} off",
         "youSave": "You save {{amount}}",
+        "viewCoupons": "View Coupons",
+        "noCoupons": "No coupons available",
+        "off": "off",
+        "minOrder": "Min. order {{amount}}",
+        "notMet": "not met",
         "errors": {
             "not_found": "Invalid coupon code",
             "inactive": "This coupon is no longer active",

@@ -36,6 +36,7 @@ Route::name('shop.')->group(function () {
     Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
     Route::post('/coupon/remove', [CouponController::class, 'remove'])->name('coupon.remove');
     Route::get('/coupon/current', [CouponController::class, 'current'])->name('coupon.current');
+    Route::get('/coupon/available', [CouponController::class, 'available'])->name('coupon.available');
 
     // Order confirmation (accessible to anyone who just placed an order)
     Route::get('/order/{order}/confirmation', [OrderController::class, 'confirmation'])->name('order.confirmation');

@@ -24,6 +24,9 @@ import {
     MapPin,
     ClipboardList,
     Package,
+    ChevronDown,
+    ChevronUp,
+    Ticket,
 } from "lucide-react";
 import axios from "axios";
 
@@ -35,6 +38,19 @@ interface AppliedCoupon {
     type: "percentage" | "fixed";
     value: number;
     discount: number;
+}
+
+interface AvailableCoupon {
+    id: number;
+    code: string;
+    name: string;
+    name_ar: string | null;
+    description: string | null;
+    description_ar: string | null;
+    type: "percentage" | "fixed";
+    value: number;
+    min_order_amount: number | null;
+    max_discount: number | null;
 }
 
 interface Props {
@@ -72,6 +88,11 @@ export default function Checkout({
     );
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponError, setCouponError] = useState<string | null>(null);
+
+    // Available coupons state
+    const [showAvailableCoupons, setShowAvailableCoupons] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
+    const [loadingAvailableCoupons, setLoadingAvailableCoupons] = useState(false);
 
     const FREE_DELIVERY_THRESHOLD = 100;
     const deliveryFee = cart.subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 5;
@@ -286,6 +307,36 @@ export default function Checkout({
         } finally {
             setCouponLoading(false);
         }
+    };
+
+    const toggleAvailableCoupons = async () => {
+        if (showAvailableCoupons) {
+            setShowAvailableCoupons(false);
+            return;
+        }
+
+        // Fetch coupons if not loaded yet
+        if (availableCoupons.length === 0) {
+            setLoadingAvailableCoupons(true);
+            try {
+                const response = await axios.get("/coupon/available");
+                if (response.data.success) {
+                    setAvailableCoupons(response.data.coupons);
+                }
+            } catch {
+                // Silently fail
+            } finally {
+                setLoadingAvailableCoupons(false);
+            }
+        }
+
+        setShowAvailableCoupons(true);
+    };
+
+    const selectCoupon = (code: string) => {
+        setCouponCode(code);
+        setShowAvailableCoupons(false);
+        setCouponError(null);
     };
 
     const BackArrow = isRTL ? ArrowRight : ArrowLeft;
@@ -577,11 +628,114 @@ export default function Checkout({
 
                                     {/* Coupon Section */}
                                     <div className="border-t pt-4 mb-4">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Tag className="h-4 w-4 text-gray-500" />
-                                            <span className="text-sm font-medium text-gray-700">
-                                                {t("checkout:coupon.title")}
-                                            </span>
+                                        <div className="relative">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <Tag className="h-4 w-4 text-gray-500" />
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {t("checkout:coupon.title")}
+                                                    </span>
+                                                </div>
+                                                {!appliedCoupon && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={toggleAvailableCoupons}
+                                                        className="text-xs text-brand-purple hover:text-brand-purple-600 font-medium flex items-center gap-1"
+                                                    >
+                                                        {loadingAvailableCoupons ? (
+                                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <Ticket className="h-3 w-3" />
+                                                                {t("checkout:coupon.viewCoupons")}
+                                                                {showAvailableCoupons ? (
+                                                                    <ChevronUp className="h-3 w-3" />
+                                                                ) : (
+                                                                    <ChevronDown className="h-3 w-3" />
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Available Coupons Popup */}
+                                            {showAvailableCoupons && !appliedCoupon && (
+                                                <>
+                                                    {/* Backdrop to close popup */}
+                                                    <div
+                                                        className="fixed inset-0 z-10"
+                                                        onClick={() => setShowAvailableCoupons(false)}
+                                                    />
+                                                    <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 space-y-2 max-h-64 overflow-y-auto">
+                                                        {availableCoupons.length === 0 ? (
+                                                            <p className="text-sm text-gray-500 text-center py-2">
+                                                                {t("checkout:coupon.noCoupons")}
+                                                            </p>
+                                                        ) : (
+                                                            [...availableCoupons]
+                                                                .sort((a, b) => {
+                                                                    const aMeetsMin = !a.min_order_amount || cart.subtotal >= a.min_order_amount;
+                                                                    const bMeetsMin = !b.min_order_amount || cart.subtotal >= b.min_order_amount;
+                                                                    if (aMeetsMin && !bMeetsMin) return -1;
+                                                                    if (!aMeetsMin && bMeetsMin) return 1;
+                                                                    return 0;
+                                                                })
+                                                                .map((coupon) => {
+                                                                const meetsMinOrder = !coupon.min_order_amount || cart.subtotal >= coupon.min_order_amount;
+                                                                return (
+                                                                    <button
+                                                                        key={coupon.id}
+                                                                        type="button"
+                                                                        onClick={() => meetsMinOrder && selectCoupon(coupon.code)}
+                                                                        disabled={!meetsMinOrder}
+                                                                        className={`w-full text-left p-2 rounded-lg border transition-colors ${
+                                                                            meetsMinOrder
+                                                                                ? "border-gray-200 bg-white hover:border-brand-purple hover:bg-brand-purple/5 cursor-pointer"
+                                                                                : "border-gray-100 bg-gray-50 opacity-60"
+                                                                        }`}
+                                                                    >
+                                                                        <div className="flex items-start justify-between gap-2">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                                                                        meetsMinOrder
+                                                                                            ? "text-brand-purple bg-brand-purple/10"
+                                                                                            : "text-gray-400 bg-gray-200"
+                                                                                    }`}>
+                                                                                        {coupon.code}
+                                                                                    </span>
+                                                                                    <span className={`text-xs font-medium ${
+                                                                                        meetsMinOrder ? "text-green-600" : "text-gray-400"
+                                                                                    }`}>
+                                                                                        {coupon.type === "percentage"
+                                                                                            ? `${coupon.value}% ${t("checkout:coupon.off")}`
+                                                                                            : `${formatPrice(coupon.value, language)} ${t("checkout:coupon.off")}`
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
+                                                                                <p className={`text-xs mt-1 ${meetsMinOrder ? "text-gray-600" : "text-gray-400"}`}>
+                                                                                    {isRTL && coupon.name_ar ? coupon.name_ar : coupon.name}
+                                                                                </p>
+                                                                                {coupon.min_order_amount && coupon.min_order_amount > 0 && (
+                                                                                    <p className={`text-xs mt-0.5 ${
+                                                                                        meetsMinOrder ? "text-gray-400" : "text-red-500 font-medium"
+                                                                                    }`}>
+                                                                                        {t("checkout:coupon.minOrder", {
+                                                                                            amount: formatPrice(coupon.min_order_amount, language),
+                                                                                        })}
+                                                                                        {!meetsMinOrder && ` (${t("checkout:coupon.notMet")})`}
+                                                                                    </p>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </button>
+                                                                );
+                                                            })
+                                                        )}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {appliedCoupon ? (
@@ -626,23 +780,37 @@ export default function Checkout({
                                         ) : (
                                             <div>
                                                 <div className="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={couponCode}
-                                                        onChange={(e) => {
-                                                            setCouponCode(
-                                                                e.target.value.toUpperCase()
-                                                            );
-                                                            setCouponError(
-                                                                null
-                                                            );
-                                                        }}
-                                                        placeholder={t(
-                                                            "checkout:coupon.placeholder"
+                                                    <div className="relative flex-1">
+                                                        <input
+                                                            type="text"
+                                                            value={couponCode}
+                                                            onChange={(e) => {
+                                                                setCouponCode(
+                                                                    e.target.value.toUpperCase()
+                                                                );
+                                                                setCouponError(
+                                                                    null
+                                                                );
+                                                            }}
+                                                            placeholder={t(
+                                                                "checkout:coupon.placeholder"
+                                                            )}
+                                                            className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:border-gray-900 outline-none uppercase"
+                                                            dir="ltr"
+                                                        />
+                                                        {couponCode && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCouponCode("");
+                                                                    setCouponError(null);
+                                                                }}
+                                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
                                                         )}
-                                                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-gray-900 outline-none uppercase"
-                                                        dir="ltr"
-                                                    />
+                                                    </div>
                                                     <button
                                                         type="button"
                                                         onClick={applyCoupon}
@@ -710,11 +878,10 @@ export default function Checkout({
                                                     {t("checkout:discount")}
                                                 </span>
                                                 <span>
-                                                    -
-                                                    {formatPrice(
-                                                        discount,
-                                                        language
-                                                    )}
+                                                    {isRTL
+                                                        ? `${formatPrice(discount, language)}-`
+                                                        : `JOD -${discount % 1 !== 0 ? discount.toFixed(2) : discount}`
+                                                    }
                                                 </span>
                                             </div>
                                         )}

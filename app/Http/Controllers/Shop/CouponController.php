@@ -93,6 +93,22 @@ class CouponController extends Controller
     }
 
     /**
+     * Get list of available coupons
+     */
+    public function available(): JsonResponse
+    {
+        $coupons = Coupon::valid()
+            ->select(['id', 'code', 'name', 'name_ar', 'description', 'description_ar', 'type', 'value', 'min_order_amount', 'max_discount'])
+            ->orderBy('value', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'coupons' => $coupons,
+        ]);
+    }
+
+    /**
      * Get currently applied coupon (if any)
      */
     public function current(): JsonResponse
