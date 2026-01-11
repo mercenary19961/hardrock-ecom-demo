@@ -1,0 +1,105 @@
+{
+    "title": "My Account",
+    "tabs": {
+        "overview": "Overview",
+        "orders": "Orders",
+        "coupons": "Coupons",
+        "settings": "Settings"
+    },
+    "stats": {
+        "totalOrders": "Total Orders",
+        "totalSpent": "Total Spent",
+        "pendingOrders": "Pending",
+        "availableCoupons": "Coupons"
+    },
+    "overview": {
+        "recentOrders": "Recent Orders",
+        "availableCoupons": "Available Coupons",
+        "accountInfo": "Account Information",
+        "viewAll": "View All",
+        "noOrders": "No orders yet",
+        "noCoupons": "No coupons available"
+    },
+    "orders": {
+        "title": "My Orders",
+        "empty": "No orders yet",
+        "emptyDesc": "Start shopping to see your orders here",
+        "startShopping": "Start Shopping",
+        "viewDetails": "View Details",
+        "orderDetails": "Order Details",
+        "orderNumber": "Order Number",
+        "date": "Date",
+        "status": "Status",
+        "items": "Items",
+        "subtotal": "Subtotal",
+        "total": "Total",
+        "close": "Close",
+        "moreItems": "more items"
+    },
+    "orderStatus": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+    },
+    "coupons": {
+        "title": "My Coupons",
+        "empty": "No coupons available",
+        "emptyDesc": "Check back later for special offers",
+        "off": "OFF",
+        "copy": "Copy code",
+        "minOrder": "Min. order {{amount}}",
+        "expiresToday": "Expires today!",
+        "expiresIn": "Expires in {{days}} days"
+    },
+    "settings": {
+        "profilePicture": "Profile Picture",
+        "avatarHint": "Upload a profile picture. Accepted formats: JPG, PNG, WebP (max 2MB)",
+        "uploadPhoto": "Upload Photo",
+        "changePhoto": "Change Photo",
+        "removePhoto": "Remove",
+        "editProfile": "Edit Profile",
+        "changePassword": "Change Password",
+        "dangerZone": "Danger Zone",
+        "deleteWarning": "Once you delete your account, there is no going back. Please be certain.",
+        "deleteAccount": "Delete Account",
+        "saveChanges": "Save Changes",
+        "updatePassword": "Update Password",
+        "noChanges": "No changes to save",
+        "deleteConfirmTitle": "Delete Account?",
+        "deleteConfirmDesc": "This action cannot be undone. All your data will be permanently deleted.",
+        "deleteIrreversible": "This action is irreversible:",
+        "deleteWarning1": "All your personal information will be deleted",
+        "deleteWarning2": "Your order history will be removed",
+        "deleteWarning3": "Any unused coupons will be lost",
+        "typeToConfirm": "Type to confirm deletion",
+        "typeExactly": "Type exactly:",
+        "cancel": "Cancel",
+        "confirmDelete": "Yes, Delete My Account"
+    },
+    "fields": {
+        "name": "Full Name",
+        "email": "Email Address",
+        "phone": "Phone Number",
+        "memberSince": "Member Since",
+        "notSet": "Not set",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "password": "Password"
+    },
+    "placeholders": {
+        "phone": "e.g. 079 123 4567",
+        "confirmPassword": "Enter your password to confirm"
+    },
+    "validation": {
+        "nameRequired": "Name is required",
+        "nameTwoWords": "Please enter your first and last name",
+        "nameWordLength": "Each name must be at least 2 characters",
+        "nameHint": "Enter your first and last name (minimum 2 characters each)",
+        "phoneInvalid": "Please enter a valid phone number",
+        "passwordHint": "Minimum 8 characters",
+        "passwordMismatch": "Passwords do not match"
+    }
+}

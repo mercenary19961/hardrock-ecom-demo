@@ -3,10 +3,12 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Shop\CartController;
 use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\CouponController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Shop\ProfileController as ShopProfileController;
 use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +31,13 @@ Route::name('shop.')->group(function () {
     // Checkout routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/whatsapp', [CheckoutController::class, 'whatsappOrder'])->name('checkout.whatsapp');
+
+    // Coupon routes
+    Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
+    Route::post('/coupon/remove', [CouponController::class, 'remove'])->name('coupon.remove');
+    Route::get('/coupon/current', [CouponController::class, 'current'])->name('coupon.current');
+    Route::get('/coupon/available', [CouponController::class, 'available'])->name('coupon.available');
 
     // Order confirmation (accessible to anyone who just placed an order)
     Route::get('/order/{order}/confirmation', [OrderController::class, 'confirmation'])->name('order.confirmation');
@@ -59,11 +68,15 @@ Route::middleware('auth')->get('/dashboard', function () {
     return redirect('/');
 })->name('dashboard');
 
-// Profile routes (from Breeze)
+// Profile routes (Shop profile with tabs)
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
+    Route::patch('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ShopProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/avatar', [ShopProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::delete('/profile/avatar', [ShopProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::delete('/profile', [ShopProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
 
 // Admin routes

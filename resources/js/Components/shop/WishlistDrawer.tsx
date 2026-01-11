@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import { Dialog, Transition } from "@headlessui/react";
 import {
@@ -221,7 +221,17 @@ export function WishlistDrawer({ isOpen, onClose }: WishlistDrawerProps) {
                                         </div>
 
                                         {items.length > 0 && (
-                                            <div className="border-t px-4 py-4">
+                                            <div className="border-t px-4 py-4 flex flex-col gap-2">
+                                                <Button
+                                                    className="w-full flex items-center justify-center gap-2 bg-brand-purple hover:bg-brand-purple-700"
+                                                    onClick={() => {
+                                                        onClose();
+                                                        router.visit("/cart");
+                                                    }}
+                                                >
+                                                    <ShoppingBagIcon className="h-4 w-4" />
+                                                    {t("common:cart.viewCart")}
+                                                </Button>
                                                 <Button
                                                     variant="outline"
                                                     className="w-full"

@@ -2,6 +2,8 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    phone: string | null;
+    avatar: string | null;
     role: "admin" | "customer";
     email_verified_at: string | null;
     created_at: string;
@@ -194,4 +196,25 @@ export interface DashboardStats {
     total_customers: number;
     revenue: number;
     pending_orders: number;
+}
+
+export interface Coupon {
+    id: number;
+    code: string;
+    name: string;
+    name_ar: string | null;
+    description: string | null;
+    description_ar: string | null;
+    type: "percentage" | "fixed";
+    value: number;
+    min_order_amount: number | null;
+    max_discount: number | null;
+    ends_at: string | null;
+}
+
+export interface ProfileStats {
+    total_orders: number;
+    total_spent: number;
+    pending_orders: number;
+    wishlist_count: number;
 }
