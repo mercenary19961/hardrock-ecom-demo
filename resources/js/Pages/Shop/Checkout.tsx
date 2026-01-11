@@ -135,27 +135,31 @@ export default function Checkout({
     const generateWhatsAppMessage = (orderNum: string): string => {
         const lines: string[] = [];
 
-        // Header - no emojis, using text formatting
+        // Header + Customer block
         if (isRTL) {
-            lines.push(`*[طلب جديد #${orderNum}]*`);
-            lines.push("من متجر HardRock");
+            lines.push(`🧾 *طلب جديد #${orderNum}*`);
+            lines.push("متجر HardRock");
             lines.push("");
-            lines.push("*معلومات العميل:*");
-            lines.push(`- الاسم: ${formData.customer_name}`);
-            lines.push(`- الهاتف: ${formData.customer_phone}`);
-            lines.push(`- المنطقة: ${formData.delivery_area}`);
+
+            lines.push("👤 *معلومات العميل*");
+            lines.push(`• الاسم: ${formData.customer_name}`);
+            lines.push(`• الهاتف: ${formData.customer_phone}`);
+            lines.push(`• المنطقة: ${formData.delivery_area}`);
             lines.push("");
-            lines.push("*تفاصيل الطلب:*");
+
+            lines.push("🛒 *المنتجات*");
         } else {
-            lines.push(`*[New Order #${orderNum}]*`);
-            lines.push("from HardRock Store");
+            lines.push(`🧾 *New Order #${orderNum}*`);
+            lines.push("HardRock Store");
             lines.push("");
-            lines.push("*Customer Information:*");
-            lines.push(`- Name: ${formData.customer_name}`);
-            lines.push(`- Phone: ${formData.customer_phone}`);
-            lines.push(`- Area: ${formData.delivery_area}`);
+
+            lines.push("👤 *Customer*");
+            lines.push(`• Name: ${formData.customer_name}`);
+            lines.push(`• Phone: ${formData.customer_phone}`);
+            lines.push(`• Area: ${formData.delivery_area}`);
             lines.push("");
-            lines.push("*Order Details:*");
+
+            lines.push("🛒 *Items*");
         }
 
         // Order items
@@ -164,24 +168,36 @@ export default function Checkout({
                 isRTL && item.product.name_ar
                     ? item.product.name_ar
                     : item.product.name;
+
             const itemTotal = formatPrice(item.subtotal, language);
-            lines.push(`${index + 1}. ${productName}`);
-            lines.push(`   x${item.quantity} = ${itemTotal}`);
+
+            if (isRTL) {
+                lines.push(`${index + 1}) ${productName}`);
+                lines.push(`   • الكمية: ${item.quantity}`);
+                lines.push(`   • الإجمالي: ${itemTotal}`);
+            } else {
+                lines.push(`${index + 1}) ${productName}`);
+                lines.push(`   • Qty: ${item.quantity}`);
+                lines.push(`   • Line total: ${itemTotal}`);
+            }
         });
 
         lines.push("");
-        lines.push("---");
+        lines.push("──────────────");
 
-        // Totals
+        // Summary / totals
         if (isRTL) {
+            lines.push("💰 *الملخص*");
             lines.push(
                 `المجموع الفرعي: ${formatPrice(cart.subtotal, language)}`
             );
+
             if (deliveryFee === 0) {
                 lines.push("التوصيل: مجاني");
             } else {
                 lines.push(`التوصيل: ${formatPrice(deliveryFee, language)}`);
             }
+
             if (discount > 0) {
                 lines.push(
                     `الخصم (${appliedCoupon?.code}): -${formatPrice(
@@ -190,15 +206,19 @@ export default function Checkout({
                     )}`
                 );
             }
+
             lines.push("");
-            lines.push(`*الإجمالي: ${formatPrice(total, language)}*`);
+            lines.push(`✅ *الإجمالي: ${formatPrice(total, language)}*`);
         } else {
+            lines.push("💰 *Summary*");
             lines.push(`Subtotal: ${formatPrice(cart.subtotal, language)}`);
+
             if (deliveryFee === 0) {
                 lines.push("Delivery: FREE");
             } else {
                 lines.push(`Delivery: ${formatPrice(deliveryFee, language)}`);
             }
+
             if (discount > 0) {
                 lines.push(
                     `Discount (${appliedCoupon?.code}): -${formatPrice(
@@ -207,8 +227,9 @@ export default function Checkout({
                     )}`
                 );
             }
+
             lines.push("");
-            lines.push(`*Total: ${formatPrice(total, language)}*`);
+            lines.push(`✅ *Total: ${formatPrice(total, language)}*`);
         }
 
         return lines.join("\n");
