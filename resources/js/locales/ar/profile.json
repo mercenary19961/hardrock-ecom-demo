@@ -54,6 +54,11 @@
         "expiresIn": "ينتهي خلال {{days}} أيام"
     },
     "settings": {
+        "profilePicture": "صورة الملف الشخصي",
+        "avatarHint": "ارفع صورة للملف الشخصي. الصيغ المقبولة: JPG، PNG، WebP (الحد الأقصى 2 ميجابايت)",
+        "uploadPhoto": "رفع صورة",
+        "changePhoto": "تغيير الصورة",
+        "removePhoto": "إزالة",
         "editProfile": "تعديل الملف الشخصي",
         "changePassword": "تغيير كلمة المرور",
         "dangerZone": "منطقة الخطر",

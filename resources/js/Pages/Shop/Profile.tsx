@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Head, router, useForm } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
@@ -37,6 +37,8 @@ import {
     Gift,
     TrendingUp,
     Heart,
+    Camera,
+    X,
 } from "lucide-react";
 
 // Validation helpers
@@ -104,6 +106,8 @@ export default function Profile({
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Profile form
     const profileForm = useForm({
@@ -232,6 +236,36 @@ export default function Profile({
     const handleCloseDeleteModal = () => {
         setShowDeleteModal(false);
         setDeleteConfirmText("");
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setAvatarUploading(true);
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        router.post("/profile/avatar", formData, {
+            preserveScroll: true,
+            onFinish: () => {
+                setAvatarUploading(false);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            },
+        });
+    };
+
+    const handleRemoveAvatar = () => {
+        router.delete("/profile/avatar", {
+            preserveScroll: true,
+        });
+    };
+
+    const getAvatarUrl = () => {
+        if (!user.avatar) return null;
+        return `/storage/${user.avatar}`;
     };
 
     const formatDate = (dateString: string) => {
@@ -667,6 +701,81 @@ export default function Profile({
                     {/* Settings Tab */}
                     {activeTab === "settings" && (
                         <div className="space-y-6">
+                            {/* Profile Picture */}
+                            <Card>
+                                <CardHeader>
+                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                        <Camera className="h-5 w-5 text-brand-purple" />
+                                        {t("profile:settings.profilePicture")}
+                                    </h2>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center gap-6">
+                                        {/* Avatar Preview */}
+                                        <div className="relative">
+                                            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+                                                {getAvatarUrl() ? (
+                                                    <img
+                                                        src={getAvatarUrl()!}
+                                                        alt={user.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-brand-purple/10">
+                                                        <UserIcon className="h-12 w-12 text-brand-purple/50" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {avatarUploading && (
+                                                <div className="absolute inset-0 bg-white/70 rounded-full flex items-center justify-center">
+                                                    <Loader2 className="h-6 w-6 animate-spin text-brand-purple" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Upload Controls */}
+                                        <div className="flex-1 space-y-3">
+                                            <p className="text-sm text-gray-600">
+                                                {t("profile:settings.avatarHint")}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                                                    onChange={handleAvatarChange}
+                                                    className="hidden"
+                                                    id="avatar-upload"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={avatarUploading}
+                                                >
+                                                    <Camera className="h-4 w-4 me-2" />
+                                                    {user.avatar ? t("profile:settings.changePhoto") : t("profile:settings.uploadPhoto")}
+                                                </Button>
+                                                {user.avatar && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handleRemoveAvatar}
+                                                        disabled={avatarUploading}
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <X className="h-4 w-4 me-2" />
+                                                        {t("profile:settings.removePhoto")}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
                             {/* Edit Profile */}
                             <Card>
                                 <CardHeader>

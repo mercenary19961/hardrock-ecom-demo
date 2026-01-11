@@ -54,6 +54,11 @@
         "expiresIn": "Expires in {{days}} days"
     },
     "settings": {
+        "profilePicture": "Profile Picture",
+        "avatarHint": "Upload a profile picture. Accepted formats: JPG, PNG, WebP (max 2MB)",
+        "uploadPhoto": "Upload Photo",
+        "changePhoto": "Change Photo",
+        "removePhoto": "Remove",
         "editProfile": "Edit Profile",
         "changePassword": "Change Password",
         "dangerZone": "Danger Zone",

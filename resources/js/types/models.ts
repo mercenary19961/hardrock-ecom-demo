@@ -3,6 +3,7 @@ export interface User {
     name: string;
     email: string;
     phone: string | null;
+    avatar: string | null;
     role: "admin" | "customer";
     email_verified_at: string | null;
     created_at: string;

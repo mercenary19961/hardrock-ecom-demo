@@ -73,6 +73,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ShopProfileController::class, 'index'])->name('profile');
     Route::patch('/profile/update', [ShopProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ShopProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/profile/avatar', [ShopProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::delete('/profile/avatar', [ShopProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::delete('/profile', [ShopProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
