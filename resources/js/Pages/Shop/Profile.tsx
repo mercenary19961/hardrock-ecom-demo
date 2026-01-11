@@ -293,8 +293,18 @@ export default function Profile({
                 {/* Profile Header */}
                 <div className="bg-gradient-to-r from-brand-purple to-brand-purple-600 rounded-2xl p-6 mb-8 text-white">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                            <UserIcon className="h-8 w-8" />
+                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30">
+                            {getAvatarUrl() ? (
+                                <img
+                                    src={getAvatarUrl()!}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                                    <UserIcon className="h-8 w-8" />
+                                </div>
+                            )}
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">{user.name}</h1>
@@ -515,26 +525,45 @@ export default function Profile({
                                     </h2>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <Mail className="h-5 w-5 text-gray-400" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">{t("profile:fields.email")}</p>
-                                                <p className="font-medium">{user.email}</p>
+                                    <div className="flex flex-col md:flex-row gap-6">
+                                        {/* User Avatar */}
+                                        <div className="flex-shrink-0 flex justify-center md:justify-start">
+                                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                                                {getAvatarUrl() ? (
+                                                    <img
+                                                        src={getAvatarUrl()!}
+                                                        alt={user.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-brand-purple/10 flex items-center justify-center">
+                                                        <UserIcon className="h-10 w-10 text-brand-purple/50" />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <Phone className="h-5 w-5 text-gray-400" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">{t("profile:fields.phone")}</p>
-                                                <p className="font-medium">{user.phone || t("profile:fields.notSet")}</p>
+                                        {/* Account Details */}
+                                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                <Mail className="h-5 w-5 text-gray-400" />
+                                                <div>
+                                                    <p className="text-xs text-gray-500">{t("profile:fields.email")}</p>
+                                                    <p className="font-medium">{user.email}</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                            <Calendar className="h-5 w-5 text-gray-400" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">{t("profile:fields.memberSince")}</p>
-                                                <p className="font-medium">{formatDate(user.created_at)}</p>
+                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                <Phone className="h-5 w-5 text-gray-400" />
+                                                <div>
+                                                    <p className="text-xs text-gray-500">{t("profile:fields.phone")}</p>
+                                                    <p className="font-medium">{user.phone || t("profile:fields.notSet")}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                <Calendar className="h-5 w-5 text-gray-400" />
+                                                <div>
+                                                    <p className="text-xs text-gray-500">{t("profile:fields.memberSince")}</p>
+                                                    <p className="font-medium">{formatDate(user.created_at)}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

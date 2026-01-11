@@ -208,17 +208,40 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {auth.user ? (
                                 <div className="relative group">
                                     <button className="flex items-center space-x-1 p-2 text-brand-purple hover:text-brand-purple-700">
-                                        <UserIcon className="h-6 w-6" />
+                                        {auth.user.avatar ? (
+                                            <img
+                                                src={`/storage/${auth.user.avatar}`}
+                                                alt={auth.user.name}
+                                                className="h-7 w-7 rounded-full object-cover border-2 border-brand-purple/20"
+                                            />
+                                        ) : (
+                                            <UserIcon className="h-6 w-6" />
+                                        )}
                                         <ChevronDownIcon className="h-4 w-4" />
                                     </button>
                                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                                         <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-brand-purple/5 to-brand-orange/5 rounded-t-xl">
-                                            <p className="font-semibold text-gray-900">
-                                                {auth.user.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 truncate">
-                                                {auth.user.email}
-                                            </p>
+                                            <div className="flex items-center gap-3">
+                                                {auth.user.avatar ? (
+                                                    <img
+                                                        src={`/storage/${auth.user.avatar}`}
+                                                        alt={auth.user.name}
+                                                        className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                                    />
+                                                ) : (
+                                                    <div className="h-10 w-10 rounded-full bg-brand-purple/10 flex items-center justify-center">
+                                                        <UserLucide className="h-5 w-5 text-brand-purple" />
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold text-gray-900 truncate">
+                                                        {auth.user.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 truncate">
+                                                        {auth.user.email}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div className="py-2">
                                             {auth.user.role === "admin" && (
