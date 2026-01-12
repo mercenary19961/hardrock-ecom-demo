@@ -7,12 +7,14 @@ import enNav from './locales/en/nav.json';
 import enShop from './locales/en/shop.json';
 import enCheckout from './locales/en/checkout.json';
 import enProfile from './locales/en/profile.json';
+import enAuth from './locales/en/auth.json';
 
 import arCommon from './locales/ar/common.json';
 import arNav from './locales/ar/nav.json';
 import arShop from './locales/ar/shop.json';
 import arCheckout from './locales/ar/checkout.json';
 import arProfile from './locales/ar/profile.json';
+import arAuth from './locales/ar/auth.json';
 
 const resources = {
     en: {
@@ -21,6 +23,7 @@ const resources = {
         shop: enShop,
         checkout: enCheckout,
         profile: enProfile,
+        auth: enAuth,
     },
     ar: {
         common: arCommon,
@@ -28,6 +31,7 @@ const resources = {
         shop: arShop,
         checkout: arCheckout,
         profile: arProfile,
+        auth: arAuth,
     },
 };
 
@@ -44,7 +48,7 @@ i18n.use(initReactI18next).init({
     lng: getSavedLanguage(),
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'nav', 'shop', 'checkout', 'profile'],
+    ns: ['common', 'nav', 'shop', 'checkout', 'profile', 'auth'],
     interpolation: {
         escapeValue: false, // React already escapes values
     },

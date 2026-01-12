@@ -71,13 +71,6 @@ export function HeroBanner() {
         );
     }, [availableSlides.length]);
 
-    const goToSlide = (index: number) => {
-        setCurrentIndex(index);
-        setIsAutoPlaying(false);
-        // Resume auto-play after 5 seconds of inactivity
-        setTimeout(() => setIsAutoPlaying(true), 5000);
-    };
-
     // Auto-advance slides
     useEffect(() => {
         if (!isAutoPlaying || availableSlides.length <= 1) return;
@@ -162,23 +155,6 @@ export function HeroBanner() {
                 </>
             )}
 
-            {/* Dots Navigation - Only show if more than 1 slide */}
-            {availableSlides.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-                    {availableSlides.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => goToSlide(index)}
-                            className={`w-3 h-3 rounded-full transition-colors ${
-                                index === currentIndex
-                                    ? "bg-gray-900"
-                                    : "bg-brand-purple hover:bg-brand-purple-400"
-                            }`}
-                            aria-label={`Go to slide ${index + 1}`}
-                        />
-                    ))}
-                </div>
-            )}
         </section>
     );
 }

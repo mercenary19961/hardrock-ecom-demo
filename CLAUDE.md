@@ -13,14 +13,15 @@
 5. [Product Variant System](#product-variant-system)
 6. [Category Page & Filters](#category-page--filters)
 7. [RTL Navigation Patterns](#rtl-navigation-patterns)
-8. [UI Effects & Animations](#ui-effects--animations)
-9. [SPA Navigation](#spa-navigation)
-10. [Responsive Design](#responsive-design)
-11. [File Reference](#file-reference)
-12. [Database & Seeding](#database--seeding)
-13. [Image Handling](#image-handling)
-14. [Data Models](#data-models)
-15. [Common Issues & Solutions](#common-issues--solutions)
+8. [Authentication Pages](#authentication-pages)
+9. [UI Effects & Animations](#ui-effects--animations)
+10. [SPA Navigation](#spa-navigation)
+11. [Responsive Design](#responsive-design)
+12. [File Reference](#file-reference)
+13. [Database & Seeding](#database--seeding)
+14. [Image Handling](#image-handling)
+15. [Data Models](#data-models)
+16. [Common Issues & Solutions](#common-issues--solutions)
 
 ---
 
@@ -55,11 +56,17 @@ resources/js/locales/
 ├── en/
 │   ├── common.json
 │   ├── shop.json
-│   └── nav.json
+│   ├── nav.json
+│   ├── checkout.json
+│   ├── profile.json
+│   └── auth.json
 └── ar/
     ├── common.json
     ├── shop.json
-    └── nav.json
+    ├── nav.json
+    ├── checkout.json
+    ├── profile.json
+    └── auth.json
 ```
 
 ### Usage Patterns
@@ -106,6 +113,8 @@ function parseArabicNumber(str: string): number {
 - Phone numbers: use `dir="ltr"` to prevent digit reversal
 - Arabic translations with static numbers: use Arabic numerals in JSON (`"٢٥ دينار"`)
 - Check language: `i18n.language === 'ar'`
+- Email fields can stay LTR even in Arabic mode (emails are always left-to-right)
+- Password fields need special handling for RTL (see Authentication Pages section)
 
 ---
 
@@ -492,28 +501,149 @@ All 8 categories have both English and Arabic banner versions.
 
 ---
 
+## Authentication Pages
+
+### Overview
+
+Login and Register pages support full Arabic localization with proper RTL handling.
+
+Files:
+- `Pages/Auth/Login.tsx`
+- `Pages/Auth/Register.tsx`
+
+### Translation Keys (auth.json)
+
+**Login namespace:**
+```json
+"login": {
+    "title": "Log in" / "تسجيل الدخول",
+    "welcome": "Welcome back!" / "مرحباً بعودتك!",
+    "enterDetails": "Please enter your details" / "يرجى إدخال بياناتك",
+    "email": "Email" / "البريد الإلكتروني",
+    "password": "Password" / "كلمة المرور",
+    "rememberMe": "Remember for 30 days" / "تذكرني لمدة ٣٠ يوم",
+    "forgotPassword": "Forgot password?" / "نسيت كلمة المرور؟",
+    "logIn": "Log in" / "تسجيل الدخول",
+    "loggingIn": "Logging in..." / "جاري تسجيل الدخول...",
+    "noAccount": "Don't have an account?" / "ليس لديك حساب؟",
+    "signUp": "Sign up" / "إنشاء حساب",
+    "orContinueWith": "or continue with" / "أو المتابعة عبر",
+    "continueWithGoogle": "Continue with Google" / "المتابعة عبر جوجل"
+}
+```
+
+**Register namespace:**
+```json
+"register": {
+    "title": "Sign Up" / "إنشاء حساب",
+    "createAccount": "Create Account" / "إنشاء حساب",
+    "fillDetails": "Fill in your details to get started" / "أدخل بياناتك للبدء",
+    "fullName": "Full Name" / "الاسم الكامل",
+    "email": "Email" / "البريد الإلكتروني",
+    "password": "Password" / "كلمة المرور",
+    "confirmPassword": "Confirm Password" / "تأكيد كلمة المرور",
+    "signUp": "Sign Up" / "إنشاء حساب",
+    "alreadyHaveAccount": "Already have an account?" / "لديك حساب بالفعل؟"
+}
+```
+
+### RTL Password Field Handling
+
+Password fields require special handling for RTL text input. The `dir` attribute alone doesn't work reliably - use inline styles instead:
+
+```typescript
+const { i18n } = useTranslation();
+const isRTL = i18n.language === 'ar';
+
+<input
+    type={showPassword ? 'text' : 'password'}
+    style={isRTL ? { direction: 'rtl', textAlign: 'right' } : undefined}
+    className={`... ${isRTL ? "pl-10 pr-3" : "pl-3 pr-10"}`}
+/>
+
+{/* Toggle password visibility button - position swaps for RTL */}
+<button
+    className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? "left-3" : "right-3"}`}
+>
+    {showPassword ? <EyeOff /> : <Eye />}
+</button>
+```
+
+**Key points:**
+- Use inline `style` for `direction: 'rtl'` and `textAlign: 'right'` (more reliable than `dir` attribute)
+- Swap padding: `pl-10 pr-3` for RTL (left padding for eye button, minimal right padding for text)
+- Move eye button to left side in RTL mode
+- Email fields can stay LTR (emails are always left-to-right)
+
+### Google OAuth Integration
+
+Both pages include Google sign-in button linking to `/auth/google`:
+```tsx
+<a href="/auth/google" className="...">
+    <svg>...</svg> {/* Google icon */}
+    <span>{t('auth:login.continueWithGoogle')}</span>
+</a>
+```
+
+---
+
 ## UI Effects & Animations
 
-### Homepage Category Icons (Glassmorphism)
+### Homepage Category Navigation
 
 File: `Components/shop/CategoryNav.tsx`
 
-Category icons use glassmorphism effect with brand colors:
+Category navigation uses **image-based cards** with category images covering the full card area and text positioned below.
 
+**Image Mapping:**
 ```typescript
-const brandStyle = {
-    bg: 'from-brand-purple/10 to-brand-purple-400/20',
-    icon: 'text-brand-orange group-hover:text-brand-orange-600',
-    glow: 'group-hover:shadow-brand-purple/30'
+const categoryImages: Record<string, string> = {
+    'electronics': '/images/home_mini/ELECTRONICS@2x.webp',
+    'skincare': '/images/home_mini/SKINCARE@2x.webp',
+    'building-blocks': '/images/home_mini/BLOCKS@2x.webp',
+    'fashion': '/images/home_mini/FASHION@2x.webp',
+    'home-kitchen': '/images/home_mini/HOME&KITCHEN@2x.webp',
+    'sports': '/images/home_mini/SPORT@2x.webp',
+    'stationery': '/images/home_mini/STATIONARY@2x.webp',
+    'kids': '/images/home_mini/KIDS@2x.webp',
 };
 ```
 
+**Layout:**
+- Image covers full card area (`w-full aspect-square`)
+- Category name text positioned below the card
+- Responsive grid: 2 cols (mobile) → 4 cols (tablet) → 8 cols (desktop)
+
 **Effects:**
-- Semi-transparent card (`bg-white/40 backdrop-blur-md`)
-- Gradient icon background (brand purple)
-- Orange icon color
-- Hover: scale up, lift, colored shadow glow
-- Bottom accent line (purple to orange gradient) expands on hover
+- Card: rounded corners, border, subtle shadow
+- Hover: scale up (105%), lift (-translate-y-1), shadow glow
+- Image zoom on hover (scale-110)
+- Text color change on hover (gray → brand-purple)
+
+### Hero Banner Carousel
+
+File: `Components/shop/HeroBanner.tsx`
+
+Auto-rotating banner carousel with navigation arrows (no dot indicators).
+
+**Features:**
+- Auto-advances every 5 seconds
+- Left/right arrow navigation (RTL-aware)
+- Keyboard navigation (arrow keys)
+- Responsive images (desktop/mobile variants)
+- RTL support: arrow directions swap for Arabic
+
+**Slide Structure:**
+```typescript
+interface Slide {
+    id: number;
+    desktopImage: string;
+    mobileImage: string;
+    link: string;
+    alt: string;      // English alt text
+    altAr: string;    // Arabic alt text
+}
+```
 
 ### Logo Pulse Animation
 
@@ -630,14 +760,16 @@ The `only` option tells Inertia to only fetch specified props from the server, m
 | `Pages/Shop/Search.tsx` | Search results |
 | `Pages/Shop/Cart.tsx` | Shopping cart |
 | `Pages/Shop/Checkout.tsx` | Checkout flow |
+| `Pages/Auth/Login.tsx` | Login page (Arabic localized, RTL support) |
+| `Pages/Auth/Register.tsx` | Registration page (Arabic localized, RTL support) |
 
 ### Key Components
 | File | Description |
 |------|-------------|
 | `Components/shop/ProductCard.tsx` | Product card in grids |
 | `Components/shop/ProductGrid.tsx` | Product grid layout |
-| `Components/shop/HeroBanner.tsx` | Homepage hero carousel |
-| `Components/shop/CategoryNav.tsx` | Homepage category icons (glassmorphism) |
+| `Components/shop/HeroBanner.tsx` | Homepage hero carousel (arrows, no dots) |
+| `Components/shop/CategoryNav.tsx` | Homepage category images (full-card images) |
 | `Components/shop/CartDrawer.tsx` | Slide-out cart panel (Arabic localized) |
 | `Components/shop/CartItem.tsx` | Cart item row (localized product names) |
 | `Components/shop/WishlistDrawer.tsx` | Slide-out wishlist panel (Arabic localized) |
@@ -716,7 +848,10 @@ function getImageUrl(path, productId, sortOrder) {
 | Seeded products | `public/images/products/` | `/images/products/...` |
 | Sluban products | `public/images/products/sluban/` | `/images/products/sluban/...` |
 | Uploaded (admin) | `storage/app/public/` | `/storage/...` |
-| Category banners | `public/images/categories/` | `/images/categories/...` |
+| Category banners | `public/images/banners/categories/` | `/images/banners/categories/...` |
+| Homepage category icons | `public/images/home_mini/` | `/images/home_mini/...` |
+| Hero banners (desktop) | `public/images/banners/desktop/` | `/images/banners/desktop/...` |
+| Hero banners (mobile) | `public/images/banners/mobile/` | `/images/banners/mobile/...` |
 
 ### External Assets
 ```
@@ -822,3 +957,17 @@ When filtering by percentage ranges, use half-open intervals `[min%, max%)` to a
 - **Problem:** Products with x9.xx% discounts (e.g., 49.09%) fall between brackets when using inclusive bounds
 - **Solution:** Lower bound inclusive, upper bound exclusive
 - **Example:** 49.09% discount matches `[40%, 50%)` bracket because `49.09 >= 40` AND `49.09 < 50`
+
+### RTL Password Input Fields
+The `dir="rtl"` attribute doesn't reliably work for password input fields. Use inline styles instead:
+```typescript
+// Problem: dir attribute doesn't apply RTL text direction
+<input type="password" dir="rtl" /> // Doesn't work!
+
+// Solution: Use inline styles
+<input
+    type="password"
+    style={{ direction: 'rtl', textAlign: 'right' }}
+/>
+```
+Also remember to swap padding and reposition the toggle button (see Authentication Pages section).
