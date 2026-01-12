@@ -10,7 +10,6 @@ import {
     HeartIcon,
     GlobeAltIcon,
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -181,10 +180,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                     wishlistPulse ? "scale-125" : "scale-100"
                                 }`}
                             >
-                                {wishlistItems.length > 0 ? (
-                                    <HeartIconSolid className="h-6 w-6 text-brand-orange" />
-                                ) : (
-                                    <HeartIcon className="h-6 w-6" />
+                                <HeartIcon className="h-6 w-6" />
+                                {wishlistItems.length > 0 && (
+                                    <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full" />
                                 )}
                             </button>
 
@@ -195,7 +193,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             >
                                 <ShoppingBagIcon className="h-6 w-6" />
                                 {cart.total_items > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-brand-orange text-white text-xs rounded-full flex items-center justify-center">
+                                    <span className="absolute top-0 right-0 h-4 w-4 bg-brand-orange text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                                         {formatNumber(
                                             cart.total_items,
                                             language
