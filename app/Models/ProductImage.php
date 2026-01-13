@@ -48,22 +48,31 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        // Check if file exists in public/images (for seeded product images)
-        $publicImagesPath = public_path('images/' . $this->path);
-        if (file_exists($publicImagesPath)) {
-            return asset('images/' . $this->path);
+        // OPTIMIZED: Use path-based check instead of file_exists()
+        // file_exists() is extremely slow on remote servers like Railway
+        // and was causing 6-7 second load times per category page
+
+        $path = $this->path;
+
+        if (empty($path)) {
+            // Fallback to picsum.photos for demo/placeholder images
+            $productId = $this->product_id ?? 1;
+            $imageNumber = $this->sort_order + 1;
+            $seed = ($productId * 10) + $imageNumber;
+            return "https://picsum.photos/seed/{$seed}/800/800";
         }
 
-        // Check if file exists in storage (for uploaded images)
-        $storagePath = storage_path('app/public/' . $this->path);
-        if (file_exists($storagePath)) {
-            return asset('storage/' . $this->path);
+        // Images starting with 'products/' are in public/images (seeded products)
+        if (str_starts_with($path, 'products/')) {
+            return asset('images/' . $path);
         }
 
-        // Fallback to picsum.photos for demo/placeholder images
-        $productId = $this->product_id ?? 1;
-        $imageNumber = $this->sort_order + 1;
-        $seed = ($productId * 10) + $imageNumber;
-        return "https://picsum.photos/seed/{$seed}/800/800";
+        // Images starting with 'http' are external URLs
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        // Everything else is in storage (uploaded images)
+        return asset('storage/' . $path);
     }
 }
