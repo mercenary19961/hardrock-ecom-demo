@@ -60,7 +60,20 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                // Enable persistent connections for Railway to reduce connection overhead
+                \PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
+                // Set connection timeout to 5 seconds (default is 60)
+                \PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
+                // Enable connection pooling
+                \PDO::ATTR_EMULATE_PREPARES => false,
+                // Set wait timeout
+                \PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION wait_timeout=28800",
             ]) : [],
+            // Add connection pool settings
+            'pool' => [
+                'min' => env('DB_POOL_MIN', 2),
+                'max' => env('DB_POOL_MAX', 10),
+            ],
         ],
 
         'mariadb' => [
