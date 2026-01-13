@@ -10,13 +10,14 @@
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48px.png">
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96px.png">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
-        <!-- Arabic Font (Rubik) -->
+        <!-- Fonts - preconnect early for faster loading -->
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+        <!-- Font stylesheets with display=swap for non-blocking render -->
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500,600;700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes
