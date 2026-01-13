@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
-import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
+import { formatPrice, formatNumber, getDiscountPercentage, getOptimizedProductImage } from '@/lib/utils';
 import { Badge, LazyImage } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -62,9 +62,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     const hasMultipleImages = images.length > 1;
 
     const currentImage = images[currentImageIndex] || images[0];
+    // Use Cloudflare Image Resizing for optimized 400px images
     const imageUrl = currentImage
-        ? getImageUrl(currentImage.path, product.id, currentImage.sort_order)
-        : getImageUrl(null, product.id, 0);
+        ? getOptimizedProductImage(currentImage.path, product.id, currentImage.sort_order)
+        : getOptimizedProductImage(null, product.id, 0);
 
     const hasDiscount = product.compare_price && Number(product.compare_price) > Number(product.price);
 
