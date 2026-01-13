@@ -40,6 +40,8 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                                     src={bgImage}
                                     alt={getCategoryName(category)}
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                    loading="eager"
+                                    decoding="async"
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-brand-purple/10 to-brand-purple-400/20" />
