@@ -34,6 +34,8 @@ export function CartItem({ item, showRemove = true }: CartItemProps) {
                     src={item.product.image || '/images/placeholder.jpg'}
                     alt={productName}
                     className="w-20 h-20 object-cover rounded-lg"
+                    loading="lazy"
+                    decoding="async"
                 />
             </Link>
             <div className="flex-1 min-w-0">

@@ -5,7 +5,7 @@ import ShopLayout from "@/Layouts/ShopLayout";
 import { ProductGrid } from "@/Components/shop/ProductGrid";
 import { QuantitySelector } from "@/Components/shop/QuantitySelector";
 import { ReviewSection } from "@/Components/shop/ReviewSection";
-import { Button, Badge } from "@/Components/ui";
+import { Button, Badge, LazyImage } from "@/Components/ui";
 import { useCart } from "@/contexts/CartContext";
 import { useLocalized } from "@/hooks/useLocalized";
 import {
@@ -223,6 +223,9 @@ function ProductContent({
                                     )}
                                     alt={productName}
                                     className="w-full h-full object-cover"
+                                    loading="eager"
+                                    decoding="async"
+                                    fetchPriority="high"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
@@ -244,14 +247,15 @@ function ProductContent({
                                                 : "border-gray-200 hover:border-gray-400"
                                         }`}
                                     >
-                                        <img
+                                        <LazyImage
                                             src={getImageUrl(
                                                 image.path,
                                                 product.id,
                                                 image.sort_order
                                             )}
                                             alt={image.alt_text || productName}
-                                            className="w-full h-full object-cover"
+                                            className="w-full h-full"
+                                            style={{ objectFit: 'cover' }}
                                         />
                                     </button>
                                 ))}

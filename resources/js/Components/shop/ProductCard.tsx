@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
 import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { Badge } from '@/Components/ui';
+import { Badge, LazyImage } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useLocalized } from '@/hooks/useLocalized';
@@ -95,10 +95,11 @@ export function ProductCard({ product }: ProductCardProps) {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <img
+                <LazyImage
                     src={imageUrl}
                     alt={product.name}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full bg-gray-50"
+                    style={{ objectFit: 'contain' }}
                 />
 
                 {/* Wishlist Heart Button */}

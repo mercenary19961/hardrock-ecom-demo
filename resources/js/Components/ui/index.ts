@@ -11,3 +11,4 @@ export { FloatingActionButton } from './FloatingActionButton';
 export { PageLoader } from './PageLoader';
 export { InertiaProgress } from './InertiaProgress';
 export { GooeyLoader } from './GooeyLoader';
+export { LazyImage } from './LazyImage';

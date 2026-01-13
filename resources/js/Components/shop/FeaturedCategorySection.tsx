@@ -21,6 +21,7 @@ import { Product, Category } from "@/types/models";
 import { useLocalized } from "@/hooks/useLocalized";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getImageUrl } from "@/lib/utils";
+import { LazyImage } from "@/Components/ui";
 
 // Map category slugs to icons
 const categoryIcons: Record<
@@ -62,10 +63,11 @@ function MiniProductCard({ product }: { product: Product }) {
     return (
         <Link href={`/product/${product.slug}`} className="group block">
             <div className="aspect-square bg-white rounded-lg overflow-hidden mb-2 border border-gray-200 group-hover:border-gray-300 transition-colors">
-                <img
+                <LazyImage
                     src={imageUrl}
                     alt={productName}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full"
+                    style={{ objectFit: 'contain' }}
                 />
             </div>
             <p
