@@ -8,3 +8,6 @@ export { DualRangeSlider } from './DualRangeSlider';
 export { Slider } from './Slider';
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
 export { FloatingActionButton } from './FloatingActionButton';
+export { PageLoader } from './PageLoader';
+export { InertiaProgress } from './InertiaProgress';
+export { GooeyLoader } from './GooeyLoader';
