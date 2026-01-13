@@ -64,9 +64,6 @@ export function getStatusColor(status: string): string {
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
-/**
- * Get image URL for product images
- */
 export function getImageUrl(path: string | null, productId?: number, sortOrder?: number): string {
     if (!path) {
         // Fallback to picsum.photos when no path
@@ -83,12 +80,4 @@ export function getImageUrl(path: string | null, productId?: number, sortOrder?:
     }
 
     return `/storage/${path}`;
-}
-
-/**
- * Get optimized image URL for product cards
- * For now returns standard URL - Cloudflare Image Resizing can be enabled later
- */
-export function getOptimizedProductImage(path: string | null, productId?: number, sortOrder?: number): string {
-    return getImageUrl(path, productId, sortOrder);
 }

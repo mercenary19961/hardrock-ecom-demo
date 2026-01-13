@@ -7,4 +7,3 @@ export type { SelectOption, SelectProps } from './Select';
 export { DualRangeSlider } from './DualRangeSlider';
 export { Slider } from './Slider';
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
-export { LazyImage } from './LazyImage';

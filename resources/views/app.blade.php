@@ -10,10 +10,6 @@
         <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48px.png">
         <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96px.png">
 
-        <!-- Preload hero banner (LCP image) - loads before JS executes -->
-        <link rel="preload" as="image" href="/images/banners/desktop/slide-3-kids-2.webp" media="(min-width: 768px)">
-        <link rel="preload" as="image" href="/images/banners/mobile/slide-3-kids.webp" media="(max-width: 767px)">
-
         <!-- Fonts - preconnect early for faster loading -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
         <link rel="preconnect" href="https://fonts.googleapis.com">
