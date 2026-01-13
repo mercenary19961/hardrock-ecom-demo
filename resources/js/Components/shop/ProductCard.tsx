@@ -3,13 +3,14 @@ import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
 import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
-import { Badge } from '@/Components/ui';
+import { Badge, LazyImage } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useLocalized } from '@/hooks/useLocalized';
 
 interface ProductCardProps {
     product: Product;
+    priority?: boolean; // If true, load image immediately (for above-the-fold)
 }
 
 function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
@@ -48,7 +49,7 @@ function StarRating({ rating, count, language }: { rating: number; count: number
     );
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, priority = false }: ProductCardProps) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { getProductName, getCategoryName } = useLocalized();
@@ -95,10 +96,11 @@ export function ProductCard({ product }: ProductCardProps) {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <img
+                <LazyImage
                     src={imageUrl}
                     alt={product.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    priority={priority}
                 />
 
                 {/* Wishlist Heart Button */}
