@@ -52,6 +52,14 @@ class Product extends Model
         ];
     }
 
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     protected static function boot(): void
     {
         parent::boot();
