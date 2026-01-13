@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,              // Electronics & Skincare products
             AdditionalProductsSeeder::class,   // More products for Fashion, Home & Kitchen, Sports, Stationery, Kids
             NewCategoriesSeeder::class,        // Additional products for all categories (uses firstOrCreate, no conflicts)
-            SlubanProductSeeder::class,        // Building Blocks (Sluban) products
+            BuildingBlocksProductSeeder::class, // Building Blocks products (hardcoded, no CSV needed)
             FashionVariantSeeder::class,       // Fashion variants (Hoodie with colors/sizes)
             BuildingBlocksSubcategoriesSeeder::class, // Categorize Building Blocks products into subcategories
             ProductSubcategoriesSeeder::class, // Redistribute products from parent categories into subcategories
