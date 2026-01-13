@@ -1,32 +1,33 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { Label } from '@/Components/ui/Label';
-import { useTranslation } from 'react-i18next';
-import '@/i18n';
+import { Head, Link, useForm } from "@inertiajs/react";
+import { FormEvent, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Label } from "@/Components/ui/Label";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function Register() {
     const { t } = useTranslation();
     const [showPassword, setShowPassword] = useState(false);
-    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] =
+        useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
+        name: "",
+        email: "",
+        password: "",
+        password_confirmation: "",
     });
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+        post(route("register"), {
+            onFinish: () => reset("password", "password_confirmation"),
         });
     };
 
     return (
         <>
-            <Head title={t('auth:register.title')} />
+            <Head title={t("auth:register.title")} />
             <div className="min-h-screen grid lg:grid-cols-2" dir="ltr">
                 {/* Left Panel - Registration Form */}
                 <div className="flex flex-col justify-center bg-background px-4 py-6 lg:px-8 order-2 lg:order-1">
@@ -34,70 +35,101 @@ export default function Register() {
                         {/* Mobile Logo */}
                         <div className="lg:hidden text-center mb-6">
                             <img
-                                src="/images/logo-title.webp"
+                                src="/images/logo-title-2.webp"
                                 alt="HardRock"
                                 className="h-10 mx-auto mb-3"
                             />
-                            <h1 className="text-2xl font-bold text-foreground">{t('auth:register.createAccount')}</h1>
-                            <p className="text-sm text-muted-foreground mt-1">{t('auth:register.fillDetails')}</p>
+                            <h1 className="text-2xl font-bold text-foreground">
+                                {t("auth:register.createAccount")}
+                            </h1>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                {t("auth:register.fillDetails")}
+                            </p>
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-3 lg:space-y-4"
+                        >
                             {/* Name Field */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="name">{t('auth:register.fullName')}</Label>
+                                <Label htmlFor="name">
+                                    {t("auth:register.fullName")}
+                                </Label>
                                 <input
                                     id="name"
                                     type="text"
-                                    placeholder={t('auth:register.namePlaceholder')}
+                                    placeholder={t(
+                                        "auth:register.namePlaceholder"
+                                    )}
                                     autoComplete="name"
                                     autoFocus
                                     required
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        setData("name", e.target.value)
+                                    }
                                     className="flex h-11 w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                                 {errors.name && (
-                                    <p className="text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+                                    <p className="text-sm text-red-600 dark:text-red-400">
+                                        {errors.name}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Email Field */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="email">{t('auth:register.email')}</Label>
+                                <Label htmlFor="email">
+                                    {t("auth:register.email")}
+                                </Label>
                                 <input
                                     id="email"
                                     type="email"
-                                    placeholder={t('auth:register.emailPlaceholder')}
+                                    placeholder={t(
+                                        "auth:register.emailPlaceholder"
+                                    )}
                                     autoComplete="email"
                                     required
                                     value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    onChange={(e) =>
+                                        setData("email", e.target.value)
+                                    }
                                     className="flex h-11 w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                                 {errors.email && (
-                                    <p className="text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+                                    <p className="text-sm text-red-600 dark:text-red-400">
+                                        {errors.email}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Password Field */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="password">{t('auth:register.password')}</Label>
+                                <Label htmlFor="password">
+                                    {t("auth:register.password")}
+                                </Label>
                                 <div className="relative">
                                     <input
                                         id="password"
-                                        type={showPassword ? 'text' : 'password'}
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
                                         placeholder="••••••••"
                                         autoComplete="new-password"
                                         required
                                         value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
+                                        onChange={(e) =>
+                                            setData("password", e.target.value)
+                                        }
                                         className="flex h-11 w-full rounded-md border border-border/60 bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showPassword ? (
@@ -108,27 +140,44 @@ export default function Register() {
                                     </button>
                                 </div>
                                 {errors.password && (
-                                    <p className="text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+                                    <p className="text-sm text-red-600 dark:text-red-400">
+                                        {errors.password}
+                                    </p>
                                 )}
                             </div>
 
                             {/* Confirm Password Field */}
                             <div className="space-y-1.5">
-                                <Label htmlFor="password_confirmation">{t('auth:register.confirmPassword')}</Label>
+                                <Label htmlFor="password_confirmation">
+                                    {t("auth:register.confirmPassword")}
+                                </Label>
                                 <div className="relative">
                                     <input
                                         id="password_confirmation"
-                                        type={showPasswordConfirmation ? 'text' : 'password'}
+                                        type={
+                                            showPasswordConfirmation
+                                                ? "text"
+                                                : "password"
+                                        }
                                         placeholder="••••••••"
                                         autoComplete="new-password"
                                         required
                                         value={data.password_confirmation}
-                                        onChange={(e) => setData('password_confirmation', e.target.value)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "password_confirmation",
+                                                e.target.value
+                                            )
+                                        }
                                         className="flex h-11 w-full rounded-md border border-border/60 bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50"
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                                        onClick={() =>
+                                            setShowPasswordConfirmation(
+                                                !showPasswordConfirmation
+                                            )
+                                        }
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {showPasswordConfirmation ? (
@@ -139,7 +188,9 @@ export default function Register() {
                                     </button>
                                 </div>
                                 {errors.password_confirmation && (
-                                    <p className="text-sm text-red-600 dark:text-red-400">{errors.password_confirmation}</p>
+                                    <p className="text-sm text-red-600 dark:text-red-400">
+                                        {errors.password_confirmation}
+                                    </p>
                                 )}
                             </div>
 
@@ -149,7 +200,9 @@ export default function Register() {
                                 disabled={processing}
                                 className="w-full h-11 bg-brand-purple hover:bg-brand-purple/90 text-white text-base font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {processing ? t('auth:register.creatingAccount') : t('auth:register.signUp')}
+                                {processing
+                                    ? t("auth:register.creatingAccount")
+                                    : t("auth:register.signUp")}
                             </button>
                         </form>
 
@@ -159,7 +212,9 @@ export default function Register() {
                                 <div className="w-full border-t border-border/60"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="bg-background px-3 text-muted-foreground">{t('auth:register.orContinueWith')}</span>
+                                <span className="bg-background px-3 text-muted-foreground">
+                                    {t("auth:register.orContinueWith")}
+                                </span>
                             </div>
                         </div>
 
@@ -186,18 +241,20 @@ export default function Register() {
                                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 />
                             </svg>
-                            <span className="text-sm font-medium text-foreground">{t('auth:register.continueWithGoogle')}</span>
+                            <span className="text-sm font-medium text-foreground">
+                                {t("auth:register.continueWithGoogle")}
+                            </span>
                         </a>
 
                         {/* Already have account Link */}
                         <div className="mt-4 text-center">
                             <p className="text-sm text-muted-foreground">
-                                {t('auth:register.alreadyHaveAccount')}{' '}
+                                {t("auth:register.alreadyHaveAccount")}{" "}
                                 <Link
-                                    href={route('login')}
+                                    href={route("login")}
                                     className="text-brand-purple hover:underline font-medium"
                                 >
-                                    {t('auth:register.logIn')}
+                                    {t("auth:register.logIn")}
                                 </Link>
                             </p>
                         </div>
@@ -208,15 +265,30 @@ export default function Register() {
                                 href="/"
                                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
-                                ← {t('auth:register.backToHomepage')}
+                                ← {t("auth:register.backToHomepage")}
                             </Link>
                         </div>
 
                         {/* Mobile Footer Links */}
                         <div className="lg:hidden mt-4 flex justify-center gap-6 text-sm text-muted-foreground">
-                            <a href="#" className="hover:text-foreground transition-colors">{t('auth:register.privacy')}</a>
-                            <a href="#" className="hover:text-foreground transition-colors">{t('auth:register.terms')}</a>
-                            <a href="/#contact" className="hover:text-foreground transition-colors">{t('auth:register.contact')}</a>
+                            <a
+                                href="#"
+                                className="hover:text-foreground transition-colors"
+                            >
+                                {t("auth:register.privacy")}
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-foreground transition-colors"
+                            >
+                                {t("auth:register.terms")}
+                            </a>
+                            <a
+                                href="/#contact"
+                                className="hover:text-foreground transition-colors"
+                            >
+                                {t("auth:register.contact")}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -231,22 +303,39 @@ export default function Register() {
                     {/* Centered Content */}
                     <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-8">
                         <img
-                            src="/images/logo-title.webp"
+                            src="/images/logo-title-2.webp"
                             alt="HardRock"
                             className="h-10 brightness-0 invert mb-6"
                         />
-                        <h2 className="text-white text-3xl font-bold text-center mb-3">{t('auth:register.joinHardrock')}</h2>
+                        <h2 className="text-white text-3xl font-bold text-center mb-3">
+                            {t("auth:register.joinHardrock")}
+                        </h2>
                         <p className="text-white/80 text-base text-center max-w-sm">
-                            {t('auth:register.joinDescription')}
+                            {t("auth:register.joinDescription")}
                         </p>
                     </div>
 
                     {/* Footer Links */}
                     <div className="p-6 relative z-10">
                         <div className="flex justify-center gap-6 text-white/60 text-sm">
-                            <a href="#" className="hover:text-white transition-colors">{t('auth:register.privacyPolicy')}</a>
-                            <a href="#" className="hover:text-white transition-colors">{t('auth:register.termsOfService')}</a>
-                            <a href="/#contact" className="hover:text-white transition-colors">{t('auth:register.contact')}</a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                {t("auth:register.privacyPolicy")}
+                            </a>
+                            <a
+                                href="#"
+                                className="hover:text-white transition-colors"
+                            >
+                                {t("auth:register.termsOfService")}
+                            </a>
+                            <a
+                                href="/#contact"
+                                className="hover:text-white transition-colors"
+                            >
+                                {t("auth:register.contact")}
+                            </a>
                         </div>
                     </div>
                 </div>
