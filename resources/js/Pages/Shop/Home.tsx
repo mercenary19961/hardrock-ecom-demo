@@ -117,14 +117,14 @@ export default function Home({
                         {t("common:demoDescription")}
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
+                        {/* <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                             <span className="text-brand-purple-300">
                                 Admin:
                             </span>
                             <span className="text-white ml-2">
                                 admin@hardrock-demo.com / demo1234
                             </span>
-                        </div>
+                        </div> */}
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                             <span className="text-brand-purple-300">
                                 Customer:
