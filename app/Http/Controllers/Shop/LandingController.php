@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,6 +23,7 @@ class LandingController extends Controller
         $childIds = $category->children()->pluck('id')->toArray();
         $categoryIds = array_merge([$category->id], $childIds);
 
+        // Eager load images (needed for product card image carousel on hover)
         $query = Product::with(['images'])
             ->whereIn('category_id', $categoryIds)
             ->active();
@@ -186,70 +188,79 @@ class LandingController extends Controller
                 ->get();
         }
 
-        // Get price range for the filter UI
-        $priceRange = Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->selectRaw('MIN(price) as min, MAX(price) as max')
-            ->first();
+        // OPTIMIZED: Get all filter metadata in a SINGLE query
+        // This replaces 4 separate queries (priceRange, productsWithColors, productsWithSizes, discountedProducts)
+        $categoryIdList = implode(',', $categoryIds);
+        $filterStats = DB::selectOne("
+            SELECT
+                MIN(price) as min_price,
+                MAX(price) as max_price,
+                SUM(CASE WHEN color IS NOT NULL AND color != '' THEN 1 ELSE 0 END) as products_with_colors,
+                SUM(CASE WHEN available_sizes IS NOT NULL THEN 1 ELSE 0 END) as products_with_sizes,
+                MAX(CASE WHEN compare_price > price THEN ((compare_price - price) * 100.0 / compare_price) ELSE 0 END) as max_discount
+            FROM products
+            WHERE category_id IN ({$categoryIdList}) AND is_active = 1
+        ");
 
-        // Count products with color options in this category
-        $productsWithColors = Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('color')
-            ->count();
-
-        // Count products with size options in this category
-        $productsWithSizes = Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('available_sizes')
-            ->count();
-
-        // Get discount brackets in a single query - OPTIMIZED
-        // Fetch all discounted products with their discount percentages, then bucket in PHP
-        $discountedProducts = Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('compare_price')
-            ->whereColumn('compare_price', '>', 'price')
-            ->selectRaw('id, ((compare_price - price) * 100.0 / compare_price) as discount_percent')
-            ->get();
-
-        // Define discount ranges
-        $discountRanges = [
-            ['min' => 10, 'max' => 20, 'label_max' => 19],
-            ['min' => 20, 'max' => 30, 'label_max' => 29],
-            ['min' => 30, 'max' => 40, 'label_max' => 39],
-            ['min' => 40, 'max' => 50, 'label_max' => 49],
-            ['min' => 50, 'max' => 60, 'label_max' => 59],
-            ['min' => 60, 'max' => 70, 'label_max' => 69],
-            ['min' => 70, 'max' => 100, 'label_max' => 100],
+        $priceRange = [
+            'min' => (float) ($filterStats->min_price ?? 0),
+            'max' => (float) ($filterStats->max_price ?? 0),
         ];
+        $productsWithColors = (int) ($filterStats->products_with_colors ?? 0);
+        $productsWithSizes = (int) ($filterStats->products_with_sizes ?? 0);
+        $maxDiscount = (float) ($filterStats->max_discount ?? 0);
 
-        // Count products in each bracket using PHP (avoids 7+ separate queries)
+        // Get discount brackets - only if there are discounted products
         $availableDiscountBrackets = [];
-        $maxDiscount = 0;
+        if ($maxDiscount >= 10) {
+            // Single query to get discount bracket counts
+            $bracketCounts = DB::select("
+                SELECT
+                    CASE
+                        WHEN discount_pct >= 70 THEN 70
+                        WHEN discount_pct >= 60 THEN 60
+                        WHEN discount_pct >= 50 THEN 50
+                        WHEN discount_pct >= 40 THEN 40
+                        WHEN discount_pct >= 30 THEN 30
+                        WHEN discount_pct >= 20 THEN 20
+                        WHEN discount_pct >= 10 THEN 10
+                        ELSE 0
+                    END as bracket_min,
+                    COUNT(*) as count
+                FROM (
+                    SELECT ((compare_price - price) * 100.0 / compare_price) as discount_pct
+                    FROM products
+                    WHERE category_id IN ({$categoryIdList})
+                    AND is_active = 1
+                    AND compare_price IS NOT NULL
+                    AND compare_price > price
+                ) as discounts
+                WHERE discount_pct >= 10
+                GROUP BY bracket_min
+                ORDER BY bracket_min
+            ");
 
-        foreach ($discountRanges as $range) {
-            $count = $discountedProducts->filter(function ($product) use ($range) {
-                $discount = (float) $product->discount_percent;
-                if ($range['max'] >= 100) {
-                    return $discount >= $range['min'];
+            $discountRanges = [
+                10 => ['min' => 10, 'max' => 20, 'label_max' => 19],
+                20 => ['min' => 20, 'max' => 30, 'label_max' => 29],
+                30 => ['min' => 30, 'max' => 40, 'label_max' => 39],
+                40 => ['min' => 40, 'max' => 50, 'label_max' => 49],
+                50 => ['min' => 50, 'max' => 60, 'label_max' => 59],
+                60 => ['min' => 60, 'max' => 70, 'label_max' => 69],
+                70 => ['min' => 70, 'max' => 100, 'label_max' => 100],
+            ];
+
+            foreach ($bracketCounts as $bracket) {
+                $min = (int) $bracket->bracket_min;
+                if (isset($discountRanges[$min])) {
+                    $availableDiscountBrackets[] = [
+                        'min' => $discountRanges[$min]['min'],
+                        'max' => $discountRanges[$min]['max'],
+                        'label_max' => $discountRanges[$min]['label_max'],
+                        'count' => (int) $bracket->count,
+                    ];
                 }
-                return $discount >= $range['min'] && $discount < $range['max'];
-            })->count();
-
-            if ($count > 0) {
-                $availableDiscountBrackets[] = [
-                    'min' => $range['min'],
-                    'max' => $range['max'],
-                    'label_max' => $range['label_max'],
-                    'count' => $count,
-                ];
             }
-        }
-
-        // Get max discount from the already fetched data
-        if ($discountedProducts->isNotEmpty()) {
-            $maxDiscount = (float) $discountedProducts->max('discount_percent');
         }
 
         return Inertia::render('Shop/Category', [
@@ -259,10 +270,7 @@ class LandingController extends Controller
             'parentCategory' => $parentCategory,
             'sort' => $sort,
             'filters' => $filters,
-            'priceRange' => [
-                'min' => (float) ($priceRange->min ?? 0),
-                'max' => (float) ($priceRange->max ?? 0),
-            ],
+            'priceRange' => $priceRange,
             'productsWithColors' => $productsWithColors,
             'productsWithSizes' => $productsWithSizes,
             'maxDiscount' => $maxDiscount,

@@ -101,7 +101,7 @@ class Product extends Model
      */
     public function updateRatingStats(): void
     {
-        $stats = $this->reviews()->selectRaw('AVG(rating) as avg, COUNT(*) as count')->first();
+        $stats = $this->reviews()->reorder()->selectRaw('AVG(rating) as avg, COUNT(*) as count')->first();
 
         $this->update([
             'average_rating' => round($stats->avg ?? 0, 1),
