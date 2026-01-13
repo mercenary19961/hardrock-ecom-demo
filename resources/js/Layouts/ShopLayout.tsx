@@ -158,7 +158,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             className="flex items-center flex-shrink-0"
                         >
                             <img
-                                src="/images/logo-title.webp"
+                                src="/images/logo-title-2.webp"
                                 alt="HardRock"
                                 className={`h-8 w-auto transition-transform duration-700 ${
                                     logoPulse ? "scale-110" : "scale-100"

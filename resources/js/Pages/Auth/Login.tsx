@@ -55,7 +55,7 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                 >
                     <div className="w-full max-w-md text-center space-y-6">
                         <img
-                            src="/images/logo-title.webp"
+                            src="/images/logo-title-2.webp"
                             alt="HardRock"
                             className="h-10 mx-auto"
                         />
@@ -105,7 +105,7 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                     {/* Header */}
                     <div className="p-8 flex items-center gap-4 relative z-10">
                         <img
-                            src="/images/logo-title.webp"
+                            src="/images/logo-title-2.webp"
                             alt="HardRock"
                             className="h-8 brightness-0 invert"
                         />
@@ -154,7 +154,7 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                         {/* Mobile Logo */}
                         <div className="lg:hidden flex justify-center mb-8">
                             <img
-                                src="/images/logo-title.webp"
+                                src="/images/logo-title-2.webp"
                                 alt="HardRock"
                                 className="h-10"
                             />
@@ -235,11 +235,16 @@ export default function Login({ status, canResetPassword, user }: LoginProps) {
                                         }
                                         onFocus={handleInputFocus}
                                         onBlur={handleInputBlur}
-                                        style={isRTL ? { direction: 'rtl', textAlign: 'right' } : undefined}
-                                        className={`flex h-12 w-full rounded-md border border-border/60 bg-background py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50 ${
+                                        style={
                                             isRTL
-                                                ? "pr-3"
-                                                : "pl-3 pr-10"
+                                                ? {
+                                                      direction: "rtl",
+                                                      textAlign: "right",
+                                                  }
+                                                : undefined
+                                        }
+                                        className={`flex h-12 w-full rounded-md border border-border/60 bg-background py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-brand-purple disabled:cursor-not-allowed disabled:opacity-50 ${
+                                            isRTL ? "pr-3" : "pl-3 pr-10"
                                         }`}
                                     />
                                     <button

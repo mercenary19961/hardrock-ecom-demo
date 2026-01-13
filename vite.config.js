@@ -10,4 +10,21 @@ export default defineConfig({
         }),
         react(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Split React and related packages
+                    'vendor-react': ['react', 'react-dom'],
+                    // Split Inertia
+                    'vendor-inertia': ['@inertiajs/react'],
+                    // Split i18n
+                    'vendor-i18n': ['i18next', 'react-i18next'],
+                    // Split UI libraries
+                    'vendor-ui': ['lucide-react', 'clsx', 'tailwind-merge', 'class-variance-authority'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 600,
+    },
 });
