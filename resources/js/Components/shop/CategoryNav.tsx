@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useLocalized } from '@/hooks/useLocalized';
 import { Category } from '@/types/models';
+import { LazyImage } from '@/Components/ui';
 
 interface CategoryNavProps {
     categories: Category[];
@@ -36,10 +37,11 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                         {/* Category image card */}
                         <div className="relative w-full aspect-square rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-lg hover:shadow-brand-purple/20 overflow-hidden transition-all duration-300">
                             {bgImage ? (
-                                <img
+                                <LazyImage
                                     src={bgImage}
                                     alt={getCategoryName(category)}
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                    className="w-full h-full"
+                                    style={{ objectFit: 'cover' }}
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-brand-purple/10 to-brand-purple-400/20" />

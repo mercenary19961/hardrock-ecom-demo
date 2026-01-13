@@ -114,6 +114,9 @@ export function HeroBanner() {
                             }
                             className="w-full h-auto object-cover"
                             style={{ aspectRatio: "768/500" }}
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
                         />
                     </picture>
                     {/* Desktop aspect ratio override */}

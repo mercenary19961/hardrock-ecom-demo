@@ -77,6 +77,8 @@ function WishlistItem({
                     src={imageUrl}
                     alt={product.name}
                     className="w-20 h-20 object-contain rounded-lg bg-gray-50"
+                    loading="lazy"
+                    decoding="async"
                 />
                 {inCart && (
                     <div className="absolute -top-1 -right-1 bg-brand-orange text-white rounded-full p-0.5">
