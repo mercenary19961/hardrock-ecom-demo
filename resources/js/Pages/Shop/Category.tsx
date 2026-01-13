@@ -1334,7 +1334,7 @@ export default function Category({
                             {t("shop:cta.chatWhatsApp")}
                         </a>
                         <a
-                            href="#"
+                            href="https://www.agentsouq.ai/business/demo-amman"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg font-medium transition-colors"

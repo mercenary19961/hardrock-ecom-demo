@@ -17,6 +17,7 @@ import { useLocalized } from "@/hooks/useLocalized";
 import { CartDrawer } from "@/Components/shop/CartDrawer";
 import { WishlistDrawer } from "@/Components/shop/WishlistDrawer";
 import { SearchBar } from "@/Components/shop/SearchBar";
+import { FloatingActionButton } from "@/Components/ui";
 import { Category, User as UserType } from "@/types/models";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
@@ -639,6 +640,22 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             <WishlistDrawer
                 isOpen={wishlistOpen}
                 onClose={() => setWishlistOpen(false)}
+            />
+
+            {/* Mujeeb Floating Action Button */}
+            <FloatingActionButton
+                href="https://www.agentsouq.ai/business/demo-amman"
+                ariaLabel="Try Mujeeb AI Assistant"
+                backgroundColor="transparent"
+                label="Try Mujeeb!"
+                icon={
+                    <img
+                        src="/images/freepik__background__87785.webp"
+                        alt="Mujeeb AI"
+                        className="w-full h-full object-cover rounded-full"
+                    />
+                }
+                iconClassName="w-full h-full"
             />
         </div>
     );
