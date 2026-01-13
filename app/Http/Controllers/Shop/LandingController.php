@@ -204,9 +204,16 @@ class LandingController extends Controller
             ->whereNotNull('available_sizes')
             ->count();
 
-        // Get available discount brackets in this category
-        // Using ranges like [10%, 20%), [20%, 30%), etc. to avoid gaps
-        // Display labels show "10-19%", "20-29%" but actual filter is [10%, 20%)
+        // Get discount brackets in a single query - OPTIMIZED
+        // Fetch all discounted products with their discount percentages, then bucket in PHP
+        $discountedProducts = Product::whereIn('category_id', $categoryIds)
+            ->active()
+            ->whereNotNull('compare_price')
+            ->whereColumn('compare_price', '>', 'price')
+            ->selectRaw('id, ((compare_price - price) * 100.0 / compare_price) as discount_percent')
+            ->get();
+
+        // Define discount ranges
         $discountRanges = [
             ['min' => 10, 'max' => 20, 'label_max' => 19],
             ['min' => 20, 'max' => 30, 'label_max' => 29],
@@ -214,55 +221,36 @@ class LandingController extends Controller
             ['min' => 40, 'max' => 50, 'label_max' => 49],
             ['min' => 50, 'max' => 60, 'label_max' => 59],
             ['min' => 60, 'max' => 70, 'label_max' => 69],
-            ['min' => 70, 'max' => 100, 'label_max' => 100], // 70%+ for anything 70 and above
+            ['min' => 70, 'max' => 100, 'label_max' => 100],
         ];
+
+        // Count products in each bracket using PHP (avoids 7+ separate queries)
         $availableDiscountBrackets = [];
+        $maxDiscount = 0;
 
         foreach ($discountRanges as $range) {
-            // discount % = (compare_price - price) / compare_price * 100
-            // Rearranged: price = compare_price * (1 - discount/100)
-            // For range [min, max): min <= discount < max
-            // Lower bound (min discount): price <= compare_price * (1 - min/100)
-            // Upper bound (max discount): price > compare_price * (1 - max/100)
-            $lowerMultiplier = 1 - ($range['min'] / 100);
-            $upperMultiplier = 1 - ($range['max'] / 100);
-
-            $query = Product::whereIn('category_id', $categoryIds)
-                ->active()
-                ->whereNotNull('compare_price')
-                ->whereColumn('compare_price', '>', 'price');
-
-            // Range [min%, max%) - inclusive lower, exclusive upper
-            $query->whereRaw('price <= compare_price * ?', [$lowerMultiplier]);
-
-            if ($range['max'] < 100) {
-                // Normal range: apply upper bound (exclusive)
-                $query->whereRaw('price > compare_price * ?', [$upperMultiplier]);
-            }
-            // For 70%+, no upper bound
-
-            $count = $query->count();
+            $count = $discountedProducts->filter(function ($product) use ($range) {
+                $discount = (float) $product->discount_percent;
+                if ($range['max'] >= 100) {
+                    return $discount >= $range['min'];
+                }
+                return $discount >= $range['min'] && $discount < $range['max'];
+            })->count();
 
             if ($count > 0) {
                 $availableDiscountBrackets[] = [
                     'min' => $range['min'],
-                    'max' => $range['max'], // Actual filter max (exclusive upper bound)
-                    'label_max' => $range['label_max'], // Display label max (e.g., 19 for "10-19%")
+                    'max' => $range['max'],
+                    'label_max' => $range['label_max'],
                     'count' => $count,
                 ];
             }
         }
 
-        // Also get max discount for backward compatibility
-        $maxDiscount = Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('compare_price')
-            ->whereColumn('compare_price', '>', 'price')
-            ->toBase()
-            ->selectRaw('MAX(((compare_price - price) * 1.0) / compare_price * 100) as max_discount')
-            ->value('max_discount');
-
-        $maxDiscount = (float) ($maxDiscount ?? 0);
+        // Get max discount from the already fetched data
+        if ($discountedProducts->isNotEmpty()) {
+            $maxDiscount = (float) $discountedProducts->max('discount_percent');
+        }
 
         return Inertia::render('Shop/Category', [
             'category' => $category,

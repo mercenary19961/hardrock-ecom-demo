@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Shop;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,71 +38,96 @@ class HomeController extends Controller
     }
 
     /**
-     * Get products for featured category sections
+     * Get products for featured category sections - OPTIMIZED
+     * Uses 3 queries instead of N queries per category
      */
     private function getFeaturedCategoryProducts(array $slugs): array
     {
-        $result = [];
+        // Get all featured categories in one query
+        $featuredCategories = Category::whereIn('slug', $slugs)->get()->keyBy('slug');
 
-        foreach ($slugs as $slug) {
-            $category = Category::where('slug', $slug)->first();
+        if ($featuredCategories->isEmpty()) {
+            return [];
+        }
 
-            if ($category) {
-                // Get products from this category and its children
-                $categoryIds = collect([$category->id]);
+        // Get all child category IDs in one query
+        $parentIds = $featuredCategories->pluck('id')->toArray();
+        $childCategories = Category::whereIn('parent_id', $parentIds)->get();
 
-                // Include child category IDs
-                $childIds = Category::where('parent_id', $category->id)->pluck('id');
-                $categoryIds = $categoryIds->merge($childIds);
-
-                $products = Product::with(['category', 'images'])
-                    ->whereIn('category_id', $categoryIds)
-                    ->active()
-                    ->orderBy('times_purchased', 'desc')
-                    ->take(8)
-                    ->get();
-
-                $result[] = [
-                    'category' => $category,
-                    'products' => $products,
-                ];
+        // Build category ID mapping (parent_id => [parent_id, child_ids...])
+        $categoryIdMap = [];
+        foreach ($featuredCategories as $category) {
+            $categoryIdMap[$category->id] = [$category->id];
+        }
+        foreach ($childCategories as $child) {
+            if (isset($categoryIdMap[$child->parent_id])) {
+                $categoryIdMap[$child->parent_id][] = $child->id;
             }
+        }
+
+        // Get all category IDs we need products for
+        $allCategoryIds = collect($categoryIdMap)->flatten()->unique()->toArray();
+
+        // Fetch all products in one query, then group by parent category
+        $allProducts = Product::with(['category', 'images'])
+            ->whereIn('category_id', $allCategoryIds)
+            ->active()
+            ->orderBy('times_purchased', 'desc')
+            ->get();
+
+        // Build result maintaining original slug order
+        $result = [];
+        foreach ($slugs as $slug) {
+            $category = $featuredCategories->get($slug);
+            if (!$category) {
+                continue;
+            }
+
+            $categoryIds = $categoryIdMap[$category->id] ?? [$category->id];
+
+            // Filter products for this category and take 8
+            $products = $allProducts
+                ->whereIn('category_id', $categoryIds)
+                ->take(8)
+                ->values();
+
+            $result[] = [
+                'category' => $category,
+                'products' => $products,
+            ];
         }
 
         return $result;
     }
 
     /**
-     * Get sale products with variety across categories
-     * Prioritizes higher discounts and ensures category diversity
+     * Get sale products with variety across categories - OPTIMIZED
+     * Single query with fallback logic handled in PHP
      */
-    private function getSaleProductsWithVariety(int $limit = 8, int $minDiscountPercent = 15): \Illuminate\Support\Collection
+    private function getSaleProductsWithVariety(int $limit = 8, int $minDiscountPercent = 15): Collection
     {
-        // Get all products on sale with their discount percentage
+        // Single query to get all sale products ordered by discount
         $allSaleProducts = Product::with(['category', 'images'])
             ->active()
             ->whereNotNull('compare_price')
             ->where('compare_price', '>', 0)
             ->whereColumn('compare_price', '>', 'price')
-            // Only include products with minimum discount percentage (use float division)
-            ->whereRaw('((compare_price - price) * 100.0 / compare_price) >= ?', [$minDiscountPercent])
             ->orderByRaw('((compare_price - price) * 1.0 / compare_price) DESC')
             ->get();
 
-        // If not enough products with high discount, include lower discounts
-        if ($allSaleProducts->count() < $limit) {
-            $allSaleProducts = Product::with(['category', 'images'])
-                ->active()
-                ->whereNotNull('compare_price')
-                ->where('compare_price', '>', 0)
-                ->whereColumn('compare_price', '>', 'price')
-                ->orderByRaw('((compare_price - price) * 1.0 / compare_price) DESC')
-                ->get();
-        }
+        // Filter for minimum discount in PHP (avoids second query)
+        $highDiscountProducts = $allSaleProducts->filter(function ($product) use ($minDiscountPercent) {
+            $discount = (($product->compare_price - $product->price) / $product->compare_price) * 100;
+            return $discount >= $minDiscountPercent;
+        });
 
-        // Group products by parent category for variety
-        $productsByCategory = $allSaleProducts->groupBy(function ($product) {
-            // Get the parent category ID (or current category if it's a parent)
+        // Use high discount products if enough, otherwise use all
+        $productsToUse = $highDiscountProducts->count() >= $limit
+            ? $highDiscountProducts
+            : $allSaleProducts;
+
+        // Group products by parent category for variety (category already eager loaded)
+        $productsByCategory = $productsToUse->groupBy(function ($product) {
             $category = $product->category;
             return $category?->parent_id ?? $category?->id ?? 0;
         });
@@ -117,11 +143,6 @@ class HomeController extends Controller
 
         while ($result->count() < $limit) {
             $addedThisRound = false;
-
-            // Calculate dynamic max per category based on remaining slots and active categories
-            $activeCategories = $categoryMaxReached->filter(fn($reached) => !$reached)->count();
-            $remainingSlots = $limit - $result->count();
-            $dynamicMax = $activeCategories > 0 ? max($initialMaxPerCategory, ceil($remainingSlots / $activeCategories) + $result->count() / $categoryCount) : $limit;
 
             foreach ($categoryIterators as $categoryId => $products) {
                 if ($result->count() >= $limit) break;
