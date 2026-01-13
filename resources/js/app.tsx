@@ -5,6 +5,7 @@ import "./i18n";
 import { createInertiaApp } from "@inertiajs/react";
 import { createRoot } from "react-dom/client";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { InertiaProgress } from "@/Components/ui";
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
 
@@ -23,6 +24,7 @@ createInertiaApp({
 
         root.render(
             <LanguageProvider>
+                <InertiaProgress />
                 <App {...props} />
             </LanguageProvider>
         );
