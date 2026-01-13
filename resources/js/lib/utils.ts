@@ -64,26 +64,7 @@ export function getStatusColor(status: string): string {
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
-/**
- * Cloudflare Image Resizing options
- */
-interface ImageResizeOptions {
-    width?: number;
-    height?: number;
-    quality?: number;
-    fit?: 'contain' | 'cover' | 'scale-down' | 'crop';
-}
-
-/**
- * Get image URL with optional Cloudflare Image Resizing (Pro plan feature)
- * https://developers.cloudflare.com/images/image-resizing/url-format/
- */
-export function getImageUrl(
-    path: string | null,
-    productId?: number,
-    sortOrder?: number,
-    options?: ImageResizeOptions
-): string {
+export function getImageUrl(path: string | null, productId?: number, sortOrder?: number): string {
     if (!path) {
         // Fallback to picsum.photos when no path
         const id = productId ?? 1;
@@ -93,37 +74,10 @@ export function getImageUrl(
     }
     if (path.startsWith('http')) return path;
 
-    // Build the base URL
-    let baseUrl: string;
+    // Seeded product images are in public/images/, uploaded images are in storage/
     if (path.startsWith('products/')) {
-        baseUrl = `/images/${path}`;
-    } else {
-        baseUrl = `/storage/${path}`;
+        return `/images/${path}`;
     }
 
-    // If resize options provided, use Cloudflare Image Resizing
-    if (options && (options.width || options.height)) {
-        const params: string[] = [];
-        if (options.width) params.push(`width=${options.width}`);
-        if (options.height) params.push(`height=${options.height}`);
-        params.push(`quality=${options.quality || 80}`);
-        params.push(`fit=${options.fit || 'contain'}`);
-        params.push('format=webp'); // Always use WebP for best compression
-
-        return `/cdn-cgi/image/${params.join(',')}${baseUrl}`;
-    }
-
-    return baseUrl;
-}
-
-/**
- * Get optimized image URL for product cards
- * Uses Cloudflare Image Resizing to serve 400px images instead of full-size
- */
-export function getOptimizedProductImage(path: string | null, productId?: number, sortOrder?: number): string {
-    return getImageUrl(path, productId, sortOrder, {
-        width: 400,
-        quality: 80,
-        fit: 'contain',
-    });
+    return `/storage/${path}`;
 }

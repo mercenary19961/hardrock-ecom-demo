@@ -114,17 +114,8 @@ export function HeroBanner() {
                             }
                             className="w-full h-auto object-cover"
                             style={{ aspectRatio: "768/500" }}
-                            loading="eager"
-                            fetchPriority="high"
-                            decoding="async"
                         />
                     </picture>
-                    {/* Preload next slide for smoother transitions */}
-                    <link
-                        rel="preload"
-                        as="image"
-                        href={availableSlides[(currentIndex + 1) % availableSlides.length].desktopImage}
-                    />
                     {/* Desktop aspect ratio override */}
                     <style>{`
                         @media (min-width: 768px) {

@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Product } from '@/types/models';
-import { formatPrice, formatNumber, getDiscountPercentage, getOptimizedProductImage } from '@/lib/utils';
-import { Badge, LazyImage } from '@/Components/ui';
+import { formatPrice, formatNumber, getImageUrl, getDiscountPercentage } from '@/lib/utils';
+import { Badge } from '@/Components/ui';
 import { Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useLocalized } from '@/hooks/useLocalized';
 
 interface ProductCardProps {
     product: Product;
-    priority?: boolean; // If true, load image immediately (for above-the-fold)
 }
 
 function StarRating({ rating, count, language }: { rating: number; count: number; language: string }) {
@@ -49,7 +48,7 @@ function StarRating({ rating, count, language }: { rating: number; count: number
     );
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { getProductName, getCategoryName } = useLocalized();
@@ -62,10 +61,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
     const hasMultipleImages = images.length > 1;
 
     const currentImage = images[currentImageIndex] || images[0];
-    // Use Cloudflare Image Resizing for optimized 400px images
     const imageUrl = currentImage
-        ? getOptimizedProductImage(currentImage.path, product.id, currentImage.sort_order)
-        : getOptimizedProductImage(null, product.id, 0);
+        ? getImageUrl(currentImage.path, product.id, currentImage.sort_order)
+        : getImageUrl(null, product.id, 0);
 
     const hasDiscount = product.compare_price && Number(product.compare_price) > Number(product.price);
 
@@ -97,14 +95,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <LazyImage
+                <img
                     src={imageUrl}
                     alt={product.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    priority={priority}
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    width={400}
-                    height={400}
                 />
 
                 {/* Wishlist Heart Button */}
