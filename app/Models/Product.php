@@ -264,7 +264,10 @@ class Product extends Model
      */
     public function getRatingDistribution(): array
     {
+        // Use reorder() to remove the default ->latest() ordering from reviews()
+        // This fixes MySQL strict mode error with GROUP BY
         $counts = $this->reviews()
+            ->reorder()
             ->selectRaw('rating, count(*) as count')
             ->groupBy('rating')
             ->pluck('count', 'rating')
