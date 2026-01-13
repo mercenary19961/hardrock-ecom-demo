@@ -101,6 +101,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                     alt={product.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     priority={priority}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    width={400}
+                    height={400}
                 />
 
                 {/* Wishlist Heart Button */}

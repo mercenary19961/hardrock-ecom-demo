@@ -6,6 +6,9 @@ interface LazyImageProps {
     className?: string;
     placeholderClassName?: string;
     priority?: boolean; // If true, load immediately (for above-the-fold images)
+    sizes?: string; // Responsive sizes hint for browser
+    width?: number; // Intrinsic width for aspect ratio
+    height?: number; // Intrinsic height for aspect ratio
 }
 
 export function LazyImage({
@@ -14,6 +17,9 @@ export function LazyImage({
     className = '',
     placeholderClassName = '',
     priority = false,
+    sizes,
+    width,
+    height,
 }: LazyImageProps) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(priority);
@@ -65,6 +71,9 @@ export function LazyImage({
                     onLoad={() => setIsLoaded(true)}
                     loading={priority ? 'eager' : 'lazy'}
                     decoding="async"
+                    sizes={sizes}
+                    width={width}
+                    height={height}
                 />
             )}
         </div>
