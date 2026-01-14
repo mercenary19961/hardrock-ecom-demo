@@ -16,6 +16,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'slug' => [
                 'nullable',
                 'string',
@@ -23,6 +24,7 @@ class UpdateCategoryRequest extends FormRequest
                 Rule::unique('categories', 'slug')->ignore($this->category->id),
             ],
             'description' => 'nullable|string|max:1000',
+            'description_ar' => 'nullable|string|max:1000',
             'image' => 'nullable|image|max:2048',
             'parent_id' => [
                 'nullable',

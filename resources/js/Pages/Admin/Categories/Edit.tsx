@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Card, CardHeader, CardContent } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent } from '@/Components/ui';
 import { Category } from '@/types/models';
 import { ArrowLeft } from 'lucide-react';
 
@@ -13,8 +13,10 @@ export default function EditCategory({ category, parentCategories }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         _method: 'PUT',
         name: category.name,
+        name_ar: category.name_ar || '',
         slug: category.slug,
         description: category.description || '',
+        description_ar: category.description_ar || '',
         parent_id: category.parent_id?.toString() || '',
         sort_order: category.sort_order,
         is_active: category.is_active,
@@ -48,13 +50,23 @@ export default function EditCategory({ category, parentCategories }: Props) {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <Input
-                                label="Name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                error={errors.name}
-                                required
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="Name (English)"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    error={errors.name}
+                                    required
+                                />
+                                <Input
+                                    label="Name (Arabic)"
+                                    value={data.name_ar}
+                                    onChange={(e) => setData('name_ar', e.target.value)}
+                                    error={errors.name_ar}
+                                    dir="rtl"
+                                    placeholder="الاسم بالعربية"
+                                />
+                            </div>
 
                             <Input
                                 label="Slug"
@@ -63,17 +75,22 @@ export default function EditCategory({ category, parentCategories }: Props) {
                                 error={errors.slug}
                             />
 
-                            <div>
-                                <label htmlFor="edit_cat_description" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
-                                </label>
-                                <textarea
-                                    id="edit_cat_description"
-                                    name="description"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Textarea
+                                    label="Description (English)"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
+                                    error={errors.description}
                                     rows={3}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
+                                />
+                                <Textarea
+                                    label="Description (Arabic)"
+                                    value={data.description_ar}
+                                    onChange={(e) => setData('description_ar', e.target.value)}
+                                    error={errors.description_ar}
+                                    rows={3}
+                                    dir="rtl"
+                                    placeholder="الوصف بالعربية"
                                 />
                             </div>
 

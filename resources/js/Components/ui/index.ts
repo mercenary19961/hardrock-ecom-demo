@@ -1,6 +1,9 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { Textarea } from './Textarea';
 export { Badge } from './Badge';
+export { ColorPicker } from './ColorPicker';
+export { SizeStockEditor } from './SizeStockEditor';
 export { Card, CardHeader, CardContent, CardFooter } from './Card';
 export { Select } from './Select';
 export type { SelectOption, SelectProps } from './Select';

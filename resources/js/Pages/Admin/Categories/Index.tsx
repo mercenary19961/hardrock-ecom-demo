@@ -194,13 +194,15 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {categories.data.map((category) => (
-                                    <tr key={category.id} className="hover:bg-gray-50">
+                                    <tr key={category.id} className={`hover:bg-gray-50 ${category.parent_id ? 'bg-gray-50/50' : ''}`}>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center font-medium text-gray-900">
+                                            <div className={`flex items-center ${category.parent_id ? 'pl-6' : ''}`}>
                                                 {category.parent_id && (
                                                     <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
                                                 )}
-                                                {category.name}
+                                                <span className={category.parent_id ? 'text-gray-700' : 'font-medium text-gray-900'}>
+                                                    {category.name}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-gray-500">

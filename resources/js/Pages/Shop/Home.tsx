@@ -159,7 +159,7 @@ export default function Home({
                                 Admin:
                             </span>
                             <span className="text-white ml-2">
-                                admin@hardrock-demo.com / demo1234
+                                pa / demo1234
                             </span>
                         </div> */}
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">

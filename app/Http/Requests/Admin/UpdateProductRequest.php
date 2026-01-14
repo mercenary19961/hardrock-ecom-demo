@@ -17,6 +17,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'slug' => [
                 'nullable',
                 'string',
@@ -24,7 +25,9 @@ class UpdateProductRequest extends FormRequest
                 Rule::unique('products', 'slug')->ignore($this->product->id),
             ],
             'description' => 'nullable|string',
+            'description_ar' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
+            'short_description_ar' => 'nullable|string|max:500',
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
             'sku' => [
@@ -41,6 +44,14 @@ class UpdateProductRequest extends FormRequest
             'images.*' => 'image|max:2048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'integer|exists:product_images,id',
+            // Variant fields
+            'color' => 'nullable|string|max:100',
+            'color_hex' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'available_sizes' => 'nullable|array',
+            'available_sizes.*' => 'string|max:20',
+            'size_stock' => 'nullable|array',
+            'size_stock.*' => 'integer|min:0',
+            'product_group' => 'nullable|string|max:100',
         ];
     }
 }

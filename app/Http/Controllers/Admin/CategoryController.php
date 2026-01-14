@@ -16,21 +16,81 @@ class CategoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Category::withCount('products');
+        // Build hierarchically ordered categories (parent followed by children)
+        $searchTerm = $request->filled('search') ? $request->search : null;
+        $statusFilter = $request->filled('status') ? $request->status : null;
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        // Get all categories ordered hierarchically
+        $allCategories = collect();
+
+        // First, get parent categories
+        $parentQuery = Category::withCount('products')
+            ->whereNull('parent_id')
+            ->ordered();
+
+        if ($searchTerm) {
+            // When searching, include parents that match OR have matching children
+            $matchingChildParentIds = Category::where('name', 'like', '%' . $searchTerm . '%')
+                ->whereNotNull('parent_id')
+                ->pluck('parent_id')
+                ->unique();
+
+            $parentQuery->where(function ($q) use ($searchTerm, $matchingChildParentIds) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhereIn('id', $matchingChildParentIds);
+            });
         }
 
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
+        if ($statusFilter) {
+            $parentQuery->where('is_active', $statusFilter === 'active');
         }
 
+        $parents = $parentQuery->get();
+
+        // For each parent, add it and then its children
+        foreach ($parents as $parent) {
+            // Get children of this parent
+            $childQuery = Category::withCount('products')
+                ->where('parent_id', $parent->id)
+                ->ordered();
+
+            if ($searchTerm) {
+                $childQuery->where('name', 'like', '%' . $searchTerm . '%');
+            }
+
+            if ($statusFilter) {
+                $childQuery->where('is_active', $statusFilter === 'active');
+            }
+
+            $children = $childQuery->get();
+
+            // Calculate total products for parent (parent's own products + all children's products)
+            $childrenProductCount = $children->sum('products_count');
+            $parent->products_count = $parent->products_count + $childrenProductCount;
+
+            $allCategories->push($parent);
+
+            foreach ($children as $child) {
+                $allCategories->push($child);
+            }
+        }
+
+        // Manual pagination of the hierarchical collection
         $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
             ? (int) $request->per_page
             : 15;
 
-        $categories = $query->ordered()->paginate($perPage)->withQueryString();
+        $page = $request->input('page', 1);
+        $total = $allCategories->count();
+        $items = $allCategories->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $categories = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         // Get counts for status filters
         $statusCounts = [

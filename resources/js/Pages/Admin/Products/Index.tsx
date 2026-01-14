@@ -4,7 +4,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Product, Category, PaginatedData } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
@@ -160,6 +160,55 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Variant Information */}
+                                {(product.color || (product.available_sizes && product.available_sizes.length > 0)) && (
+                                    <div className="border-t pt-4">
+                                        <h4 className="text-sm font-medium text-gray-500 mb-3">Variant Options</h4>
+                                        <div className="space-y-3">
+                                            {product.color && (
+                                                <div className="flex items-center gap-3">
+                                                    <Palette className="h-4 w-4 text-gray-400" />
+                                                    <div
+                                                        className="w-6 h-6 rounded-full border-2 border-gray-300"
+                                                        style={{ backgroundColor: product.color_hex || '#ccc' }}
+                                                    />
+                                                    <span className="text-gray-700">{product.color}</span>
+                                                    {product.color_hex && (
+                                                        <span className="text-xs text-gray-400 font-mono">{product.color_hex}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {product.available_sizes && product.available_sizes.length > 0 && (
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <Ruler className="h-4 w-4 text-gray-400" />
+                                                        <span className="text-gray-700">Sizes ({product.available_sizes.length})</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 ml-6">
+                                                        {product.available_sizes.map((size) => (
+                                                            <span
+                                                                key={size}
+                                                                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                                                            >
+                                                                {size}
+                                                                {product.size_stock && product.size_stock[size] !== undefined && (
+                                                                    <span className="text-gray-400 ml-1">({product.size_stock[size]})</span>
+                                                                )}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {product.product_group && (
+                                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                    <Layers className="h-4 w-4 text-gray-400" />
+                                                    <span>Product Group: {product.product_group}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Description */}
                                 {product.description && (
@@ -450,6 +499,27 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                     <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                                     <p className="text-xs text-gray-500 mb-2">{product.category?.name || 'No category'}</p>
 
+                                    {/* Variant Indicators */}
+                                    {(product.color || (product.available_sizes && product.available_sizes.length > 0)) && (
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {product.color && (
+                                                <div className="flex items-center gap-1" title={`Color: ${product.color}`}>
+                                                    <div
+                                                        className="w-4 h-4 rounded-full border border-gray-300"
+                                                        style={{ backgroundColor: product.color_hex || '#ccc' }}
+                                                    />
+                                                    <span className="text-xs text-gray-500">{product.color}</span>
+                                                </div>
+                                            )}
+                                            {product.available_sizes && product.available_sizes.length > 0 && (
+                                                <div className="flex items-center gap-1" title={`Sizes: ${product.available_sizes.join(', ')}`}>
+                                                    <Ruler className="h-3 w-3 text-gray-400" />
+                                                    <span className="text-xs text-gray-500">{product.available_sizes.length} sizes</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="font-semibold tabular-nums">{formatPrice(product.price, language)}</div>
@@ -534,8 +604,21 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                             {product.name}
                                                         </div>
                                                     </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        SKU: {product.sku}
+                                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                        <span>SKU: {product.sku}</span>
+                                                        {/* Variant Indicators */}
+                                                        {product.color && (
+                                                            <div
+                                                                className="w-3 h-3 rounded-full border border-gray-300 flex-shrink-0"
+                                                                style={{ backgroundColor: product.color_hex || '#ccc' }}
+                                                                title={`Color: ${product.color}`}
+                                                            />
+                                                        )}
+                                                        {product.available_sizes && product.available_sizes.length > 0 && (
+                                                            <span className="text-xs text-gray-400" title={`Sizes: ${product.available_sizes.join(', ')}`}>
+                                                                {product.available_sizes.length}S
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

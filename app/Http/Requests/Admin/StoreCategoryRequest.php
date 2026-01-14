@@ -15,8 +15,10 @@ class StoreCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255|unique:categories,slug',
             'description' => 'nullable|string|max:1000',
+            'description_ar' => 'nullable|string|max:1000',
             'image' => 'nullable|image|max:2048',
             'parent_id' => 'nullable|exists:categories,id',
             'sort_order' => 'nullable|integer|min:0',
