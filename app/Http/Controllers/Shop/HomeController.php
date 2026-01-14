@@ -13,27 +13,27 @@ class HomeController extends Controller
 {
     public function index(): Response
     {
-        // Products on sale with variety across categories
-        // Prioritize higher discounts (25%+) and ensure category diversity
-        $saleProducts = $this->getSaleProductsWithVariety(8, 25);
-
+        // Only load categories immediately (fast query ~10ms)
+        // This allows the page shell to render quickly
         $categories = Category::active()
             ->parents()
             ->ordered()
             ->withCount('activeProducts')
             ->get();
 
-        // Featured category sections
-        $featuredCategories = $this->getFeaturedCategoryProducts([
-            'electronics',
-            'building-blocks',
-            'skincare',
-        ]);
-
         return Inertia::render('Shop/Home', [
-            'saleProducts' => $saleProducts,
+            // Categories load immediately for page structure
             'categories' => $categories,
-            'featuredCategories' => $featuredCategories,
+
+            // Featured categories - deferred (loads after initial render)
+            'featuredCategories' => Inertia::defer(fn () => $this->getFeaturedCategoryProducts([
+                'electronics',
+                'building-blocks',
+                'skincare',
+            ]), 'featured'),
+
+            // Sale products - deferred (loads after initial render)
+            'saleProducts' => Inertia::defer(fn () => $this->getSaleProductsWithVariety(8, 25), 'sale'),
         ]);
     }
 
