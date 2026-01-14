@@ -180,11 +180,11 @@ export default function Category({
     parentCategory,
     sort,
     filters,
-    priceRange,
-    productsWithColors,
-    productsWithSizes,
-    maxDiscount: _maxDiscount,
-    availableDiscountBrackets,
+    priceRange = { min: 0, max: 1000 },
+    productsWithColors = 0,
+    productsWithSizes = 0,
+    maxDiscount: _maxDiscount = 0,
+    availableDiscountBrackets = [],
 }: Props) {
     const { t, i18n } = useTranslation();
     const { getCategoryName, getCategoryDescription } = useLocalized();
@@ -905,7 +905,7 @@ export default function Category({
                                         ),
                                     })}
                                 </span>
-                                {!isSubcategory && (
+                                {!isSubcategory && products?.total !== undefined && (
                                     <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">
                                         {formatNumber(products.total, language)}
                                     </span>
@@ -933,7 +933,7 @@ export default function Category({
                                     >
                                         <SubIcon className="w-4 h-4" />
                                         <span>{getCategoryName(sub)}</span>
-                                        {isCurrentSubcategory && (
+                                        {isCurrentSubcategory && products?.total !== undefined && (
                                             <span className="bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full text-xs">
                                                 {formatNumber(
                                                     products.total,
@@ -1072,8 +1072,8 @@ export default function Category({
                         <div className="hidden lg:flex items-center gap-3 mb-6">
                             <span className="text-sm text-gray-500 flex items-center gap-1.5 flex-shrink-0">
                                 <Package className="w-4 h-4 text-gray-500" />
-                                {formatNumber(products.total, language)}{" "}
-                                {products.total === 1
+                                {formatNumber(products?.total ?? 0, language)}{" "}
+                                {(products?.total ?? 0) === 1
                                     ? t("shop:product")
                                     : t("shop:products")}
                             </span>
@@ -1704,16 +1704,16 @@ export default function Category({
                                 onClick={() => setShowMobileFilters(false)}
                                 className={hasActiveFilters ? "" : "w-full"}
                             >
-                                {products.total === 1
+                                {(products?.total ?? 0) === 1
                                     ? t("shop:showResult", {
                                           count: formatNumber(
-                                              products.total,
+                                              products?.total ?? 0,
                                               language
                                           ) as unknown as number,
                                       })
                                     : t("shop:showResults", {
                                           count: formatNumber(
-                                              products.total,
+                                              products?.total ?? 0,
                                               language
                                           ) as unknown as number,
                                       })}
