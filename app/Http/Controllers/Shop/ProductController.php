@@ -20,48 +20,63 @@ class ProductController extends Controller
         // Increment view count
         $product->increment('view_count');
 
+        // Load essential product data immediately
         $product->load(['category', 'images']);
 
-        $reviews = $product->reviews()
-            ->with('user')
-            ->paginate(3)
-            ->withQueryString();
-
-        $ratingDistribution = $product->getRatingDistribution();
-
-        $relatedProducts = [];
-        if ($product->category_id) {
-            $relatedProducts = Product::with(['images'])
-                ->where('category_id', $product->category_id)
-                ->where('id', '!=', $product->id)
-                ->active()
-                ->inStock()
-                ->take(4)
-                ->get();
-        }
-
+        // Build breadcrumbs immediately (needed for page structure)
         $breadcrumbs = [];
         if ($product->category) {
             $breadcrumbs[] = ['name' => $product->category->name, 'slug' => $product->category->slug];
         }
         $breadcrumbs[] = ['name' => $product->name, 'slug' => $product->slug];
 
-        // Check if logged-in user can review (must have purchased and not reviewed yet)
-        $canReview = false;
-        $userReview = null;
-        if (Auth::check()) {
-            $userReview = $product->reviews()->where('user_id', Auth::id())->first();
-            $canReview = !$userReview && Auth::user()->hasPurchased($product->id);
-        }
+        // Store product ID for closures
+        $productId = $product->id;
+        $categoryId = $product->category_id;
 
         return Inertia::render('Shop/Product', [
+            // Immediate props - for page structure
             'product' => $product,
-            'reviews' => $reviews,
-            'ratingDistribution' => $ratingDistribution,
-            'relatedProducts' => $relatedProducts,
             'breadcrumbs' => $breadcrumbs,
-            'canReview' => $canReview,
-            'userReview' => $userReview,
+
+            // Deferred: Reviews section
+            'reviews' => Inertia::defer(
+                fn () => $product->reviews()->with('user')->paginate(3)->withQueryString(),
+                'reviews'
+            ),
+            'ratingDistribution' => Inertia::defer(
+                fn () => $product->getRatingDistribution(),
+                'reviews'
+            ),
+
+            // Deferred: Related products
+            'relatedProducts' => Inertia::defer(function () use ($categoryId, $productId) {
+                if (!$categoryId) {
+                    return [];
+                }
+                return Product::with(['images'])
+                    ->where('category_id', $categoryId)
+                    ->where('id', '!=', $productId)
+                    ->active()
+                    ->inStock()
+                    ->take(4)
+                    ->get();
+            }, 'related'),
+
+            // Deferred: User review status
+            'canReview' => Inertia::defer(function () use ($productId) {
+                if (!Auth::check()) {
+                    return false;
+                }
+                $hasReview = Product::find($productId)->reviews()->where('user_id', Auth::id())->exists();
+                return !$hasReview && Auth::user()->hasPurchased($productId);
+            }, 'userReview'),
+            'userReview' => Inertia::defer(function () use ($productId) {
+                if (!Auth::check()) {
+                    return null;
+                }
+                return Product::find($productId)->reviews()->where('user_id', Auth::id())->first();
+            }, 'userReview'),
         ]);
     }
 
