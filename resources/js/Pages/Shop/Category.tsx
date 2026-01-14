@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, Link, router, Deferred } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
 import { ProductGrid } from "@/Components/shop/ProductGrid";
@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { formatPrice, formatNumber } from "@/lib/utils";
 import { useLocalized } from "@/hooks/useLocalized";
+import { ProductGridSkeleton } from "@/Components/shop/ProductGridSkeleton";
 // Map category slugs to banner image names
 const categoryBannerMap: Record<string, string> = {
     electronics: "category-electronics-hero",
@@ -1286,33 +1287,38 @@ export default function Category({
                             </div>
                         )}
 
-                        {/* Products Grid */}
-                        <ProductGrid
-                            products={products.data}
-                            emptyMessage={t("shop:noProductsMatch")}
-                        />
+                        {/* Products Grid - Deferred Loading */}
+                        <Deferred
+                            data="products"
+                            fallback={<ProductGridSkeleton count={12} />}
+                        >
+                            <ProductGrid
+                                products={products?.data || []}
+                                emptyMessage={t("shop:noProductsMatch")}
+                            />
 
-                        {/* Pagination */}
-                        {products.last_page > 1 && (
-                            <div className="flex justify-center gap-2 mt-12">
-                                {products.links.map((link, index) => (
-                                    <Link
-                                        key={index}
-                                        href={link.url || "#"}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                            link.active
-                                                ? "bg-brand-slate text-white"
-                                                : link.url
-                                                ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                                                : "bg-gray-50 text-gray-400 cursor-not-allowed"
-                                        }`}
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                            {/* Pagination */}
+                            {products?.last_page > 1 && (
+                                <div className="flex justify-center gap-2 mt-12">
+                                    {products.links.map((link, index) => (
+                                        <Link
+                                            key={index}
+                                            href={link.url || "#"}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                link.active
+                                                    ? "bg-brand-slate text-white"
+                                                    : link.url
+                                                    ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                                    : "bg-gray-50 text-gray-400 cursor-not-allowed"
+                                            }`}
+                                            dangerouslySetInnerHTML={{
+                                                __html: link.label,
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </Deferred>
                     </div>
                 </div>
 

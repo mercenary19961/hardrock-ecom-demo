@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, Deferred } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
 import { ProductGrid } from "@/Components/shop/ProductGrid";
+import { ProductGridSkeleton } from "@/Components/shop/ProductGridSkeleton";
 import { QuantitySelector } from "@/Components/shop/QuantitySelector";
 import { ReviewSection } from "@/Components/shop/ReviewSection";
 import { Button, Badge, LazyImage } from "@/Components/ui";
@@ -464,25 +465,53 @@ function ProductContent({
                     </div>
                 </div>
 
-                {/* Reviews Section */}
-                <ReviewSection
-                    product={product}
-                    reviews={reviews}
-                    ratingDistribution={ratingDistribution}
-                    canReview={canReview}
-                    userReview={userReview}
-                    isAuthenticated={!!auth?.user}
-                />
+                {/* Reviews Section - Deferred Loading */}
+                <Deferred
+                    data="reviews"
+                    fallback={
+                        <div className="mt-12 animate-pulse">
+                            <div className="h-8 bg-gray-200 rounded w-48 mb-6" />
+                            <div className="space-y-4">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="bg-gray-100 rounded-lg p-4">
+                                        <div className="h-4 bg-gray-200 rounded w-32 mb-2" />
+                                        <div className="h-3 bg-gray-200 rounded w-full mb-1" />
+                                        <div className="h-3 bg-gray-200 rounded w-3/4" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    }
+                >
+                    <ReviewSection
+                        product={product}
+                        reviews={reviews}
+                        ratingDistribution={ratingDistribution}
+                        canReview={canReview}
+                        userReview={userReview}
+                        isAuthenticated={!!auth?.user}
+                    />
+                </Deferred>
 
-                {/* Related Products */}
-                {relatedProducts.length > 0 && (
-                    <section className="mt-12">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                            {t("shop:relatedProducts")}
-                        </h2>
-                        <ProductGrid products={relatedProducts} />
-                    </section>
-                )}
+                {/* Related Products - Deferred Loading */}
+                <Deferred
+                    data="relatedProducts"
+                    fallback={
+                        <section className="mt-12">
+                            <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
+                            <ProductGridSkeleton count={4} />
+                        </section>
+                    }
+                >
+                    {relatedProducts && relatedProducts.length > 0 && (
+                        <section className="mt-12">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                                {t("shop:relatedProducts")}
+                            </h2>
+                            <ProductGrid products={relatedProducts} />
+                        </section>
+                    )}
+                </Deferred>
             </div>
         </>
     );
