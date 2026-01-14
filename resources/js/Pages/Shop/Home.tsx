@@ -1,12 +1,13 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Deferred } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
 import { ProductGrid } from "@/Components/shop/ProductGrid";
 import { CategoryNav } from "@/Components/shop/CategoryNav";
 import { HeroBanner } from "@/Components/shop/HeroBanner";
 import { FeaturedCategorySection } from "@/Components/shop/FeaturedCategorySection";
+import { ProductGridSkeleton } from "@/Components/shop/ProductGridSkeleton";
 import { Product, Category } from "@/types/models";
-import { ArrowRight, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 
 interface FeaturedCategory {
     category: Category;
@@ -51,51 +52,87 @@ export default function Home({
                 </div>
             </section>
 
-            {/* Featured Category Sections */}
-            {featuredCategories?.map((featured, index) => {
-                const isBuildingBlocks =
-                    featured.category.slug === "building-blocks";
-                return (
-                    <FeaturedCategorySection
-                        key={featured.category.id}
-                        category={featured.category}
-                        products={featured.products}
-                        bgColor={sectionColors[index % sectionColors.length]}
-                        accentColor={
-                            isBuildingBlocks
-                                ? "purple"
-                                : index % 2 === 0
-                                ? "purple"
-                                : "orange"
-                        }
-                        variant={isBuildingBlocks ? "grid-cards" : "default"}
-                    />
-                );
-            })}
+            {/* Featured Category Sections - Deferred Loading */}
+            <Deferred
+                data="featuredCategories"
+                fallback={
+                    <>
+                        {[0, 1, 2].map((index) => (
+                            <section
+                                key={index}
+                                className={`py-12 ${sectionColors[index % sectionColors.length]}`}
+                            >
+                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                    <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
+                                    <ProductGridSkeleton count={8} />
+                                </div>
+                            </section>
+                        ))}
+                    </>
+                }
+            >
+                {featuredCategories?.map((featured, index) => {
+                    const isBuildingBlocks =
+                        featured.category.slug === "building-blocks";
+                    return (
+                        <FeaturedCategorySection
+                            key={featured.category.id}
+                            category={featured.category}
+                            products={featured.products}
+                            bgColor={sectionColors[index % sectionColors.length]}
+                            accentColor={
+                                isBuildingBlocks
+                                    ? "purple"
+                                    : index % 2 === 0
+                                    ? "purple"
+                                    : "orange"
+                            }
+                            variant={isBuildingBlocks ? "grid-cards" : "default"}
+                        />
+                    );
+                })}
+            </Deferred>
 
-            {/* Sale Products - Brand Orange Theme */}
-            {saleProducts && saleProducts.length > 0 && (
-                <section className="relative py-12 overflow-hidden bg-brand-orange">
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-                    <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-2xl font-bold text-white">
-                                    {t("common:onSale")}
-                                </h2>
-                                <span className="bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5">
-                                    <Flame className="h-4 w-4" />
-                                    {t("common:hotDeals")}
-                                </span>
+            {/* Sale Products - Brand Orange Theme - Deferred Loading */}
+            <Deferred
+                data="saleProducts"
+                fallback={
+                    <section className="relative py-12 overflow-hidden bg-brand-orange">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="h-8 bg-white/20 rounded w-32 animate-pulse" />
+                                <div className="h-6 bg-white/20 rounded-full w-24 animate-pulse" />
                             </div>
+                            <ProductGridSkeleton count={8} />
                         </div>
-                        <ProductGrid products={saleProducts} />
-                    </div>
-                </section>
-            )}
+                    </section>
+                }
+            >
+                {saleProducts && saleProducts.length > 0 && (
+                    <section className="relative py-12 overflow-hidden bg-brand-orange">
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+                        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-2xl font-bold text-white">
+                                        {t("common:onSale")}
+                                    </h2>
+                                    <span className="bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                                        <Flame className="h-4 w-4" />
+                                        {t("common:hotDeals")}
+                                    </span>
+                                </div>
+                            </div>
+                            <ProductGrid products={saleProducts} />
+                        </div>
+                    </section>
+                )}
+            </Deferred>
 
             {/* Demo Banner - Brand Purple Theme */}
             <section className="relative py-16 overflow-hidden">
