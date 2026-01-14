@@ -7,7 +7,7 @@ import { createRoot } from "react-dom/client";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { InertiaProgress } from "@/Components/ui";
 
-const appName = import.meta.env.VITE_APP_NAME || "Laravel";
+const appName = "Demo-HardRock-ecom ";
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

@@ -39,7 +39,7 @@ class HomeController extends Controller
 
     /**
      * Get products for featured category sections - OPTIMIZED
-     * Uses 3 queries instead of N queries per category
+     * Uses separate queries per category with LIMIT to avoid loading all products
      */
     private function getFeaturedCategoryProducts(array $slugs): array
     {
@@ -65,17 +65,7 @@ class HomeController extends Controller
             }
         }
 
-        // Get all category IDs we need products for
-        $allCategoryIds = collect($categoryIdMap)->flatten()->unique()->toArray();
-
-        // Fetch all products in one query, then group by parent category
-        $allProducts = Product::with(['category', 'images'])
-            ->whereIn('category_id', $allCategoryIds)
-            ->active()
-            ->orderBy('times_purchased', 'desc')
-            ->get();
-
-        // Build result maintaining original slug order
+        // Build result with individual queries (with LIMIT) per category
         $result = [];
         foreach ($slugs as $slug) {
             $category = $featuredCategories->get($slug);
@@ -85,11 +75,13 @@ class HomeController extends Controller
 
             $categoryIds = $categoryIdMap[$category->id] ?? [$category->id];
 
-            // Filter products for this category and take 8
-            $products = $allProducts
+            // Query with LIMIT 8 - much faster than loading all and filtering
+            $products = Product::with(['images'])
                 ->whereIn('category_id', $categoryIds)
+                ->active()
+                ->orderBy('times_purchased', 'desc')
                 ->take(8)
-                ->values();
+                ->get();
 
             $result[] = [
                 'category' => $category,
@@ -102,17 +94,18 @@ class HomeController extends Controller
 
     /**
      * Get sale products with variety across categories - OPTIMIZED
-     * Single query with fallback logic handled in PHP
+     * Limited query with variety logic handled in PHP
      */
     private function getSaleProductsWithVariety(int $limit = 8, int $minDiscountPercent = 15): Collection
     {
-        // Single query to get all sale products ordered by discount
+        // Limit to 50 products max - enough for variety selection without loading everything
         $allSaleProducts = Product::with(['category', 'images'])
             ->active()
             ->whereNotNull('compare_price')
             ->where('compare_price', '>', 0)
             ->whereColumn('compare_price', '>', 'price')
             ->orderByRaw('((compare_price - price) * 1.0 / compare_price) DESC')
+            ->take(50)
             ->get();
 
         // Filter for minimum discount in PHP (avoids second query)
