@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -244,124 +245,147 @@ class LandingController extends Controller
     }
 
     /**
-     * Get price range for category
+     * Get price range for category (cached for 10 minutes)
      */
     private function getPriceRange(array $categoryIds): array
     {
-        $categoryIdList = implode(',', $categoryIds);
-        $result = DB::selectOne("
-            SELECT MIN(price) as min_price, MAX(price) as max_price
-            FROM products
-            WHERE category_id IN ({$categoryIdList}) AND is_active = 1
-        ");
+        $cacheKey = 'category_price_range_' . implode('_', $categoryIds);
 
-        return [
-            'min' => (float) ($result->min_price ?? 0),
-            'max' => (float) ($result->max_price ?? 0),
-        ];
+        return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+            $result = DB::selectOne("
+                SELECT MIN(price) as min_price, MAX(price) as max_price
+                FROM products
+                WHERE category_id IN ({$placeholders}) AND is_active = 1
+            ", $categoryIds);
+
+            return [
+                'min' => (float) ($result->min_price ?? 0),
+                'max' => (float) ($result->max_price ?? 0),
+            ];
+        });
     }
 
     /**
-     * Get count of products with colors
+     * Get count of products with colors (cached for 10 minutes)
      */
     private function getProductsWithColors(array $categoryIds): int
     {
-        return Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('color')
-            ->where('color', '!=', '')
-            ->count();
+        $cacheKey = 'category_products_with_colors_' . implode('_', $categoryIds);
+
+        return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+            return Product::whereIn('category_id', $categoryIds)
+                ->active()
+                ->whereNotNull('color')
+                ->where('color', '!=', '')
+                ->count();
+        });
     }
 
     /**
-     * Get count of products with sizes
+     * Get count of products with sizes (cached for 10 minutes)
      */
     private function getProductsWithSizes(array $categoryIds): int
     {
-        return Product::whereIn('category_id', $categoryIds)
-            ->active()
-            ->whereNotNull('available_sizes')
-            ->count();
+        $cacheKey = 'category_products_with_sizes_' . implode('_', $categoryIds);
+
+        return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+            return Product::whereIn('category_id', $categoryIds)
+                ->active()
+                ->whereNotNull('available_sizes')
+                ->count();
+        });
     }
 
     /**
-     * Get maximum discount percentage in category
+     * Get maximum discount percentage in category (cached for 10 minutes)
      */
     private function getMaxDiscount(array $categoryIds): float
     {
-        $categoryIdList = implode(',', $categoryIds);
-        $result = DB::selectOne("
-            SELECT MAX(CASE WHEN compare_price > price
-                THEN ((compare_price - price) * 100.0 / compare_price)
-                ELSE 0 END) as max_discount
-            FROM products
-            WHERE category_id IN ({$categoryIdList}) AND is_active = 1
-        ");
+        $cacheKey = 'category_max_discount_' . implode('_', $categoryIds);
 
-        return (float) ($result->max_discount ?? 0);
+        return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+            $result = DB::selectOne("
+                SELECT MAX(CASE WHEN compare_price > price
+                    THEN ((compare_price - price) * 100.0 / compare_price)
+                    ELSE 0 END) as max_discount
+                FROM products
+                WHERE category_id IN ({$placeholders}) AND is_active = 1
+            ", $categoryIds);
+
+            return (float) ($result->max_discount ?? 0);
+        });
     }
 
     /**
-     * Get available discount brackets with counts
+     * Get available discount brackets with counts (cached for 10 minutes)
+     * Optimized: computes max discount inline to avoid duplicate query
      */
     private function getDiscountBrackets(array $categoryIds): array
     {
-        $maxDiscount = $this->getMaxDiscount($categoryIds);
+        $cacheKey = 'category_discount_brackets_' . implode('_', $categoryIds);
 
-        if ($maxDiscount < 10) {
-            return [];
-        }
+        return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
 
-        $categoryIdList = implode(',', $categoryIds);
-        $bracketCounts = DB::select("
-            SELECT
-                CASE
-                    WHEN discount_pct >= 70 THEN 70
-                    WHEN discount_pct >= 60 THEN 60
-                    WHEN discount_pct >= 50 THEN 50
-                    WHEN discount_pct >= 40 THEN 40
-                    WHEN discount_pct >= 30 THEN 30
-                    WHEN discount_pct >= 20 THEN 20
-                    WHEN discount_pct >= 10 THEN 10
-                    ELSE 0
-                END as bracket_min,
-                COUNT(*) as count
-            FROM (
-                SELECT ((compare_price - price) * 100.0 / compare_price) as discount_pct
-                FROM products
-                WHERE category_id IN ({$categoryIdList})
-                AND is_active = 1
-                AND compare_price IS NOT NULL
-                AND compare_price > price
-            ) as discounts
-            WHERE discount_pct >= 10
-            GROUP BY bracket_min
-            ORDER BY bracket_min
-        ");
+            // Single query that computes both max discount and bracket counts
+            // This avoids the duplicate getMaxDiscount() call
+            $bracketCounts = DB::select("
+                SELECT
+                    CASE
+                        WHEN discount_pct >= 70 THEN 70
+                        WHEN discount_pct >= 60 THEN 60
+                        WHEN discount_pct >= 50 THEN 50
+                        WHEN discount_pct >= 40 THEN 40
+                        WHEN discount_pct >= 30 THEN 30
+                        WHEN discount_pct >= 20 THEN 20
+                        WHEN discount_pct >= 10 THEN 10
+                        ELSE 0
+                    END as bracket_min,
+                    COUNT(*) as count
+                FROM (
+                    SELECT ((compare_price - price) * 100.0 / compare_price) as discount_pct
+                    FROM products
+                    WHERE category_id IN ({$placeholders})
+                    AND is_active = 1
+                    AND compare_price IS NOT NULL
+                    AND compare_price > price
+                ) as discounts
+                WHERE discount_pct >= 10
+                GROUP BY bracket_min
+                ORDER BY bracket_min
+            ", $categoryIds);
 
-        $discountRanges = [
-            10 => ['min' => 10, 'max' => 20, 'label_max' => 19],
-            20 => ['min' => 20, 'max' => 30, 'label_max' => 29],
-            30 => ['min' => 30, 'max' => 40, 'label_max' => 39],
-            40 => ['min' => 40, 'max' => 50, 'label_max' => 49],
-            50 => ['min' => 50, 'max' => 60, 'label_max' => 59],
-            60 => ['min' => 60, 'max' => 70, 'label_max' => 69],
-            70 => ['min' => 70, 'max' => 100, 'label_max' => 100],
-        ];
-
-        $availableDiscountBrackets = [];
-        foreach ($bracketCounts as $bracket) {
-            $min = (int) $bracket->bracket_min;
-            if (isset($discountRanges[$min])) {
-                $availableDiscountBrackets[] = [
-                    'min' => $discountRanges[$min]['min'],
-                    'max' => $discountRanges[$min]['max'],
-                    'label_max' => $discountRanges[$min]['label_max'],
-                    'count' => (int) $bracket->count,
-                ];
+            // If no brackets found (no discounts >= 10%), return empty array
+            if (empty($bracketCounts)) {
+                return [];
             }
-        }
 
-        return $availableDiscountBrackets;
+            $discountRanges = [
+                10 => ['min' => 10, 'max' => 20, 'label_max' => 19],
+                20 => ['min' => 20, 'max' => 30, 'label_max' => 29],
+                30 => ['min' => 30, 'max' => 40, 'label_max' => 39],
+                40 => ['min' => 40, 'max' => 50, 'label_max' => 49],
+                50 => ['min' => 50, 'max' => 60, 'label_max' => 59],
+                60 => ['min' => 60, 'max' => 70, 'label_max' => 69],
+                70 => ['min' => 70, 'max' => 100, 'label_max' => 100],
+            ];
+
+            $availableDiscountBrackets = [];
+            foreach ($bracketCounts as $bracket) {
+                $min = (int) $bracket->bracket_min;
+                if (isset($discountRanges[$min])) {
+                    $availableDiscountBrackets[] = [
+                        'min' => $discountRanges[$min]['min'],
+                        'max' => $discountRanges[$min]['max'],
+                        'label_max' => $discountRanges[$min]['label_max'],
+                        'count' => (int) $bracket->count,
+                    ];
+                }
+            }
+
+            return $availableDiscountBrackets;
+        });
     }
 }
