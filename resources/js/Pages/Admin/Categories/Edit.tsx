@@ -1,7 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, UndoButton } from '@/Components/ui';
 import { Category } from '@/types/models';
 import {
     ArrowLeft,
@@ -31,12 +31,32 @@ const defaultCategoryImages: Record<string, string> = {
     'kids': '/images/home_mini/KIDS@2x.webp',
 };
 
+interface FieldChange {
+    field: string;
+    label: string;
+    type: 'text' | 'textarea' | 'boolean' | 'image' | 'select';
+    old: string;
+    new: string;
+    old_path?: string;
+    new_path?: string;
+    old_id?: string | number;
+    new_id?: string | number;
+}
+
+interface UndoMeta {
+    available: boolean;
+    saved_at: string;
+    saved_by: number;
+    changes?: FieldChange[];
+}
+
 interface Props {
     category: Category;
     parentCategories: Category[];
+    undoMeta: UndoMeta | null;
 }
 
-export default function EditCategory({ category, parentCategories }: Props) {
+export default function EditCategory({ category, parentCategories, undoMeta }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
 
@@ -56,6 +76,24 @@ export default function EditCategory({ category, parentCategories }: Props) {
     };
 
     const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm(initialValues);
+
+    // Reset form when category prop changes (e.g., after undo restore)
+    useEffect(() => {
+        setData({
+            _method: 'PUT',
+            name: category.name,
+            name_ar: category.name_ar || '',
+            slug: category.slug,
+            description: category.description || '',
+            description_ar: category.description_ar || '',
+            parent_id: category.parent_id?.toString() || '',
+            sort_order: category.sort_order,
+            is_active: category.is_active,
+            low_stock_threshold: category.low_stock_threshold ?? 10,
+            image: null,
+        });
+        setImagePreview(null);
+    }, [category.id, category.updated_at]); // Reset when category is updated
 
     // Check if form has changes
     const hasChanges =
@@ -154,6 +192,14 @@ export default function EditCategory({ category, parentCategories }: Props) {
                         Back to Categories
                     </Link>
                 </div>
+
+                {/* Undo Last Update Button */}
+                <UndoButton
+                    modelType="category"
+                    modelId={category.id}
+                    undoMeta={undoMeta}
+                    className="mb-4"
+                />
 
                 <Card>
                     <CardHeader>

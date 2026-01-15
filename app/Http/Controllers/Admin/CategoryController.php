@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,10 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        protected UndoService $undoService
+    ) {}
+
     public function index(Request $request): Response
     {
         // Build hierarchically ordered categories (parent followed by children)
@@ -138,9 +143,13 @@ class CategoryController extends Controller
             ->ordered()
             ->get(['id', 'name']);
 
+        // Get undo metadata if available (pass current model for diff computation)
+        $undoMeta = $this->undoService->getUndoMeta('category', $category->id, $category);
+
         return Inertia::render('Admin/Categories/Edit', [
             'category' => $category,
             'parentCategories' => $parentCategories,
+            'undoMeta' => $undoMeta,
         ]);
     }
 
@@ -151,10 +160,14 @@ class CategoryController extends Controller
         // Ensure is_active is explicitly set (handles false values in form data)
         $data['is_active'] = $request->boolean('is_active');
 
+        // Save current state for undo BEFORE making changes (only if there are actual changes)
+        $oldImagePath = $category->image;
+        $this->undoService->saveState($category, $oldImagePath, $data);
+
         if ($request->hasFile('image')) {
-            // Delete old image
+            // Mark old image for potential deletion (will be cleaned up if undo state is cleared)
             if ($category->image) {
-                Storage::disk('public')->delete($category->image);
+                $this->undoService->markImageForDeletion('category', $category->id, $category->image);
             }
             $data['image'] = $request->file('image')->store('categories', 'public');
         }

@@ -15,3 +15,4 @@ export { PageLoader } from './PageLoader';
 export { InertiaProgress } from './InertiaProgress';
 export { GooeyLoader } from './GooeyLoader';
 export { LazyImage } from './LazyImage';
+export { UndoButton } from './UndoButton';
