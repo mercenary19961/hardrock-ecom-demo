@@ -148,6 +148,9 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
 
+        // Ensure is_active is explicitly set (handles false values in form data)
+        $data['is_active'] = $request->boolean('is_active');
+
         if ($request->hasFile('image')) {
             // Delete old image
             if ($category->image) {
@@ -159,7 +162,7 @@ class CategoryController extends Controller
         $category->update($data);
 
         return redirect()
-            ->route('admin.categories.index')
+            ->route('admin.categories.edit', $category)
             ->with('success', 'Category updated successfully.');
     }
 
