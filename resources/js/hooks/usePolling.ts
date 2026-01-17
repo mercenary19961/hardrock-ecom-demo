@@ -19,7 +19,7 @@ interface UsePollingOptions {
  */
 export function usePolling(options: UsePollingOptions = {}) {
     const {
-        interval = 30000, // 30 seconds default
+        interval = 30000,
         enabled = true,
         onlyWhenVisible = true,
     } = options;
