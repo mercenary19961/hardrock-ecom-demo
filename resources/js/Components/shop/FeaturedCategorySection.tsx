@@ -176,7 +176,7 @@ export function FeaturedCategorySection({
 
         return (
             <section className={`${sectionBg} py-12`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Section Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
@@ -290,7 +290,7 @@ export function FeaturedCategorySection({
 
     return (
         <section className={`${sectionBg} py-12`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">

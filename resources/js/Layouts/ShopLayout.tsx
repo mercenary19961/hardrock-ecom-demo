@@ -151,7 +151,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-4 h-16">
                         {/* Logo */}
                         <Link
@@ -368,7 +368,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                     showCategoryNav ? "top-16 opacity-100" : "-top-10 opacity-0"
                 }`}
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                     <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-12 overflow-x-auto scrollbar-hide">
                         {categories?.map((category) => {
                             const isOnCategoryPage =
@@ -436,7 +436,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
 
             {/* Footer */}
             <footer className="bg-brand-slate text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 lg:gap-16">
                         {/* HardRock Brand */}
                         <div>
