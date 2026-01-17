@@ -13,6 +13,7 @@ use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // Shop routes
@@ -80,35 +81,59 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
 
-// Cache health check (temporary - remove after verifying Redis works)
-Route::get('/cache-health', function () {
+// Performance diagnostic (temporary - remove after debugging)
+Route::get('/perf-check', function () {
+    $timings = [];
+    $start = microtime(true);
+
+    // 1. Test basic PHP response
+    $timings['php_boot'] = round((microtime(true) - $start) * 1000, 2);
+
+    // 2. Test Redis connection
+    $redisStart = microtime(true);
     try {
-        $driver = config('cache.default');
-        $testKey = 'health_check_' . time();
-
-        // Test write
-        Cache::put($testKey, 'working', 60);
-
-        // Test read
-        $value = Cache::get($testKey);
-
-        // Cleanup
-        Cache::forget($testKey);
-
-        return response()->json([
-            'status' => 'ok',
-            'cache_driver' => $driver,
-            'test_result' => $value === 'working' ? 'pass' : 'fail',
-            'redis_host' => config('database.redis.default.host'),
-            'redis_port' => config('database.redis.default.port'),
-        ]);
+        Cache::put('perf_test', 'ok', 10);
+        Cache::get('perf_test');
+        $timings['redis'] = round((microtime(true) - $redisStart) * 1000, 2);
     } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'cache_driver' => config('cache.default'),
-            'error' => $e->getMessage(),
-        ], 500);
+        $timings['redis'] = 'error: ' . $e->getMessage();
     }
+
+    // 3. Test MySQL connection
+    $dbStart = microtime(true);
+    try {
+        DB::select('SELECT 1');
+        $timings['mysql_connect'] = round((microtime(true) - $dbStart) * 1000, 2);
+    } catch (\Exception $e) {
+        $timings['mysql_connect'] = 'error: ' . $e->getMessage();
+    }
+
+    // 4. Test simple query
+    $queryStart = microtime(true);
+    try {
+        DB::table('categories')->count();
+        $timings['mysql_query'] = round((microtime(true) - $queryStart) * 1000, 2);
+    } catch (\Exception $e) {
+        $timings['mysql_query'] = 'error: ' . $e->getMessage();
+    }
+
+    // 5. Test Eloquent with eager loading (like homepage)
+    $eloquentStart = microtime(true);
+    try {
+        \App\Models\Product::with('images')->take(8)->get();
+        $timings['eloquent_eager'] = round((microtime(true) - $eloquentStart) * 1000, 2);
+    } catch (\Exception $e) {
+        $timings['eloquent_eager'] = 'error: ' . $e->getMessage();
+    }
+
+    $timings['total'] = round((microtime(true) - $start) * 1000, 2);
+
+    return response()->json([
+        'timings_ms' => $timings,
+        'cache_driver' => config('cache.default'),
+        'session_driver' => config('session.driver'),
+        'db_host' => config('database.connections.mysql.host'),
+    ]);
 });
 
 // Admin routes
