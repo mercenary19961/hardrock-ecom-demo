@@ -81,61 +81,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
 
-// Performance diagnostic (temporary - remove after debugging)
-Route::get('/perf-check', function () {
-    $timings = [];
-    $start = microtime(true);
-
-    // 1. Test basic PHP response
-    $timings['php_boot'] = round((microtime(true) - $start) * 1000, 2);
-
-    // 2. Test Redis connection
-    $redisStart = microtime(true);
-    try {
-        Cache::put('perf_test', 'ok', 10);
-        Cache::get('perf_test');
-        $timings['redis'] = round((microtime(true) - $redisStart) * 1000, 2);
-    } catch (\Exception $e) {
-        $timings['redis'] = 'error: ' . $e->getMessage();
-    }
-
-    // 3. Test MySQL connection
-    $dbStart = microtime(true);
-    try {
-        DB::select('SELECT 1');
-        $timings['mysql_connect'] = round((microtime(true) - $dbStart) * 1000, 2);
-    } catch (\Exception $e) {
-        $timings['mysql_connect'] = 'error: ' . $e->getMessage();
-    }
-
-    // 4. Test simple query
-    $queryStart = microtime(true);
-    try {
-        DB::table('categories')->count();
-        $timings['mysql_query'] = round((microtime(true) - $queryStart) * 1000, 2);
-    } catch (\Exception $e) {
-        $timings['mysql_query'] = 'error: ' . $e->getMessage();
-    }
-
-    // 5. Test Eloquent with eager loading (like homepage)
-    $eloquentStart = microtime(true);
-    try {
-        \App\Models\Product::with('images')->take(8)->get();
-        $timings['eloquent_eager'] = round((microtime(true) - $eloquentStart) * 1000, 2);
-    } catch (\Exception $e) {
-        $timings['eloquent_eager'] = 'error: ' . $e->getMessage();
-    }
-
-    $timings['total'] = round((microtime(true) - $start) * 1000, 2);
-
-    return response()->json([
-        'timings_ms' => $timings,
-        'cache_driver' => config('cache.default'),
-        'session_driver' => config('session.driver'),
-        'db_host' => config('database.connections.mysql.host'),
-    ]);
-});
-
 // Admin routes
 require __DIR__.'/admin.php';
 

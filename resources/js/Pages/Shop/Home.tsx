@@ -41,7 +41,7 @@ export default function Home({
             <section className="relative py-12 overflow-hidden">
                 {/* Subtle gradient background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-purple-50/50 via-white to-brand-orange-50/30" />
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3 mb-6">
                         <h2 className="text-2xl font-bold text-gray-900">
                             {t("common:shopByCategory")}
@@ -62,7 +62,7 @@ export default function Home({
                                 key={index}
                                 className={`py-12 ${sectionColors[index % sectionColors.length]}`}
                             >
-                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                                     <div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse" />
                                     <ProductGridSkeleton count={8} />
                                 </div>
@@ -100,7 +100,7 @@ export default function Home({
                     <section className="relative py-12 overflow-hidden bg-brand-orange">
                         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-                        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="h-8 bg-white/20 rounded w-32 animate-pulse" />
                                 <div className="h-6 bg-white/20 rounded-full w-24 animate-pulse" />
@@ -116,7 +116,7 @@ export default function Home({
                         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-                        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-bold text-white">
@@ -142,7 +142,7 @@ export default function Home({
                 <div className="absolute top-0 left-1/4 w-64 h-64 bg-brand-purple/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-brand-purple-400/20 rounded-full blur-3xl" />
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-4">
                         <span className="w-2 h-2 bg-brand-orange rounded-full animate-pulse" />
                         <span className="text-white/80 text-sm">Demo Mode</span>

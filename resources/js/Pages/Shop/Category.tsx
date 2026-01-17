@@ -772,7 +772,7 @@ export default function Category({
                 {!bannerImage && (
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-100 via-gray-50 to-white hidden md:block" />
                 )}
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+                <div className="relative max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
                             <Link
@@ -852,7 +852,7 @@ export default function Category({
             {/* Subcategories Section */}
             {subcategories.length > 0 && (
                 <div className="bg-white border-b border-gray-200 overflow-hidden">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                    <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 relative">
                         {/* Left scroll arrow */}
                         <button
                             onClick={() =>
@@ -953,7 +953,7 @@ export default function Category({
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex gap-8">
                     {/* Desktop Sidebar */}
                     <aside className="hidden lg:block w-64 flex-shrink-0">

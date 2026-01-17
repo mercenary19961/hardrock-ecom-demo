@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,5 +26,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle CSRF token mismatch for Inertia requests - redirect back to refresh the token
+        $exceptions->respond(function (Response $response, Throwable $e, $request) {
+            if ($e instanceof TokenMismatchException) {
+                // For Inertia requests, redirect back to refresh the page and get a new token
+                if ($request->header('X-Inertia')) {
+                    return back()->with('error', 'Your session has expired. Please try again.');
+                }
+            }
+            return $response;
+        });
     })->create();
