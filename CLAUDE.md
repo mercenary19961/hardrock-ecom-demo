@@ -24,6 +24,10 @@
 16. [Image Handling](#image-handling)
 17. [Data Models](#data-models)
 18. [Common Issues & Solutions](#common-issues--solutions)
+19. [CSRF & Session Configuration](#csrf--session-configuration)
+20. [Coupon System](#coupon-system)
+21. [Layout & Spacing](#layout--spacing)
+22. [Deployment (Railway)](#deployment-railway)
 
 ---
 
@@ -32,11 +36,13 @@
 | Stack Component | Technology |
 |-----------------|------------|
 | Backend | Laravel 12 |
-| SPA Bridge | Inertia.js |
+| SPA Bridge | Inertia.js v2 |
 | Frontend | React 18 |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | i18n | i18next |
+| Cache/Session | Redis |
+| Hosting | Railway |
 
 **Demo Accounts:**
 | Role | Email | Password |
@@ -976,11 +982,14 @@ Run: `php artisan db:seed`
 | 3 | ProductSeeder | Electronics & Skincare |
 | 4 | AdditionalProductsSeeder | Fashion, Home, Sports, etc. |
 | 5 | NewCategoriesSeeder | Additional products |
-| 6 | **SlubanProductSeeder** | Imports from CSV |
-| 7 | BuildingBlocksSubcategoriesSeeder | Organize Sluban products |
-| 8 | ProductSubcategoriesSeeder | Redistribute to subcategories |
-| 9 | SaleProductsSeeder | Add discounts |
-| 10 | OrderSeeder | Demo orders |
+| 6 | BuildingBlocksProductSeeder | Building Blocks products (hardcoded) |
+| 7 | FashionVariantSeeder | Fashion variants (Hoodie with colors/sizes) |
+| 8 | BuildingBlocksSubcategoriesSeeder | Organize Building Blocks into subcategories |
+| 9 | ProductSubcategoriesSeeder | Redistribute to subcategories |
+| 10 | SaleProductsSeeder | Add discounts |
+| 11 | OrderSeeder | Demo orders |
+| 12 | ReviewSeeder | Demo reviews for products |
+| 13 | CouponSeeder | Discount coupons (WELCOME10, SAVE20, FLAT5) |
 
 ### CSV Import (Sluban Products)
 
@@ -1184,3 +1193,201 @@ If you see `SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected`:
 1. Check `.env` file has `DB_DATABASE=hardrock_ecom_demo` (not empty)
 2. Run `php artisan config:clear` after changes
 3. Restart the dev server
+
+---
+
+## CSRF & Session Configuration
+
+### Inertia v2 CSRF Handling
+
+**CRITICAL:** Do NOT include the `csrf-token` meta tag in Laravel + Inertia v2 projects. Per Inertia v2 documentation, this prevents CSRF tokens from refreshing properly after session regeneration (e.g., after login).
+
+**Correct setup (`resources/views/app.blade.php`):**
+```html
+<!-- NO csrf-token meta tag! Inertia v2 handles this via cookies -->
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title inertia>{{ config('app.name') }}</title>
+    <!-- ... rest of head -->
+</head>
+```
+
+**Axios configuration (`resources/js/bootstrap.ts`):**
+```typescript
+import axios from 'axios';
+window.axios = axios;
+
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.withCredentials = true;
+window.axios.defaults.withXSRFToken = true;
+```
+
+- `withCredentials: true` - Sends cookies with requests
+- `withXSRFToken: true` - Axios reads XSRF-TOKEN cookie and sends as X-XSRF-TOKEN header
+
+### Session Configuration (`.env`)
+
+```env
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=
+SESSION_SECURE_COOKIE=false  # Set to true in production with HTTPS
+```
+
+**Common 419 Error Causes:**
+1. csrf-token meta tag present (remove it for Inertia v2)
+2. `SESSION_DOMAIN=null` (string) instead of empty
+3. Browser cookies disabled
+4. Session expired
+
+### CSRF Error Handler (`bootstrap/app.php`)
+
+```php
+->withExceptions(function (Exceptions $exceptions): void {
+    $exceptions->respond(function (Response $response, Throwable $e, $request) {
+        if ($e instanceof TokenMismatchException) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('error', 'Your session has expired. Please try again.');
+            }
+        }
+        return $response;
+    });
+})
+```
+
+---
+
+## Coupon System
+
+### Overview
+
+The application supports discount coupons with percentage or fixed value discounts, minimum order amounts, usage limits, and per-user limits.
+
+### Coupon Model (`App\Models\Coupon`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | string | Unique coupon code (uppercase) |
+| `name` / `name_ar` | string | Bilingual display names |
+| `description` / `description_ar` | text | Bilingual descriptions |
+| `type` | enum | `percentage` or `fixed` |
+| `value` | decimal | Discount value (% or JOD amount) |
+| `min_order_amount` | decimal/null | Minimum cart subtotal required |
+| `max_discount` | decimal/null | Cap on percentage discounts |
+| `usage_limit` | int/null | Total uses allowed |
+| `usage_count` | int | Current total uses |
+| `per_user_limit` | int/null | Uses per user |
+| `starts_at` | datetime/null | Start date |
+| `expires_at` | datetime/null | Expiry date |
+| `is_active` | boolean | Active status |
+
+### Available Coupons (Seeded)
+
+| Code | Type | Value | Min Order | Max Discount |
+|------|------|-------|-----------|--------------|
+| `WELCOME10` | percentage | 10% | None | 50 JOD |
+| `SAVE20` | percentage | 20% | 50 JOD | 30 JOD |
+| `FLAT5` | fixed | 5 JOD | 25 JOD | N/A |
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/coupon/available` | GET | List valid coupons |
+| `/coupon/apply` | POST | Apply coupon code |
+| `/coupon/remove` | POST | Remove applied coupon |
+| `/coupon/current` | GET | Get currently applied coupon |
+
+### Usage in Checkout
+
+Coupons are stored in session after validation:
+```php
+session(['applied_coupon' => [
+    'id' => $coupon->id,
+    'code' => $coupon->code,
+    'name' => $coupon->name,
+    'discount' => $calculatedDiscount,
+]]);
+```
+
+### Seeding Coupons
+
+```bash
+php artisan db:seed --class=CouponSeeder
+```
+
+---
+
+## Layout & Spacing
+
+### Container Width
+
+The site uses a wider container (`max-w-[1700px]`) for a more filled view on large screens.
+
+**Affected components:**
+- Header/Footer (`ShopLayout.tsx`)
+- Category page sections (`Category.tsx`)
+- Home page sections (`Home.tsx`)
+- Featured category sections (`FeaturedCategorySection.tsx`)
+- Cart page (`Cart.tsx`)
+- Checkout page (`Checkout.tsx`)
+
+```tsx
+// Standard container
+<div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+```
+
+**Previous value:** `max-w-7xl` (1280px)
+**Current value:** `max-w-[1700px]` (1700px)
+
+---
+
+## Deployment (Railway)
+
+### Configuration
+
+| Setting | Value |
+|---------|-------|
+| **Pre-deploy Command** | `php artisan migrate --force && php artisan storage:link` |
+| **Start Command** | `php artisan serve --host=0.0.0.0 --port=$PORT` |
+| **Region** | EU West (Amsterdam) |
+
+### Environment Variables
+
+Required Railway variables:
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://demo.hardrock-co.com`
+- `DB_*` - MySQL connection from Railway MySQL service
+- `REDIS_*` - Redis connection from Railway Redis service
+- `SESSION_DRIVER=database`
+- `CACHE_DRIVER=redis`
+
+### One-time Seeding
+
+To seed data in production (run once, then revert):
+
+1. Temporarily update pre-deploy command:
+```
+php artisan migrate --force && php artisan storage:link && php artisan db:seed --class=CouponSeeder --force
+```
+
+2. Deploy
+
+3. Revert pre-deploy command to:
+```
+php artisan migrate --force && php artisan storage:link
+```
+
+### Architecture
+
+```
+Railway Project
+├── MySQL (database)
+├── Redis (cache/session)
+└── Laravel App (hardrock-ecom-demo)
+    └── Connected to MySQL & Redis
+```
