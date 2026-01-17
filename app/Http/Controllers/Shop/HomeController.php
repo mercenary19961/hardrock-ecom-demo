@@ -78,8 +78,7 @@ class HomeController extends Controller
             $categoryIds = $categoryIdMap[$category->id] ?? [$category->id];
 
             // Query with LIMIT 8 - much faster than loading all and filtering
-            // Only load primary image, not all images
-            $products = Product::with(['primaryImage'])
+            $products = Product::with(['images'])
                 ->whereIn('category_id', $categoryIds)
                 ->active()
                 ->orderBy('times_purchased', 'desc')
@@ -102,8 +101,7 @@ class HomeController extends Controller
     private function getSaleProductsWithVariety(int $limit = 8, int $minDiscountPercent = 15): Collection
     {
         // Filter by minimum discount in SQL - much faster than loading 50 and filtering
-        // Only load primary image, not all images
-        $productsToUse = Product::with(['category', 'primaryImage'])
+        $productsToUse = Product::with(['category', 'images'])
             ->active()
             ->whereNotNull('compare_price')
             ->where('compare_price', '>', 0)

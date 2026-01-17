@@ -38,7 +38,12 @@ const resources = {
 // Get saved language from localStorage or default to 'en'
 const getSavedLanguage = (): string => {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('language') || 'en';
+        try {
+            return localStorage.getItem('language') || 'en';
+        } catch {
+            // localStorage may be blocked in some contexts (incognito, iframes, etc.)
+            return 'en';
+        }
     }
     return 'en';
 };
@@ -62,7 +67,11 @@ i18n.on('languageChanged', (lng) => {
     if (typeof document !== 'undefined') {
         document.documentElement.lang = lng;
         document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
-        localStorage.setItem('language', lng);
+        try {
+            localStorage.setItem('language', lng);
+        } catch {
+            // localStorage may be blocked in some contexts
+        }
     }
 });
 

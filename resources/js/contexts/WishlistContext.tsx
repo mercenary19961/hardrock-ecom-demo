@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from '@/types/models';
+import { safeStorage } from '@/lib/utils';
 
 interface WishlistContextType {
     items: Product[];
@@ -22,7 +23,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     // Load wishlist from localStorage on mount
     useEffect(() => {
         try {
-            const stored = localStorage.getItem(WISHLIST_STORAGE_KEY);
+            const stored = safeStorage.getItem(WISHLIST_STORAGE_KEY);
             if (stored) {
                 setItems(JSON.parse(stored));
             }
@@ -36,7 +37,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     // Save wishlist to localStorage whenever it changes
     useEffect(() => {
         if (!loading) {
-            localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
+            safeStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(items));
         }
     }, [items, loading]);
 

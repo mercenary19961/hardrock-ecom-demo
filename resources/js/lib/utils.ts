@@ -64,6 +64,33 @@ export function getStatusColor(status: string): string {
     return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
+/**
+ * Safe localStorage wrapper that handles blocked access (incognito, iframes, etc.)
+ */
+export const safeStorage = {
+    getItem(key: string): string | null {
+        try {
+            return localStorage.getItem(key);
+        } catch {
+            return null;
+        }
+    },
+    setItem(key: string, value: string): void {
+        try {
+            localStorage.setItem(key, value);
+        } catch {
+            // localStorage may be blocked
+        }
+    },
+    removeItem(key: string): void {
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            // localStorage may be blocked
+        }
+    },
+};
+
 export function getImageUrl(path: string | null, productId?: number, sortOrder?: number): string {
     if (!path) {
         // Fallback to picsum.photos when no path

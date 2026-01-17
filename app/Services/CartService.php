@@ -119,8 +119,8 @@ class CartService
 
     public function getCartData(Cart $cart): array
     {
-        // Only load primary image, not all images
-        $cart->load(['items.product.primaryImage']);
+        // Load images for cart items (needed for getPrimaryImageUrl fallback)
+        $cart->load(['items.product.images']);
 
         $items = $cart->items->map(function ($item) {
             return [
