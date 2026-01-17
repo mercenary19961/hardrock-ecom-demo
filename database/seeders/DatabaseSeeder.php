@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SaleProductsSeeder::class,         // Add sale discounts to products
             OrderSeeder::class,
             ReviewSeeder::class,               // Demo reviews for products
+            CouponSeeder::class,               // Discount coupons
         ]);
     }
 }
