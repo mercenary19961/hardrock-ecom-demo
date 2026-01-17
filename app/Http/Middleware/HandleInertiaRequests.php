@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Category;
 use App\Services\CartService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -44,11 +45,13 @@ class HandleInertiaRequests extends Middleware
             'cart' => fn () => $this->cartService->getCartData(
                 $this->cartService->getCart($request->user())
             ),
-            'categories' => fn () => Category::query()
-                ->whereNull('parent_id')
-                ->active()
-                ->ordered()
-                ->get(),
+            'categories' => fn () => Cache::remember('nav_categories', 3600, fn () =>
+                Category::query()
+                    ->whereNull('parent_id')
+                    ->active()
+                    ->ordered()
+                    ->get()
+            ),
         ];
     }
 }

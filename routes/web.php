@@ -12,6 +12,7 @@ use App\Http\Controllers\Shop\ProfileController as ShopProfileController;
 use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 // Shop routes
@@ -77,6 +78,37 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile/avatar', [ShopProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
     Route::delete('/profile', [ShopProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
+});
+
+// Cache health check (temporary - remove after verifying Redis works)
+Route::get('/cache-health', function () {
+    try {
+        $driver = config('cache.default');
+        $testKey = 'health_check_' . time();
+
+        // Test write
+        Cache::put($testKey, 'working', 60);
+
+        // Test read
+        $value = Cache::get($testKey);
+
+        // Cleanup
+        Cache::forget($testKey);
+
+        return response()->json([
+            'status' => 'ok',
+            'cache_driver' => $driver,
+            'test_result' => $value === 'working' ? 'pass' : 'fail',
+            'redis_host' => config('database.redis.default.host'),
+            'redis_port' => config('database.redis.default.port'),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'cache_driver' => config('cache.default'),
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 });
 
 // Admin routes
