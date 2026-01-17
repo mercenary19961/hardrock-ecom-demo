@@ -34,9 +34,6 @@ export function usePolling(options: UsePollingOptions = {}) {
 
         router.reload({
             only: [], // Empty array reloads all props
-            preserveState: true,
-            preserveScroll: true,
-            showProgress: false, // Disable loading indicator for background refresh
         });
     }, [onlyWhenVisible]);
 
