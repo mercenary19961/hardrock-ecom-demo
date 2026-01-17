@@ -39,6 +39,8 @@ import {
     LogOut,
     Shield,
     Ticket,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 // Map category slugs to icons
@@ -77,6 +79,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
     const [logoPulse, setLogoPulse] = useState(false);
     const [showCategoryNav, setShowCategoryNav] = useState(true);
     const lastScrollY = useRef(0);
+    const categoryNavRef = useRef<HTMLElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
 
     // Logo pulse animation every 15 seconds
     useEffect(() => {
@@ -118,6 +123,49 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
         };
     }, [wishlistItems.length]);
 
+    // Check if category nav can scroll left/right
+    const checkCategoryNavScroll = () => {
+        const nav = categoryNavRef.current;
+        if (nav) {
+            const { scrollLeft, scrollWidth, clientWidth } = nav;
+            setCanScrollLeft(scrollLeft > 0);
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+        }
+    };
+
+    // Scroll category nav
+    const scrollCategoryNav = (direction: "left" | "right") => {
+        const nav = categoryNavRef.current;
+        if (nav) {
+            const scrollAmount = 200;
+            // RTL-aware scrolling
+            const actualDirection =
+                language === "ar"
+                    ? direction === "left"
+                        ? "right"
+                        : "left"
+                    : direction;
+            nav.scrollBy({
+                left: actualDirection === "left" ? -scrollAmount : scrollAmount,
+                behavior: "smooth",
+            });
+        }
+    };
+
+    // Monitor category nav scroll state
+    useEffect(() => {
+        const nav = categoryNavRef.current;
+        if (nav) {
+            checkCategoryNavScroll();
+            nav.addEventListener("scroll", checkCategoryNavScroll);
+            window.addEventListener("resize", checkCategoryNavScroll);
+            return () => {
+                nav.removeEventListener("scroll", checkCategoryNavScroll);
+                window.removeEventListener("resize", checkCategoryNavScroll);
+            };
+        }
+    }, [categories]);
+
     // Show/hide category nav based on scroll direction
     useEffect(() => {
         const SCROLL_THRESHOLD = 10;
@@ -152,7 +200,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-40">
                 <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-4 h-16">
+                    <div className="flex items-center gap-2 sm:gap-4 h-16">
                         {/* Logo */}
                         <Link
                             href="/"
@@ -161,7 +209,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             <img
                                 src="/images/logo-title-2.webp"
                                 alt="HardRock"
-                                className={`h-8 w-auto transition-transform duration-700 ${
+                                className={`h-7 sm:h-8 w-auto transition-transform duration-700 ${
                                     logoPulse ? "scale-110" : "scale-100"
                                 }`}
                             />
@@ -173,15 +221,15 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center space-x-2 ml-auto">
+                        <div className="flex items-center space-x-1 sm:space-x-2 ml-auto">
                             {/* Wishlist */}
                             <button
                                 onClick={() => setWishlistOpen(true)}
-                                className={`relative p-2 text-brand-purple hover:text-brand-purple-700 transition-transform duration-300 ${
+                                className={`relative p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700 transition-transform duration-300 ${
                                     wishlistPulse ? "scale-125" : "scale-100"
                                 }`}
                             >
-                                <HeartIcon className="h-6 w-6" />
+                                <HeartIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                                 {wishlistItems.length > 0 && (
                                     <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full" />
                                 )}
@@ -190,9 +238,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* Cart */}
                             <button
                                 onClick={() => setCartOpen(true)}
-                                className="relative p-2 text-brand-purple hover:text-brand-purple-700"
+                                className="relative p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700"
                             >
-                                <ShoppingBagIcon className="h-6 w-6" />
+                                <ShoppingBagIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                                 {cart.total_items > 0 && (
                                     <span className="absolute top-0 right-0 h-4 w-4 bg-brand-orange text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                                         {formatNumber(
@@ -206,17 +254,17 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             {/* User Menu */}
                             {auth.user ? (
                                 <div className="relative group">
-                                    <button className="flex items-center space-x-1 p-2 text-brand-purple hover:text-brand-purple-700">
+                                    <button className="flex items-center space-x-0.5 sm:space-x-1 p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700">
                                         {auth.user.avatar ? (
                                             <img
                                                 src={`/storage/${auth.user.avatar}`}
                                                 alt={auth.user.name}
-                                                className="h-7 w-7 rounded-full object-cover border-2 border-brand-purple/20"
+                                                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover border-2 border-brand-purple/20"
                                             />
                                         ) : (
-                                            <UserIcon className="h-6 w-6" />
+                                            <UserIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                                         )}
-                                        <ChevronDownIcon className="h-4 w-4" />
+                                        <ChevronDownIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </button>
                                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                                         <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-brand-purple/5 to-brand-orange/5 rounded-t-xl">
@@ -297,10 +345,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="p-2 text-brand-purple hover:text-brand-purple-700"
+                                    className="p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700"
                                     title={t("nav:login")}
                                 >
-                                    <UserIcon className="h-6 w-6 md:hidden" />
+                                    <UserIcon className="h-5 w-5 sm:h-6 sm:w-6 md:hidden" />
                                     <span className="hidden md:inline font-medium">
                                         {t("nav:login")}
                                     </span>
@@ -312,14 +360,14 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 onClick={() =>
                                     setLanguage(language === "en" ? "ar" : "en")
                                 }
-                                className="flex items-center gap-1 p-2 text-brand-purple hover:text-brand-purple-700 font-medium text-sm border border-brand-purple-200 rounded-full hover:bg-brand-purple-50 transition-colors"
+                                className="flex items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700 font-medium text-xs sm:text-sm border border-brand-purple-200 rounded-full hover:bg-brand-purple-50 transition-colors"
                                 title={
                                     language === "en"
                                         ? "Switch to Arabic"
                                         : "التبديل إلى الإنجليزية"
                                 }
                             >
-                                <GlobeAltIcon className="h-4 w-4" />
+                                <GlobeAltIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 <span>{language === "en" ? "AR" : "EN"}</span>
                             </button>
 
@@ -328,12 +376,12 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                 onClick={() =>
                                     setMobileMenuOpen(!mobileMenuOpen)
                                 }
-                                className="md:hidden p-2 text-brand-purple hover:text-brand-purple-700"
+                                className="md:hidden p-1.5 sm:p-2 text-brand-purple hover:text-brand-purple-700"
                             >
                                 {mobileMenuOpen ? (
-                                    <XMarkIcon className="h-6 w-6" />
+                                    <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                                 ) : (
-                                    <Bars3Icon className="h-6 w-6" />
+                                    <Bars3Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                                 )}
                             </button>
                         </div>
@@ -368,8 +416,22 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                     showCategoryNav ? "top-16 opacity-100" : "-top-10 opacity-0"
                 }`}
             >
-                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <nav className="flex items-center md:justify-center gap-6 md:gap-8 h-12 overflow-x-auto scrollbar-hide">
+                <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 relative">
+                    {/* Left scroll button */}
+                    {canScrollLeft && (
+                        <button
+                            onClick={() => scrollCategoryNav("left")}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-10 w-8 flex items-center justify-center bg-gradient-to-r from-white via-white to-transparent"
+                            aria-label="Scroll left"
+                        >
+                            <ChevronLeft className="h-5 w-5 text-gray-600 hover:text-brand-purple transition-colors" />
+                        </button>
+                    )}
+
+                    <nav
+                        ref={categoryNavRef}
+                        className="flex items-center md:justify-center gap-6 md:gap-8 h-12 overflow-x-auto scrollbar-hide px-2"
+                    >
                         {categories?.map((category) => {
                             const isOnCategoryPage =
                                 window.location.pathname.startsWith(
@@ -428,6 +490,17 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                             );
                         })}
                     </nav>
+
+                    {/* Right scroll button */}
+                    {canScrollRight && (
+                        <button
+                            onClick={() => scrollCategoryNav("right")}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-10 w-8 flex items-center justify-center bg-gradient-to-l from-white via-white to-transparent"
+                            aria-label="Scroll right"
+                        >
+                            <ChevronRight className="h-5 w-5 text-gray-600 hover:text-brand-purple transition-colors" />
+                        </button>
+                    )}
                 </div>
             </div>
 
