@@ -26,7 +26,10 @@ export function CategoryNav({ categories }: CategoryNavProps) {
     return (
         <nav className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
             {categories.map((category) => {
-                const bgImage = categoryImages[category.slug];
+                // Use custom uploaded image if available, otherwise fall back to default
+                const bgImage = category.image
+                    ? `/storage/${category.image}`
+                    : categoryImages[category.slug];
 
                 return (
                     <Link

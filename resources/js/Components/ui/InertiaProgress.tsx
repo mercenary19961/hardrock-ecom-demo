@@ -7,11 +7,21 @@ export function InertiaProgress() {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const removeStartListener = router.on('start', () => {
+        const removeStartListener = router.on('start', (event) => {
+            // Don't show loading for silent/background requests (polling)
+            const visit = event.detail.visit;
+            if (visit.showProgress === false) {
+                return;
+            }
             setLoading(true);
         });
 
-        const removeFinishListener = router.on('finish', () => {
+        const removeFinishListener = router.on('finish', (event) => {
+            // Only hide if we were showing (handles silent requests)
+            const visit = event.detail.visit;
+            if (visit.showProgress === false) {
+                return;
+            }
             setTimeout(() => {
                 setLoading(false);
             }, 200);

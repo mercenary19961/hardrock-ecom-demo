@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Settings, Folder } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
@@ -96,7 +96,10 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <FolderTree className="h-6 w-6 text-purple-600" />
+                        Categories
+                    </h1>
                     <Link href="/admin/categories/create">
                         <Button>
                             <Plus className="h-4 w-4 mr-2" />
@@ -110,36 +113,39 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                 <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => handleStatusFilter('all')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             !filters.status
                                 ? 'bg-gray-900 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
+                        <Layers className="h-4 w-4" />
                         All
-                        <span className="ml-1 opacity-70">({totalCategories})</span>
+                        <span className="opacity-70">({totalCategories})</span>
                     </button>
                     <button
                         onClick={() => handleStatusFilter('active')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             filters.status === 'active'
                                 ? 'bg-gray-900 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
+                        <CheckCircle className="h-4 w-4" />
                         Active
-                        <span className="ml-1 opacity-70">({statusCounts.active})</span>
+                        <span className="opacity-70">({statusCounts.active})</span>
                     </button>
                     <button
                         onClick={() => handleStatusFilter('inactive')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             filters.status === 'inactive'
                                 ? 'bg-gray-900 text-white'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
+                        <XCircle className="h-4 w-4" />
                         Inactive
-                        <span className="ml-1 opacity-70">({statusCounts.inactive})</span>
+                        <span className="opacity-70">({statusCounts.inactive})</span>
                     </button>
                 </div>
 
@@ -176,31 +182,50 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                             <thead className="bg-gray-50 border-b">
                                 <tr>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
+                                        <div className="flex items-center gap-1.5">
+                                            <Type className="h-3.5 w-3.5" />
+                                            Name
+                                        </div>
                                     </th>
                                     <th className="hidden md:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Slug
+                                        <div className="flex items-center gap-1.5">
+                                            <Link2 className="h-3.5 w-3.5" />
+                                            Slug
+                                        </div>
                                     </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Products
+                                        <div className="flex items-center gap-1.5">
+                                            <Package className="h-3.5 w-3.5" />
+                                            Products
+                                        </div>
                                     </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
+                                        <div className="flex items-center gap-1.5">
+                                            <ToggleLeft className="h-3.5 w-3.5" />
+                                            Status
+                                        </div>
                                     </th>
                                     <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
+                                        <div className="flex items-center justify-end gap-1.5">
+                                            <Settings className="h-3.5 w-3.5" />
+                                            Actions
+                                        </div>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {categories.data.map((category) => (
-                                    <tr key={category.id} className="hover:bg-gray-50">
+                                    <tr key={category.id} className={`hover:bg-gray-50 ${category.parent_id ? 'bg-gray-50/50' : ''}`}>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center font-medium text-gray-900">
-                                                {category.parent_id && (
+                                            <div className={`flex items-center ${category.parent_id ? 'pl-6' : ''}`}>
+                                                {category.parent_id ? (
                                                     <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                                                ) : (
+                                                    <Folder className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
                                                 )}
-                                                {category.name}
+                                                <span className={category.parent_id ? 'text-gray-700' : 'font-medium text-gray-900'}>
+                                                    {category.name}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-gray-500">

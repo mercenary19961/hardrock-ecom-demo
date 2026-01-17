@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -13,16 +14,17 @@ class HomeController extends Controller
 {
     public function index(): Response
     {
-        // Only load categories immediately (fast query ~10ms)
-        // This allows the page shell to render quickly
-        $categories = Category::active()
-            ->parents()
-            ->ordered()
-            ->withCount('activeProducts')
-            ->get();
+        // Cache categories for 1 hour - they rarely change
+        $categories = Cache::remember('home_categories', 3600, fn () =>
+            Category::active()
+                ->parents()
+                ->ordered()
+                ->withCount('activeProducts')
+                ->get()
+        );
 
         return Inertia::render('Shop/Home', [
-            // Categories load immediately for page structure
+            // Categories load immediately for page structure (cached)
             'categories' => $categories,
 
             // Featured categories - deferred (loads after initial render)
@@ -94,30 +96,21 @@ class HomeController extends Controller
 
     /**
      * Get sale products with variety across categories - OPTIMIZED
-     * Limited query with variety logic handled in PHP
+     * Filter discount in SQL and limit query results
      */
     private function getSaleProductsWithVariety(int $limit = 8, int $minDiscountPercent = 15): Collection
     {
-        // Limit to 50 products max - enough for variety selection without loading everything
-        $allSaleProducts = Product::with(['category', 'images'])
+        // Filter by minimum discount in SQL - much faster than loading 50 and filtering
+        $productsToUse = Product::with(['category', 'images'])
             ->active()
             ->whereNotNull('compare_price')
             ->where('compare_price', '>', 0)
             ->whereColumn('compare_price', '>', 'price')
+            // Filter discount percentage in SQL
+            ->whereRaw('((compare_price - price) * 100.0 / compare_price) >= ?', [$minDiscountPercent])
             ->orderByRaw('((compare_price - price) * 1.0 / compare_price) DESC')
-            ->take(50)
+            ->take(20)  // Reduced from 50 - enough for variety with 8 final products
             ->get();
-
-        // Filter for minimum discount in PHP (avoids second query)
-        $highDiscountProducts = $allSaleProducts->filter(function ($product) use ($minDiscountPercent) {
-            $discount = (($product->compare_price - $product->price) / $product->compare_price) * 100;
-            return $discount >= $minDiscountPercent;
-        });
-
-        // Use high discount products if enough, otherwise use all
-        $productsToUse = $highDiscountProducts->count() >= $limit
-            ? $highDiscountProducts
-            : $allSaleProducts;
 
         // Group products by parent category for variety (category already eager loaded)
         $productsByCategory = $productsToUse->groupBy(function ($product) {

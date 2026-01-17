@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,23 +15,87 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        protected UndoService $undoService
+    ) {}
+
     public function index(Request $request): Response
     {
-        $query = Category::withCount('products');
+        // Build hierarchically ordered categories (parent followed by children)
+        $searchTerm = $request->filled('search') ? $request->search : null;
+        $statusFilter = $request->filled('status') ? $request->status : null;
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        // Get all categories ordered hierarchically
+        $allCategories = collect();
+
+        // First, get parent categories
+        $parentQuery = Category::withCount('products')
+            ->whereNull('parent_id')
+            ->ordered();
+
+        if ($searchTerm) {
+            // When searching, include parents that match OR have matching children
+            $matchingChildParentIds = Category::where('name', 'like', '%' . $searchTerm . '%')
+                ->whereNotNull('parent_id')
+                ->pluck('parent_id')
+                ->unique();
+
+            $parentQuery->where(function ($q) use ($searchTerm, $matchingChildParentIds) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhereIn('id', $matchingChildParentIds);
+            });
         }
 
-        if ($request->filled('status')) {
-            $query->where('is_active', $request->status === 'active');
+        if ($statusFilter) {
+            $parentQuery->where('is_active', $statusFilter === 'active');
         }
 
+        $parents = $parentQuery->get();
+
+        // For each parent, add it and then its children
+        foreach ($parents as $parent) {
+            // Get children of this parent
+            $childQuery = Category::withCount('products')
+                ->where('parent_id', $parent->id)
+                ->ordered();
+
+            if ($searchTerm) {
+                $childQuery->where('name', 'like', '%' . $searchTerm . '%');
+            }
+
+            if ($statusFilter) {
+                $childQuery->where('is_active', $statusFilter === 'active');
+            }
+
+            $children = $childQuery->get();
+
+            // Calculate total products for parent (parent's own products + all children's products)
+            $childrenProductCount = $children->sum('products_count');
+            $parent->products_count = $parent->products_count + $childrenProductCount;
+
+            $allCategories->push($parent);
+
+            foreach ($children as $child) {
+                $allCategories->push($child);
+            }
+        }
+
+        // Manual pagination of the hierarchical collection
         $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
             ? (int) $request->per_page
             : 15;
 
-        $categories = $query->ordered()->paginate($perPage)->withQueryString();
+        $page = $request->input('page', 1);
+        $total = $allCategories->count();
+        $items = $allCategories->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $categories = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         // Get counts for status filters
         $statusCounts = [
@@ -78,9 +143,13 @@ class CategoryController extends Controller
             ->ordered()
             ->get(['id', 'name']);
 
+        // Get undo metadata if available (pass current model for diff computation)
+        $undoMeta = $this->undoService->getUndoMeta('category', $category->id, $category);
+
         return Inertia::render('Admin/Categories/Edit', [
             'category' => $category,
             'parentCategories' => $parentCategories,
+            'undoMeta' => $undoMeta,
         ]);
     }
 
@@ -88,10 +157,17 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
 
+        // Ensure is_active is explicitly set (handles false values in form data)
+        $data['is_active'] = $request->boolean('is_active');
+
+        // Save current state for undo BEFORE making changes (only if there are actual changes)
+        $oldImagePath = $category->image;
+        $this->undoService->saveState($category, $oldImagePath, $data);
+
         if ($request->hasFile('image')) {
-            // Delete old image
+            // Mark old image for potential deletion (will be cleaned up if undo state is cleared)
             if ($category->image) {
-                Storage::disk('public')->delete($category->image);
+                $this->undoService->markImageForDeletion('category', $category->id, $category->image);
             }
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
@@ -99,7 +175,7 @@ class CategoryController extends Controller
         $category->update($data);
 
         return redirect()
-            ->route('admin.categories.index')
+            ->route('admin.categories.edit', $category)
             ->with('success', 'Category updated successfully.');
     }
 

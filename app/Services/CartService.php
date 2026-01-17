@@ -21,15 +21,25 @@ class CartService
 
     protected function getUserCart(User $user): Cart
     {
-        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+        // Use firstOr to avoid unnecessary INSERT on every request
+        $cart = Cart::where('user_id', $user->id)->first();
 
-        // Merge guest cart if exists
+        if (!$cart) {
+            $cart = Cart::create(['user_id' => $user->id]);
+        }
+
+        // Only check for guest cart merge if session has potential cart
         $sessionId = Session::getId();
-        $guestCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
+        if ($sessionId) {
+            $guestCart = Cart::where('session_id', $sessionId)
+                ->whereNull('user_id')
+                ->whereHas('items')  // Only fetch if it has items
+                ->first();
 
-        if ($guestCart && $guestCart->items->isNotEmpty()) {
-            $this->mergeCarts($guestCart, $cart);
-            $guestCart->delete();
+            if ($guestCart) {
+                $this->mergeCarts($guestCart, $cart);
+                $guestCart->delete();
+            }
         }
 
         return $cart->load('items.product');
@@ -39,9 +49,16 @@ class CartService
     {
         $sessionId = Session::getId();
 
-        return Cart::firstOrCreate(
-            ['session_id' => $sessionId, 'user_id' => null]
-        )->load('items.product');
+        // Use first + create pattern to avoid unnecessary INSERT attempts
+        $cart = Cart::where('session_id', $sessionId)
+            ->whereNull('user_id')
+            ->first();
+
+        if (!$cart) {
+            $cart = Cart::create(['session_id' => $sessionId, 'user_id' => null]);
+        }
+
+        return $cart->load('items.product');
     }
 
     protected function mergeCarts(Cart $source, Cart $target): void
@@ -102,7 +119,8 @@ class CartService
 
     public function getCartData(Cart $cart): array
     {
-        $cart->load('items.product.images');
+        // Load images for cart items (needed for getPrimaryImageUrl fallback)
+        $cart->load(['items.product.images']);
 
         $items = $cart->items->map(function ($item) {
             return [

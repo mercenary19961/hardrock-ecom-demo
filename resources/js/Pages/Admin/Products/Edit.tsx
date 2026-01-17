@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Card, CardHeader, CardContent, Select } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor } from '@/Components/ui';
 import { Category, Product } from '@/types/models';
 import { ArrowLeft, X } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
@@ -15,9 +15,12 @@ export default function EditProduct({ product, categories }: Props) {
         _method: 'PUT',
         category_id: product.category_id.toString(),
         name: product.name,
+        name_ar: product.name_ar || '',
         slug: product.slug,
         description: product.description || '',
+        description_ar: product.description_ar || '',
         short_description: product.short_description || '',
+        short_description_ar: product.short_description_ar || '',
         price: product.price.toString(),
         compare_price: product.compare_price?.toString() || '',
         sku: product.sku,
@@ -27,6 +30,12 @@ export default function EditProduct({ product, categories }: Props) {
         is_featured: product.is_featured,
         images: [] as File[],
         delete_images: [] as number[],
+        // Variant fields
+        color: product.color || '',
+        color_hex: product.color_hex || '',
+        available_sizes: product.available_sizes || [] as string[],
+        size_stock: product.size_stock || {} as Record<string, number>,
+        product_group: product.product_group || '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -82,13 +91,23 @@ export default function EditProduct({ product, categories }: Props) {
                                 }))}
                             />
 
-                            <Input
-                                label="Name"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                error={errors.name}
-                                required
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="Name (English)"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    error={errors.name}
+                                    required
+                                />
+                                <Input
+                                    label="Name (Arabic)"
+                                    value={data.name_ar}
+                                    onChange={(e) => setData('name_ar', e.target.value)}
+                                    error={errors.name_ar}
+                                    dir="rtl"
+                                    placeholder="الاسم بالعربية"
+                                />
+                            </div>
 
                             <Input
                                 label="Slug"
@@ -97,32 +116,43 @@ export default function EditProduct({ product, categories }: Props) {
                                 error={errors.slug}
                             />
 
-                            <div>
-                                <label htmlFor="edit_short_description" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Short Description
-                                </label>
-                                <textarea
-                                    id="edit_short_description"
-                                    name="short_description"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Textarea
+                                    label="Short Description (English)"
                                     value={data.short_description}
                                     onChange={(e) => setData('short_description', e.target.value)}
+                                    error={errors.short_description}
                                     rows={2}
                                     maxLength={500}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
+                                />
+                                <Textarea
+                                    label="Short Description (Arabic)"
+                                    value={data.short_description_ar}
+                                    onChange={(e) => setData('short_description_ar', e.target.value)}
+                                    error={errors.short_description_ar}
+                                    rows={2}
+                                    maxLength={500}
+                                    dir="rtl"
+                                    placeholder="الوصف المختصر بالعربية"
                                 />
                             </div>
 
-                            <div>
-                                <label htmlFor="edit_description" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
-                                </label>
-                                <textarea
-                                    id="edit_description"
-                                    name="description"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Textarea
+                                    label="Description (English)"
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
+                                    error={errors.description}
                                     rows={5}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-gray-900 outline-none"
+                                />
+                                <Textarea
+                                    label="Description (Arabic)"
+                                    value={data.description_ar}
+                                    onChange={(e) => setData('description_ar', e.target.value)}
+                                    error={errors.description_ar}
+                                    rows={5}
+                                    dir="rtl"
+                                    placeholder="الوصف بالعربية"
                                 />
                             </div>
                         </CardContent>
@@ -188,6 +218,45 @@ export default function EditProduct({ product, categories }: Props) {
                                     Leave empty to use the category's threshold. Set a value to override for this product only.
                                 </p>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <h2 className="text-lg font-semibold">Variant Options</h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Optional: Add color and size variants for this product
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <ColorPicker
+                                label="Color"
+                                colorName={data.color}
+                                colorHex={data.color_hex}
+                                onColorNameChange={(value) => setData('color', value)}
+                                onColorHexChange={(value) => setData('color_hex', value)}
+                                error={errors.color || errors.color_hex}
+                            />
+
+                            <SizeStockEditor
+                                label="Sizes & Stock"
+                                sizes={data.available_sizes}
+                                sizeStock={data.size_stock}
+                                onSizesChange={(sizes) => setData('available_sizes', sizes)}
+                                onSizeStockChange={(stock) => setData('size_stock', stock)}
+                                error={errors.available_sizes || errors.size_stock}
+                            />
+
+                            <Input
+                                label="Product Group (optional)"
+                                value={data.product_group}
+                                onChange={(e) => setData('product_group', e.target.value)}
+                                error={errors.product_group}
+                                placeholder="Group related color variants together"
+                            />
+                            <p className="text-sm text-gray-500 -mt-3">
+                                Use the same group name for products that are color variants of each other.
+                            </p>
                         </CardContent>
                     </Card>
 

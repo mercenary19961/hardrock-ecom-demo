@@ -16,12 +16,14 @@
 8. [Authentication Pages](#authentication-pages)
 9. [UI Effects & Animations](#ui-effects--animations)
 10. [SPA Navigation](#spa-navigation)
-11. [Responsive Design](#responsive-design)
-12. [File Reference](#file-reference)
-13. [Database & Seeding](#database--seeding)
-14. [Image Handling](#image-handling)
-15. [Data Models](#data-models)
-16. [Common Issues & Solutions](#common-issues--solutions)
+11. [Progressive Loading](#progressive-loading)
+12. [Performance Optimizations](#performance-optimizations)
+13. [Responsive Design](#responsive-design)
+14. [File Reference](#file-reference)
+15. [Database & Seeding](#database--seeding)
+16. [Image Handling](#image-handling)
+17. [Data Models](#data-models)
+18. [Common Issues & Solutions](#common-issues--solutions)
 
 ---
 
@@ -719,6 +721,182 @@ The `only` option tells Inertia to only fetch specified props from the server, m
 
 ---
 
+## Progressive Loading
+
+### Overview
+
+The application uses Inertia.js deferred props (`Inertia::defer()`) to implement progressive loading. This allows the page shell to render immediately while heavy data loads asynchronously.
+
+### How It Works
+
+**Backend (Laravel):**
+```php
+return Inertia::render('Shop/Home', [
+    // Immediate props - render right away
+    'categories' => $categories,
+
+    // Deferred props - load after initial render
+    'featuredCategories' => Inertia::defer(fn () => $this->getProducts(), 'featured'),
+    'saleProducts' => Inertia::defer(fn () => $this->getSaleProducts(), 'sale'),
+]);
+```
+
+**Frontend (React):**
+```tsx
+import { Deferred } from '@inertiajs/react';
+
+// Wrap deferred content with fallback skeleton
+<Deferred data="featuredCategories" fallback={<ProductGridSkeleton count={8} />}>
+    {featuredCategories.map(category => (
+        <CategorySection key={category.slug} {...category} />
+    ))}
+</Deferred>
+```
+
+### Deferred Groups
+
+Props can be grouped to load together:
+- `'featured'` - Featured category products
+- `'sale'` - Sale products section
+- `'products'` - Category page product grid
+- `'filterMeta'` - Filter metadata (price range, discount brackets)
+- `'reviews'` - Product reviews section
+- `'related'` - Related products
+- `'userReview'` - User review status
+
+### Pages Using Progressive Loading
+
+| Page | Immediate Props | Deferred Props |
+|------|-----------------|----------------|
+| **Home** | categories | featuredCategories, saleProducts |
+| **Category** | category, subcategories, filters, sort | products, priceRange, productsWithColors, productsWithSizes, maxDiscount, availableDiscountBrackets |
+| **Product** | product, breadcrumbs | reviews, ratingDistribution, relatedProducts, canReview, userReview |
+
+### ProductGridSkeleton Component
+
+File: `Components/shop/ProductGridSkeleton.tsx`
+
+Animated placeholder while products load:
+```tsx
+<ProductGridSkeleton count={8} />  // 8 skeleton cards
+<ProductGridSkeleton count={12} /> // 12 skeleton cards
+```
+
+### Default Values for Deferred Props
+
+When using deferred props, provide default values in the component to prevent errors during initial render:
+
+```tsx
+export default function Category({
+    products,
+    priceRange = { min: 0, max: 1000 },  // Default fallback
+    productsWithColors = 0,
+    productsWithSizes = 0,
+    availableDiscountBrackets = [],
+}: Props) {
+    // Safe access for potentially undefined deferred data
+    const total = products?.total ?? 0;
+}
+```
+
+### Benefits
+
+1. **Faster perceived load time** - Page structure visible immediately
+2. **Better UX** - Users see content loading progressively
+3. **Railway optimization** - Reduces time-to-first-byte on slower deployments
+4. **Parallel loading** - Different data groups can load concurrently
+
+---
+
+## Performance Optimizations
+
+### Database Indexes
+
+#### Products Table Indexes
+
+Migration: `database/migrations/2026_01_14_123825_add_category_price_composite_index_to_products_table.php`
+
+| Index Name | Columns | Purpose |
+|------------|---------|---------|
+| `products_category_price_idx` | `category_id, is_active, price` | Price range queries (MIN/MAX) |
+| `products_category_discount_idx` | `category_id, is_active, compare_price, price` | Discount calculations |
+| `products_category_color_idx` | `category_id, is_active, color` | Color filter queries |
+| `products_category_active_idx` | `category_id, is_active` | General category filtering |
+| `products_active_sale_idx` | `is_active, compare_price` | Sale products query |
+| `products_active_popular_idx` | `is_active, times_purchased` | Popular products sorting |
+| `products_active_newest_idx` | `is_active, created_at` | Newest products sorting |
+| `products_active_price_idx` | `is_active, price` | Price filtering |
+
+**Note:** JSON columns (`available_sizes`, `size_stock`) cannot be indexed directly in MySQL.
+
+### Query Caching
+
+Filter metadata is cached for 10 minutes to reduce database load:
+
+```php
+private function getPriceRange(array $categoryIds): array
+{
+    $cacheKey = 'category_price_range_' . implode('_', $categoryIds);
+
+    return Cache::remember($cacheKey, 600, function () use ($categoryIds) {
+        // Query executes only if cache miss
+        return [...];
+    });
+}
+```
+
+**Cached queries:**
+| Method | Cache Key Pattern | TTL |
+|--------|------------------|-----|
+| `getPriceRange()` | `category_price_range_{ids}` | 10 min |
+| `getProductsWithColors()` | `category_products_with_colors_{ids}` | 10 min |
+| `getProductsWithSizes()` | `category_products_with_sizes_{ids}` | 10 min |
+| `getMaxDiscount()` | `category_max_discount_{ids}` | 10 min |
+| `getDiscountBrackets()` | `category_discount_brackets_{ids}` | 10 min |
+
+### Parameterized Queries (SQL Injection Prevention)
+
+All raw SQL queries use parameterized placeholders:
+
+```php
+// CORRECT - Parameterized
+$placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+$result = DB::selectOne("
+    SELECT MIN(price) as min_price, MAX(price) as max_price
+    FROM products
+    WHERE category_id IN ({$placeholders}) AND is_active = 1
+", $categoryIds);
+
+// WRONG - String interpolation (SQL injection risk)
+$ids = implode(',', $categoryIds);
+$result = DB::selectOne("SELECT ... WHERE category_id IN ({$ids})");
+```
+
+### Home Page Optimization
+
+**Query limits:**
+- Featured categories: 8 products per category (not all products)
+- Sale products: Top 50 by discount, then filter in PHP
+- Categories: Only parent categories with `withCount('activeProducts')`
+
+```php
+// OPTIMIZED: Query with LIMIT
+Product::whereIn('category_id', $categoryIds)
+    ->active()
+    ->orderBy('times_purchased', 'desc')
+    ->take(8)  // Limit in SQL, not PHP
+    ->get();
+```
+
+### Image Lazy Loading
+
+Product images use native lazy loading:
+```tsx
+<img loading="lazy" src={imageUrl} alt={productName} />
+```
+
+---
+
 ## Responsive Design
 
 ### Breakpoints
@@ -768,6 +946,7 @@ The `only` option tells Inertia to only fetch specified props from the server, m
 |------|-------------|
 | `Components/shop/ProductCard.tsx` | Product card in grids |
 | `Components/shop/ProductGrid.tsx` | Product grid layout |
+| `Components/shop/ProductGridSkeleton.tsx` | Skeleton loader for progressive loading |
 | `Components/shop/HeroBanner.tsx` | Homepage hero carousel (arrows, no dots) |
 | `Components/shop/CategoryNav.tsx` | Homepage category images (full-card images) |
 | `Components/shop/CartDrawer.tsx` | Slide-out cart panel (Arabic localized) |
@@ -971,3 +1150,37 @@ The `dir="rtl"` attribute doesn't reliably work for password input fields. Use i
 />
 ```
 Also remember to swap padding and reposition the toggle button (see Authentication Pages section).
+
+### Deferred Props TypeError on Initial Render
+When using `Inertia::defer()`, props are `undefined` during initial render. Always provide default values:
+```typescript
+// Problem: TypeError when accessing deferred prop properties
+export default function Category({ products, priceRange }: Props) {
+    return <div>{priceRange.min}</div>;  // TypeError: Cannot read property 'min' of undefined
+}
+
+// Solution: Default values in destructuring
+export default function Category({
+    products,
+    priceRange = { min: 0, max: 1000 },  // Default fallback
+}: Props) {
+    // Also use optional chaining for nested access
+    const total = products?.total ?? 0;
+}
+```
+
+### MySQL Index Key Length Error
+MySQL has a max key length of 3072 bytes. JSON columns cannot be indexed:
+```php
+// Problem: Key too long error
+$table->index(['category_id', 'is_active', 'available_sizes']);  // Fails - JSON column
+
+// Solution: Don't index JSON columns, use separate indexed flags if needed
+$table->index(['category_id', 'is_active', 'color']);  // Works - varchar column
+```
+
+### Database Connection "No Database Selected"
+If you see `SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected`:
+1. Check `.env` file has `DB_DATABASE=hardrock_ecom_demo` (not empty)
+2. Run `php artisan config:clear` after changes
+3. Restart the dev server
