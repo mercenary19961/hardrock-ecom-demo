@@ -90,14 +90,26 @@ function StarRating({
 
 interface Props {
     product: ProductType;
-    reviews: PaginatedData<Review>;
-    ratingDistribution: Record<number, number>;
-    relatedProducts: ProductType[];
+    reviews?: PaginatedData<Review>;
+    ratingDistribution?: Record<number, number>;
+    relatedProducts?: ProductType[];
     breadcrumbs: Breadcrumb[];
-    canReview: boolean;
-    userReview: Review | null;
+    canReview?: boolean;
+    userReview?: Review | null;
     auth?: { user: { id: number; name: string; email: string } | null };
 }
+
+// Default empty paginated data for deferred props
+const defaultReviews: PaginatedData<Review> = {
+    data: [],
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+    from: 0,
+    to: 0,
+    links: [],
+};
 
 function ProductContent({
     product,
@@ -485,10 +497,10 @@ function ProductContent({
                 >
                     <ReviewSection
                         product={product}
-                        reviews={reviews}
-                        ratingDistribution={ratingDistribution}
-                        canReview={canReview}
-                        userReview={userReview}
+                        reviews={reviews ?? defaultReviews}
+                        ratingDistribution={ratingDistribution ?? {}}
+                        canReview={canReview ?? false}
+                        userReview={userReview ?? null}
                         isAuthenticated={!!auth?.user}
                     />
                 </Deferred>
