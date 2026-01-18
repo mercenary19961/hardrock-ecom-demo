@@ -718,9 +718,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             {/* Mujeeb Floating Action Button */}
             <FloatingActionButton
                 href="https://www.agentsouq.ai/business/demo-amman"
-                ariaLabel="Try Mujeeb AI Assistant"
+                ariaLabel={language === "ar" ? "جرب مساعد مجيب الذكي" : "Try Mujeeb AI Assistant"}
                 backgroundColor="transparent"
-                label="Try Mujeeb!"
+                label={language === "ar" ? "جرّب مجيب!" : "Try Mujeeb!"}
                 icon={
                     <img
                         src="/images/freepik__background__87785.webp"
