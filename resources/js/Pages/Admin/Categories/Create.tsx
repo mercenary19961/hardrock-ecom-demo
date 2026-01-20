@@ -128,7 +128,7 @@ export default function CreateCategory({ parentCategories }: Props) {
                                         onChange={(e) => setData('name_ar', e.target.value)}
                                         error={errors.name_ar}
                                         dir="rtl"
-                                        placeholder="الاسم بالعربية"
+                                        placeholder="اسم الفئة"
                                     />
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500">
@@ -175,7 +175,7 @@ export default function CreateCategory({ parentCategories }: Props) {
                                         error={errors.description_ar}
                                         rows={3}
                                         dir="rtl"
-                                        placeholder="الوصف بالعربية"
+                                        placeholder="وصف الفئة"
                                     />
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500">
