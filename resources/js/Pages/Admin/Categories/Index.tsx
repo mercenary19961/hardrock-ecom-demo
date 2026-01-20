@@ -96,7 +96,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <FolderTree className="h-6 w-6 text-purple-600" />
                         Categories
                     </h1>
@@ -115,8 +115,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                         onClick={() => handleStatusFilter('all')}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             !filters.status
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                     >
                         <Layers className="h-4 w-4" />
@@ -127,8 +127,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                         onClick={() => handleStatusFilter('active')}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             filters.status === 'active'
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                     >
                         <CheckCircle className="h-4 w-4" />
@@ -139,8 +139,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                         onClick={() => handleStatusFilter('inactive')}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
                             filters.status === 'inactive'
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                     >
                         <XCircle className="h-4 w-4" />
@@ -150,7 +150,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                 </div>
 
                 {/* Search */}
-                <Card>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
                         <div className="relative flex-1">
                             <label htmlFor="categories-search" className="sr-only">Search categories</label>
@@ -162,7 +162,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search categories..."
                                 autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-gray-900 outline-none"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         </div>
@@ -178,7 +178,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                 {/* Mobile Card Layout */}
                 <div className="md:hidden space-y-3">
                     {categories.data.map((category) => (
-                        <Card key={category.id} className={category.parent_id ? 'ml-4 border-l-4 border-l-gray-300' : ''}>
+                        <Card key={category.id} className={`dark:bg-gray-800 dark:border-gray-700 ${category.parent_id ? 'ml-4 border-l-4 border-l-gray-300 dark:border-l-gray-600' : ''}`}>
                             <div className="p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
@@ -188,18 +188,18 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                             ) : (
                                                 <Folder className="h-4 w-4 text-purple-500 flex-shrink-0" />
                                             )}
-                                            <span className={`truncate ${category.parent_id ? 'text-gray-700' : 'font-medium text-gray-900'}`}>
+                                            <span className={`truncate ${category.parent_id ? 'text-gray-700 dark:text-gray-300' : 'font-medium text-gray-900 dark:text-white'}`}>
                                                 {category.name}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1 truncate">{category.slug}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{category.slug}</p>
                                     </div>
                                     <Badge variant={category.is_active ? 'success' : 'default'} className="flex-shrink-0">
                                         {category.is_active ? 'Active' : 'Inactive'}
                                     </Badge>
                                 </div>
-                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                    <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
                                         <Package className="h-4 w-4" />
                                         <span className="tabular-nums">{category.products_count || 0}</span>
                                         <span>products</span>
@@ -221,7 +221,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                             onClick={() => handleDelete(category)}
                                             title="Delete"
                                         >
-                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                            <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                                         </Button>
                                     </div>
                                 </div>
@@ -229,8 +229,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                         </Card>
                     ))}
                     {categories.data.length === 0 && (
-                        <Card>
-                            <div className="text-center py-12 text-gray-500">
+                        <Card className="dark:bg-gray-800 dark:border-gray-700">
+                            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                 No categories found
                             </div>
                         </Card>
@@ -238,36 +238,36 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                 </div>
 
                 {/* Desktop Table Layout */}
-                <Card className="hidden md:block">
+                <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
+                            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center gap-1.5">
                                             <Type className="h-3.5 w-3.5" />
                                             Name
                                         </div>
                                     </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center gap-1.5">
                                             <Link2 className="h-3.5 w-3.5" />
                                             Slug
                                         </div>
                                     </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center gap-1.5">
                                             <Package className="h-3.5 w-3.5" />
                                             Products
                                         </div>
                                     </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center gap-1.5">
                                             <ToggleLeft className="h-3.5 w-3.5" />
                                             Status
                                         </div>
                                     </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <div className="flex items-center justify-end gap-1.5">
                                             <Settings className="h-3.5 w-3.5" />
                                             Actions
@@ -275,9 +275,9 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {categories.data.map((category) => (
-                                    <tr key={category.id} className={`hover:bg-gray-50 ${category.parent_id ? 'bg-gray-50/50' : ''}`}>
+                                    <tr key={category.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${category.parent_id ? 'bg-gray-50/50 dark:bg-gray-700/30' : ''}`}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className={`flex items-center ${category.parent_id ? 'pl-6' : ''}`}>
                                                 {category.parent_id ? (
@@ -285,16 +285,16 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                 ) : (
                                                     <Folder className="h-4 w-4 text-purple-500 mr-2 flex-shrink-0" />
                                                 )}
-                                                <span className={category.parent_id ? 'text-gray-700' : 'font-medium text-gray-900'}>
+                                                <span className={category.parent_id ? 'text-gray-700 dark:text-gray-300' : 'font-medium text-gray-900 dark:text-white'}>
                                                     {category.name}
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
                                             {category.slug}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="tabular-nums text-gray-900">{category.products_count || 0}</span>
+                                            <span className="tabular-nums text-gray-900 dark:text-white">{category.products_count || 0}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <Badge variant={category.is_active ? 'success' : 'default'}>
@@ -319,7 +319,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                     onClick={() => handleDelete(category)}
                                                     title="Delete"
                                                 >
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                    <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
                                                 </Button>
                                             </div>
                                         </td>
@@ -329,7 +329,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                         </table>
                     </div>
                     {categories.data.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No categories found
                         </div>
                     )}
@@ -347,8 +347,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 preserveState
                                 className={`px-3 py-2 rounded-lg text-sm ${
                                     categories.links[0].url
-                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                 }`}
                             >
                                 <ChevronLeft className="h-4 w-4" />
@@ -374,7 +374,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 return (
                                     <span key={index} className={!showOnMobile ? 'hidden sm:inline' : ''}>
                                         {showLeftEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 sm:hidden">...</span>
+                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">...</span>
                                         )}
                                         <Link
                                             href={link.url || '#'}
@@ -382,16 +382,16 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                             preserveState
                                             className={`px-3 sm:px-4 py-2 rounded-lg text-sm ${
                                                 link.active
-                                                    ? 'bg-gray-900 text-white'
+                                                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
                                                     : link.url
-                                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                             }`}
                                         >
                                             {pageNum}
                                         </Link>
                                         {showRightEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 sm:hidden">...</span>
+                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">...</span>
                                         )}
                                     </span>
                                 );
@@ -404,8 +404,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 preserveState
                                 className={`px-3 py-2 rounded-lg text-sm ${
                                     categories.links[categories.links.length - 1].url
-                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                 }`}
                             >
                                 <ChevronRight className="h-4 w-4" />
@@ -416,13 +416,13 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="categories-per-page" className="text-sm text-gray-500">Show:</label>
+                            <label htmlFor="categories-per-page" className="text-sm text-gray-500 dark:text-gray-400">Show:</label>
                             <select
                                 id="categories-per-page"
                                 name="per_page"
                                 value={perPage}
                                 onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-gray-900 outline-none min-w-[80px]"
+                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[80px]"
                             >
                                 {perPageOptions.map((option) => (
                                     <option key={option} value={option}>
