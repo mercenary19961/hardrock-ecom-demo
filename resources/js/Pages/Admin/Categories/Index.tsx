@@ -175,8 +175,70 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                     </div>
                 </Card>
 
-                {/* Table */}
-                <Card>
+                {/* Mobile Card Layout */}
+                <div className="md:hidden space-y-3">
+                    {categories.data.map((category) => (
+                        <Card key={category.id} className={category.parent_id ? 'ml-4 border-l-4 border-l-gray-300' : ''}>
+                            <div className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            {category.parent_id ? (
+                                                <CornerDownRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                            ) : (
+                                                <Folder className="h-4 w-4 text-purple-500 flex-shrink-0" />
+                                            )}
+                                            <span className={`truncate ${category.parent_id ? 'text-gray-700' : 'font-medium text-gray-900'}`}>
+                                                {category.name}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1 truncate">{category.slug}</p>
+                                    </div>
+                                    <Badge variant={category.is_active ? 'success' : 'default'} className="flex-shrink-0">
+                                        {category.is_active ? 'Active' : 'Inactive'}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                        <Package className="h-4 w-4" />
+                                        <span className="tabular-nums">{category.products_count || 0}</span>
+                                        <span>products</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <Link href={`/admin/categories/${category.id}`} preserveScroll>
+                                            <Button variant="ghost" size="sm" title="View">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        <Link href={`/admin/categories/${category.id}/edit`} preserveScroll>
+                                            <Button variant="ghost" size="sm" title="Edit">
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(category)}
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                    {categories.data.length === 0 && (
+                        <Card>
+                            <div className="text-center py-12 text-gray-500">
+                                No categories found
+                            </div>
+                        </Card>
+                    )}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <Card className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b">
@@ -187,7 +249,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                             Name
                                         </div>
                                     </th>
-                                    <th className="hidden md:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         <div className="flex items-center gap-1.5">
                                             <Link2 className="h-3.5 w-3.5" />
                                             Slug
@@ -228,7 +290,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                                             {category.slug}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">

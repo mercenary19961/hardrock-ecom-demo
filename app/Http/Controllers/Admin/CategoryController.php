@@ -156,10 +156,20 @@ class CategoryController extends Controller
         // Get undo metadata if available (pass current model for diff computation)
         $undoMeta = $this->undoService->getUndoMeta('category', $category->id, $category);
 
+        // Get active children for cascade warning (only for parent categories)
+        $activeChildren = [];
+        if ($category->is_active && is_null($category->parent_id)) {
+            $activeChildren = $category->children()
+                ->where('is_active', true)
+                ->get(['id', 'name'])
+                ->toArray();
+        }
+
         return Inertia::render('Admin/Categories/Edit', [
             'category' => $category,
             'parentCategories' => $parentCategories,
             'undoMeta' => $undoMeta,
+            'activeChildren' => $activeChildren,
         ]);
     }
 
@@ -184,9 +194,23 @@ class CategoryController extends Controller
 
         $category->update($data);
 
+        // Auto-cascade: If parent category is set to inactive and cascade is confirmed,
+        // also deactivate all active children
+        $cascadedCount = 0;
+        if (!$data['is_active'] && $request->boolean('cascade_inactive') && is_null($category->parent_id)) {
+            $cascadedCount = $category->children()
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
+        }
+
+        $successMessage = 'Category updated successfully.';
+        if ($cascadedCount > 0) {
+            $successMessage .= " {$cascadedCount} subcategories were also deactivated.";
+        }
+
         return redirect()
             ->route('admin.categories.edit', $category)
-            ->with('success', 'Category updated successfully.');
+            ->with('success', $successMessage);
     }
 
     public function destroy(Category $category): RedirectResponse
