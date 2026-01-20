@@ -89,24 +89,30 @@ export function DualRangeSlider({
                 <div className="flex-1">
                     <input
                         type="text"
+                        id="price-range-min"
+                        name="min_price"
                         inputMode="numeric"
                         value={localMin}
                         onChange={handleMinChange}
                         onKeyDown={handleKeyDown}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                         placeholder={t('shop:min')}
+                        aria-label={t('shop:min')}
                     />
                 </div>
                 <span className="text-gray-400">—</span>
                 <div className="flex-1">
                     <input
                         type="text"
+                        id="price-range-max"
+                        name="max_price"
                         inputMode="numeric"
                         value={localMax}
                         onChange={handleMaxChange}
                         onKeyDown={handleKeyDown}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
                         placeholder={t('shop:max')}
+                        aria-label={t('shop:max')}
                     />
                 </div>
             </div>

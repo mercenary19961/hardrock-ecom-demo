@@ -183,11 +183,13 @@ function ReviewForm({
 
             {/* Title */}
             <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="review-title" className="block text-sm font-medium text-gray-700 mb-2">
                     {t("shop:reviewsSection.title")}
                 </label>
                 <input
                     type="text"
+                    id="review-title"
+                    name="review_title"
                     value={isArabic ? data.title_ar : data.title}
                     onChange={(e) => {
                         if (isArabic) {
@@ -204,10 +206,12 @@ function ReviewForm({
 
             {/* Comment */}
             <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="review-comment" className="block text-sm font-medium text-gray-700 mb-2">
                     {t("shop:reviewsSection.comment")}
                 </label>
                 <textarea
+                    id="review-comment"
+                    name="review_comment"
                     value={isArabic ? data.comment_ar : data.comment}
                     onChange={(e) => {
                         if (isArabic) {

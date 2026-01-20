@@ -143,21 +143,27 @@ function FilterSection({
 
 // Checkbox filter item
 function FilterCheckbox({
+    id,
+    name,
     label,
     checked,
     onChange,
     count,
 }: {
+    id: string;
+    name: string;
     label: string;
     checked: boolean;
     onChange: (checked: boolean) => void;
     count?: number;
 }) {
     return (
-        <label className="flex items-center justify-between py-1.5 cursor-pointer group">
+        <label htmlFor={id} className="flex items-center justify-between py-1.5 cursor-pointer group">
             <div className="flex items-center gap-2">
                 <input
                     type="checkbox"
+                    id={id}
+                    name={name}
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
                     className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
@@ -639,6 +645,8 @@ export default function Category({
                 icon={Clock}
             >
                 <FilterCheckbox
+                    id="filter-new-arrivals"
+                    name="new_arrivals"
                     label={t("shop:filterLabels.latestProducts")}
                     checked={localFilters.new_arrivals}
                     onChange={(checked) =>
@@ -670,6 +678,8 @@ export default function Category({
                 icon={Package}
             >
                 <FilterCheckbox
+                    id="filter-in-stock"
+                    name="in_stock"
                     label={t("shop:filterLabels.inStockOnly")}
                     checked={localFilters.in_stock}
                     onChange={(checked) => applyFilters({ in_stock: checked })}
@@ -683,6 +693,8 @@ export default function Category({
                     icon={Palette}
                 >
                     <FilterCheckbox
+                        id="filter-has-colors"
+                        name="has_colors"
                         label={t("shop:filterLabels.hasColorOptions")}
                         checked={localFilters.has_colors}
                         onChange={(checked) =>
@@ -700,6 +712,8 @@ export default function Category({
                     icon={Ruler}
                 >
                     <FilterCheckbox
+                        id="filter-has-sizes"
+                        name="has_sizes"
                         label={t("shop:filterLabels.hasSizeOptions")}
                         checked={localFilters.has_sizes}
                         onChange={(checked) =>
@@ -720,6 +734,8 @@ export default function Category({
                         {discountOptions.map((option) => (
                             <FilterCheckbox
                                 key={option.min}
+                                id={`filter-discount-${option.min}-${option.max}`}
+                                name={`discount_${option.min}_${option.max}`}
                                 label={option.label}
                                 checked={
                                     localFilters.min_discount === option.min &&

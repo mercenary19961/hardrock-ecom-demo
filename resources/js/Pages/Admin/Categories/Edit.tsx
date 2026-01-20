@@ -5,6 +5,7 @@ import { Button, Input, Textarea, Card, CardHeader, CardContent, UndoButton } fr
 import { Category } from '@/types/models';
 import {
     ArrowLeft,
+    ArrowUp,
     ImageIcon,
     X,
     Check,
@@ -17,6 +18,7 @@ import {
     ToggleLeft,
     Pencil,
     RotateCcw,
+    Settings,
 } from 'lucide-react';
 
 // Map category slugs to default homepage images
@@ -59,6 +61,7 @@ interface Props {
 export default function EditCategory({ category, parentCategories, undoMeta }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -170,6 +173,19 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
         };
     }, []);
 
+    // Track scroll position to show/hide scroll-to-top button
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 300);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         post(`/admin/categories/${category.id}`, {
@@ -182,34 +198,60 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
         <AdminLayout>
             <Head title={`Edit ${category.name}`} />
 
-            <div className="max-w-2xl">
-                <div className="mb-6">
-                    <Link
-                        href="/admin/categories"
-                        className="inline-flex items-center text-gray-600 hover:text-gray-900"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Categories
-                    </Link>
-                </div>
-
-                {/* Undo Last Update Button */}
+            {/* Top Action Bar - Back Link, Undo Button & Form Actions */}
+            <div className="mb-6 flex flex-wrap items-center gap-4">
+                <Link
+                    href="/admin/categories"
+                    className="inline-flex items-center text-gray-600 hover:text-gray-900"
+                >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Categories
+                </Link>
                 <UndoButton
                     modelType="category"
                     modelId={category.id}
                     undoMeta={undoMeta}
-                    className="mb-4"
                 />
+                <div className="flex gap-3 ml-auto">
+                    <Button
+                        type="submit"
+                        form="category-edit-form"
+                        disabled={processing || !hasChanges}
+                        className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
+                    >
+                        {processing ? 'Saving...' : 'Update Category'}
+                    </Button>
+                    {hasChanges && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleRevertChanges}
+                            className="flex items-center gap-2 text-amber-700 border-amber-300 hover:bg-amber-50"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Revert Changes
+                        </Button>
+                    )}
+                    <Link href="/admin/categories">
+                        <Button type="button" variant="outline">
+                            Cancel
+                        </Button>
+                    </Link>
+                </div>
+            </div>
 
-                <Card>
-                    <CardHeader>
-                        <h1 className="text-xl font-semibold flex items-center gap-2">
-                            <Pencil className="h-5 w-5 text-gray-600" />
-                            Edit Category
-                        </h1>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+            <form id="category-edit-form" onSubmit={handleSubmit}>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Left Card - Category Information */}
+                    <Card>
+                        <CardHeader>
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <Pencil className="h-5 w-5 text-gray-600" />
+                                Category Information
+                            </h2>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Category Name */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <Type className="h-4 w-4 text-gray-500" />
@@ -237,6 +279,7 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                 </p>
                             </div>
 
+                            {/* Slug */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <Link2 className="h-4 w-4 text-gray-500" />
@@ -252,6 +295,7 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                 </p>
                             </div>
 
+                            {/* Description */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <FileText className="h-4 w-4 text-gray-500" />
@@ -280,6 +324,7 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                 </p>
                             </div>
 
+                            {/* Parent Category */}
                             <div>
                                 <label htmlFor="edit_parent_id" className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <FolderTree className="h-4 w-4 text-gray-500" />
@@ -303,7 +348,19 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                     Set a parent to make this a subcategory. Subcategories appear under their parent in navigation and filters.
                                 </p>
                             </div>
+                        </CardContent>
+                    </Card>
 
+                    {/* Right Card - Settings & Media */}
+                    <Card>
+                        <CardHeader>
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <Settings className="h-5 w-5 text-gray-600" />
+                                Settings & Media
+                            </h2>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Sort Order */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <ArrowUpDown className="h-4 w-4 text-gray-500" />
@@ -317,10 +374,11 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                     min={0}
                                 />
                                 <p className="mt-1 text-xs text-gray-500">
-                                    Controls the display order of categories in the homepage and in the category page. Lower numbers appear first. Categories with the same sort order are sorted alphabetically.
+                                    Controls the display order of categories. Lower numbers appear first.
                                 </p>
                             </div>
 
+                            {/* Low Stock Threshold */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <PackageSearch className="h-4 w-4 text-gray-500" />
@@ -335,96 +393,11 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                     max={1000}
                                 />
                                 <p className="mt-1 text-xs text-gray-500">
-                                    Products in this category will be marked as "low stock" when their quantity falls to or below this number.
+                                    Products will be marked as "low stock" when quantity falls to or below this number.
                                 </p>
                             </div>
 
-                            <div>
-                                <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1.5">
-                                    <ImageIcon className="h-4 w-4 text-gray-500" />
-                                    Category Image
-                                </label>
-
-                                {/* Current Images Display */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* Currently Displayed Image */}
-                                    <div className="border border-gray-200 rounded-lg p-3">
-                                        <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                                            <ImageIcon className="h-3.5 w-3.5" />
-                                            Currently Displayed on Homepage
-                                        </p>
-                                        {category.image ? (
-                                            <img
-                                                src={`/storage/${category.image}`}
-                                                alt={category.name}
-                                                className="w-full max-w-[200px] aspect-square object-cover rounded-lg border-2 border-green-400"
-                                            />
-                                        ) : defaultCategoryImages[category.slug] ? (
-                                            <img
-                                                src={defaultCategoryImages[category.slug]}
-                                                alt={`Default ${category.name}`}
-                                                className="w-full max-w-[200px] aspect-square object-cover rounded-lg border border-gray-100"
-                                            />
-                                        ) : (
-                                            <div className="w-full max-w-[200px] aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                                                <span className="text-xs text-gray-400">No image set</span>
-                                            </div>
-                                        )}
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            {category.image ? 'Custom image (active)' : 'Default image'}
-                                        </p>
-                                    </div>
-
-                                    {/* New Image Preview / Upload */}
-                                    <div className="border border-gray-200 rounded-lg p-3">
-                                        <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
-                                            <ImageIcon className="h-3.5 w-3.5" />
-                                            {imagePreview ? 'New Image Preview' : 'Upload New Image'}
-                                        </p>
-                                        {imagePreview ? (
-                                            <div className="relative w-full max-w-[200px]">
-                                                <img
-                                                    src={imagePreview}
-                                                    alt="Preview"
-                                                    className="w-full aspect-square object-cover rounded-lg border-2 border-purple-400"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={clearImageSelection}
-                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                                                    title="Remove selected image"
-                                                >
-                                                    <X className="h-3.5 w-3.5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="w-full max-w-[200px] aspect-square bg-gray-50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-200">
-                                                <span className="text-xs text-gray-400">Select a file below</span>
-                                            </div>
-                                        )}
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            {imagePreview ? 'Save to apply this image' : 'Choose a new image to upload'}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* File Upload */}
-                                <input
-                                    id="edit_cat_image"
-                                    name="image"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                                />
-                                {errors.image && (
-                                    <p className="mt-1 text-xs text-red-600">{errors.image}</p>
-                                )}
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Upload a custom image to feature on the homepage instead of the default. Recommended size: 400x400px. Max file size: 200KB. Supported formats: JPG, PNG, WebP.
-                                </p>
-                            </div>
-
+                            {/* Status */}
                             <div>
                                 <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                                     <ToggleLeft className="h-4 w-4 text-gray-500" />
@@ -457,39 +430,115 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                                     </button>
                                 </div>
                                 <p className="mt-2 text-xs text-gray-500">
-                                    Inactive categories are hidden from the storefront but remain in the system. Products in inactive categories won't appear in search or navigation.
+                                    Inactive categories are hidden from the storefront.
                                 </p>
                             </div>
 
-                            <div className="flex gap-3">
-                                <Button
-                                    type="submit"
-                                    disabled={processing || !hasChanges}
-                                    className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
-                                >
-                                    {processing ? 'Saving...' : 'Update Category'}
-                                </Button>
-                                {hasChanges && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleRevertChanges}
-                                        className="flex items-center gap-2 text-amber-700 border-amber-300 hover:bg-amber-50"
-                                    >
-                                        <RotateCcw className="h-4 w-4" />
-                                        Revert Changes
-                                    </Button>
+                            {/* Category Image
+                                NOTE: Subcategory images are stored in the database but are not currently
+                                displayed anywhere on the storefront. Only parent category images are shown
+                                on the homepage category navigation. */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1.5">
+                                    <ImageIcon className="h-4 w-4 text-gray-500" />
+                                    Category Image
+                                </label>
+
+                                {/* Current Images Display */}
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    {/* Currently Displayed Image */}
+                                    <div className="border border-gray-200 rounded-lg p-3">
+                                        <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                                            <ImageIcon className="h-3.5 w-3.5" />
+                                            Current Image
+                                        </p>
+                                        {category.image ? (
+                                            <img
+                                                src={`/storage/${category.image}`}
+                                                alt={category.name}
+                                                className="w-full max-w-[150px] aspect-square object-cover rounded-lg border-2 border-green-400"
+                                            />
+                                        ) : defaultCategoryImages[category.slug] ? (
+                                            <img
+                                                src={defaultCategoryImages[category.slug]}
+                                                alt={`Default ${category.name}`}
+                                                className="w-full max-w-[150px] aspect-square object-cover rounded-lg border border-gray-100"
+                                            />
+                                        ) : (
+                                            <div className="w-full max-w-[150px] aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                                                <span className="text-xs text-gray-400">No image</span>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            {category.image ? 'Custom' : 'Default'}
+                                        </p>
+                                    </div>
+
+                                    {/* New Image Preview / Upload */}
+                                    <div className="border border-gray-200 rounded-lg p-3">
+                                        <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                                            <ImageIcon className="h-3.5 w-3.5" />
+                                            {imagePreview ? 'New Image' : 'Upload New'}
+                                        </p>
+                                        {imagePreview ? (
+                                            <div className="relative w-full max-w-[150px]">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
+                                                    className="w-full aspect-square object-cover rounded-lg border-2 border-purple-400"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={clearImageSelection}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                                                    title="Remove selected image"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full max-w-[150px] aspect-square bg-gray-50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-200">
+                                                <span className="text-xs text-gray-400">Select file</span>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-gray-400 mt-2">
+                                            {imagePreview ? 'Save to apply' : 'Choose file'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* File Upload */}
+                                <input
+                                    id="edit_cat_image"
+                                    name="image"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                />
+                                {errors.image && (
+                                    <p className="mt-1 text-xs text-red-600">{errors.image}</p>
                                 )}
-                                <Link href="/admin/categories">
-                                    <Button type="button" variant="outline">
-                                        Cancel
-                                    </Button>
-                                </Link>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Recommended: 400x400px. Max: 200KB. JPG, PNG, WebP.
+                                </p>
                             </div>
-                        </form>
-                    </CardContent>
-                </Card>
-            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </form>
+
+            {/* Scroll to Top Button - visible when scrolled down (useful on stacked layout) */}
+            <button
+                type="button"
+                onClick={scrollToTop}
+                className={`fixed bottom-6 right-6 z-40 xl:hidden p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all duration-700 ${
+                    showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+                }`}
+                title="Scroll to top"
+            >
+                <ArrowUp className="h-5 w-5" />
+            </button>
 
             {/* Fixed Success Toast - Bottom Right */}
             {showSuccess && (
