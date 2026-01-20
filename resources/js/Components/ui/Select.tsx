@@ -54,7 +54,7 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
     return (
         <div ref={containerRef} className={cn('relative', className)}>
             {label && (
-                <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     {label}
                 </label>
             )}
@@ -67,23 +67,23 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                 aria-expanded={isOpen}
                 aria-labelledby={label ? selectId : undefined}
                 className={cn(
-                    'w-full flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-left',
-                    'focus:outline-none focus:border-gray-900',
-                    'hover:border-gray-400 transition-colors',
-                    isOpen && 'border-gray-900'
+                    'w-full flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white text-left',
+                    'focus:outline-none focus:border-gray-900 dark:focus:border-gray-400',
+                    'hover:border-gray-400 dark:hover:border-gray-500 transition-colors',
+                    isOpen && 'border-gray-900 dark:border-gray-400'
                 )}
             >
-                <span className={cn('flex items-center truncate', !selectedOption && 'text-gray-500')}>
+                <span className={cn('flex items-center truncate', !selectedOption && 'text-gray-500 dark:text-gray-400')}>
                     {selectedOption?.isChild && (
                         <CornerDownRight className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
                     )}
                     {selectedOption?.label || placeholder}
                 </span>
-                <ChevronDown className={cn('h-4 w-4 text-gray-500 flex-shrink-0 transition-transform', isOpen && 'rotate-180')} />
+                <ChevronDown className={cn('h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform', isOpen && 'rotate-180')} />
             </button>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
                     {options.map((option) => (
                         <button
                             key={option.value}
@@ -93,9 +93,9 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                                 setIsOpen(false);
                             }}
                             className={cn(
-                                'w-full flex items-center justify-between px-3 py-2 text-left text-sm',
-                                'hover:bg-gray-100 transition-colors',
-                                option.value === value && 'bg-gray-50 font-medium'
+                                'w-full flex items-center justify-between px-3 py-2 text-left text-sm dark:text-gray-200',
+                                'hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
+                                option.value === value && 'bg-gray-50 dark:bg-gray-700 font-medium'
                             )}
                         >
                             <span className="flex items-center truncate">
@@ -105,7 +105,7 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                                 {option.label}
                             </span>
                             {option.value === value && (
-                                <Check className="h-4 w-4 text-gray-900 flex-shrink-0" />
+                                <Check className="h-4 w-4 text-gray-900 dark:text-white flex-shrink-0" />
                             )}
                         </button>
                     ))}
