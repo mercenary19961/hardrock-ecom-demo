@@ -119,6 +119,7 @@ export default function CreateCategory({ parentCategories }: Props) {
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         error={errors.name}
+                                        placeholder="Category name"
                                         required
                                     />
                                     <Input
@@ -165,6 +166,7 @@ export default function CreateCategory({ parentCategories }: Props) {
                                         onChange={(e) => setData('description', e.target.value)}
                                         error={errors.description}
                                         rows={3}
+                                        placeholder="Category description"
                                     />
                                     <Textarea
                                         label="Arabic"
