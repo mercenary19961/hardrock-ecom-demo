@@ -24,9 +24,12 @@ export function SearchBar({ initialQuery = '', placeholder }: SearchBarProps) {
         <form onSubmit={handleSubmit} className="relative w-full max-w-md">
             <input
                 type="text"
+                id="product-search"
+                name="search_query"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
+                aria-label={searchPlaceholder}
                 className="w-full h-10 pl-10 pr-4 rounded-full border border-gray-200 bg-white shadow-sm
                          hover:border-gray-300 focus:border-brand-purple-500 focus:ring-2 focus:ring-brand-purple-500/20
                            focus:outline-none text-sm transition"
