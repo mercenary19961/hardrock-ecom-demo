@@ -5,6 +5,7 @@ import { Button, Input, Textarea, Card, CardHeader, CardContent, UndoButton } fr
 import { Category } from '@/types/models';
 import {
     ArrowLeft,
+    ArrowUp,
     ImageIcon,
     X,
     Check,
@@ -60,6 +61,7 @@ interface Props {
 export default function EditCategory({ category, parentCategories, undoMeta }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -170,6 +172,19 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
             }
         };
     }, []);
+
+    // Track scroll position to show/hide scroll-to-top button
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScrollTop(window.scrollY > 300);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -512,6 +527,18 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                     </Card>
                 </div>
             </form>
+
+            {/* Scroll to Top Button - visible when scrolled down (useful on stacked layout) */}
+            <button
+                type="button"
+                onClick={scrollToTop}
+                className={`fixed bottom-6 right-6 z-40 xl:hidden p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700 transition-all duration-700 ${
+                    showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+                }`}
+                title="Scroll to top"
+            >
+                <ArrowUp className="h-5 w-5" />
+            </button>
 
             {/* Fixed Success Toast - Bottom Right */}
             {showSuccess && (
