@@ -42,6 +42,9 @@ class ProductController extends Controller
             } elseif ($request->status === 'low_stock') {
                 $query->where('stock', '>', 0)
                     ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)');
+            } elseif ($request->status === 'on_sale') {
+                $query->whereNotNull('compare_price')
+                    ->whereColumn('compare_price', '>', 'price');
             }
         }
 
@@ -57,7 +60,10 @@ class ProductController extends Controller
             return $product;
         });
 
-        $categories = Category::ordered()->get(['id', 'name']);
+        $categories = Category::with('children:id,name,parent_id,sort_order')
+            ->whereNull('parent_id')
+            ->ordered()
+            ->get(['id', 'name', 'parent_id', 'sort_order']);
 
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,

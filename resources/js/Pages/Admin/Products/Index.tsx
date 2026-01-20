@@ -241,8 +241,41 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
 
 interface Props {
     products: PaginatedData<Product>;
-    categories: Category[];
+    categories: (Category & { children?: Category[] })[];
     filters: { search?: string; category?: string; status?: string; per_page?: string };
+}
+
+// Helper function to build hierarchical category options
+function buildCategoryOptions(categories: (Category & { children?: Category[] })[]) {
+    const options: { value: string; label: string; isChild?: boolean; isGroupHeader?: boolean; childCount?: number; parentValue?: string }[] = [
+        { value: '', label: 'All Categories' },
+    ];
+
+    categories.forEach((category) => {
+        const parentValue = String(category.id);
+
+        // Add parent category as a group header
+        options.push({
+            value: parentValue,
+            label: category.name,
+            isGroupHeader: true,
+            childCount: category.children?.length || 0,
+        });
+
+        // Add children with indentation and parent reference
+        if (category.children && category.children.length > 0) {
+            category.children.forEach((child) => {
+                options.push({
+                    value: String(child.id),
+                    label: child.name,
+                    isChild: true,
+                    parentValue: parentValue,
+                });
+            });
+        }
+    });
+
+    return options;
 }
 
 // Debounce hook for search
@@ -406,13 +439,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             onChange={handleCategoryChange}
                             className="w-full sm:w-48"
                             placeholder="All Categories"
-                            options={[
-                                { value: '', label: 'All Categories' },
-                                ...categories.map((cat) => ({
-                                    value: String(cat.id),
-                                    label: cat.name,
-                                })),
-                            ]}
+                            options={buildCategoryOptions(categories)}
                         />
                         <Select
                             value={status}
@@ -423,6 +450,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                 { value: '', label: 'All Status' },
                                 { value: 'active', label: 'Active' },
                                 { value: 'inactive', label: 'Inactive' },
+                                { value: 'on_sale', label: 'On Sale' },
                                 { value: 'low_stock', label: 'Low Stock' },
                                 { value: 'out_of_stock', label: 'Out of Stock' },
                             ]}
