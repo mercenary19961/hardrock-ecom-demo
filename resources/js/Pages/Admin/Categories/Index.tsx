@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Settings, Folder } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Settings, Folder, Eye } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
@@ -241,8 +241,13 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                <Link href={`/admin/categories/${category.id}`} preserveScroll>
+                                                    <Button variant="ghost" size="sm" title="View">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
                                                 <Link href={`/admin/categories/${category.id}/edit`} preserveScroll>
-                                                    <Button variant="ghost" size="sm">
+                                                    <Button variant="ghost" size="sm" title="Edit">
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                 </Link>
@@ -250,6 +255,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDelete(category)}
+                                                    title="Delete"
                                                 >
                                                     <Trash2 className="h-4 w-4 text-red-500" />
                                                 </Button>

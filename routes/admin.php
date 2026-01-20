@@ -11,7 +11,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Use 'id' for route model binding in admin panel (Category model uses 'slug' by default for frontend)
-    Route::resource('categories', CategoryController::class)->except(['show'])->scoped(['category' => 'id']);
+    Route::resource('categories', CategoryController::class)->scoped(['category' => 'id']);
     Route::resource('products', ProductController::class)->except(['show'])->scoped(['product' => 'id']);
 
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');

@@ -136,6 +136,16 @@ class CategoryController extends Controller
             ->with('success', 'Category created successfully.');
     }
 
+    public function show(Category $category): Response
+    {
+        // Load parent category if exists
+        $category->load('parent');
+
+        return Inertia::render('Admin/Categories/Show', [
+            'category' => $category,
+        ]);
+    }
+
     public function edit(Category $category): Response
     {
         $parentCategories = Category::whereNull('parent_id')
