@@ -6,7 +6,8 @@ import { Category, Product } from '@/types/models';
 import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
-    RotateCcw, Check, ArrowUp
+    RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
+    History, AlertCircle
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -531,38 +532,115 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
                         {/* Sidebar - Right Column (1/3 width on desktop) */}
                         <div className="space-y-6">
-                            {/* Status */}
+                            {/* Product Preview */}
+                            <Card className="dark:bg-gray-800 dark:border-gray-700">
+                                <CardHeader>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Eye className="h-5 w-5 text-purple-600" />
+                                        Preview
+                                    </h2>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {/* Product Image */}
+                                        <div className="aspect-square w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                            {existingImages.length > 0 ? (
+                                                <img
+                                                    src={getImageUrl(existingImages[0].path, product.id, existingImages[0].sort_order)}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <ImageIcon className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        {/* Product Info */}
+                                        <div>
+                                            <h3 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
+                                                {data.name || 'Product Name'}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {product.category?.name || 'Category'}
+                                            </p>
+                                        </div>
+                                        {/* Price */}
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                                {parseFloat(data.price || '0').toFixed(2)} JOD
+                                            </span>
+                                            {data.compare_price && parseFloat(data.compare_price) > parseFloat(data.price) && (
+                                                <>
+                                                    <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                                                        {parseFloat(data.compare_price).toFixed(2)} JOD
+                                                    </span>
+                                                    <Badge variant="danger" className="text-xs">
+                                                        -{Math.round(((parseFloat(data.compare_price) - parseFloat(data.price)) / parseFloat(data.compare_price)) * 100)}%
+                                                    </Badge>
+                                                </>
+                                            )}
+                                        </div>
+                                        {/* Stock Status */}
+                                        <div className="flex items-center gap-2">
+                                            {data.stock > 0 ? (
+                                                <Badge variant="success" className="text-xs">In Stock ({data.stock})</Badge>
+                                            ) : (
+                                                <Badge variant="danger" className="text-xs">Out of Stock</Badge>
+                                            )}
+                                            {data.is_featured && <Badge variant="warning" className="text-xs">Featured</Badge>}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Quick Actions */}
                             <Card className="dark:bg-gray-800 dark:border-gray-700">
                                 <CardHeader>
                                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                         <Settings className="h-5 w-5 text-purple-600" />
-                                        Status
+                                        Quick Actions
                                     </h2>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-4">
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_active"
-                                                name="is_active"
-                                                type="checkbox"
-                                                checked={data.is_active}
-                                                onChange={(e) => setData('is_active', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
-                                        </label>
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_featured"
-                                                name="is_featured"
-                                                type="checkbox"
-                                                checked={data.is_featured}
-                                                onChange={(e) => setData('is_featured', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
-                                        </label>
+                                    <div className="space-y-2">
+                                        <a
+                                            href={`/product/${product.slug}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                            View on Store
+                                        </a>
+                                        <Link
+                                            href={`/admin/products/create?duplicate=${product.id}`}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                            Duplicate Product
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+                                                    // Use Inertia to delete
+                                                    const form = document.createElement('form');
+                                                    form.method = 'POST';
+                                                    form.action = `/admin/products/${product.id}`;
+                                                    form.innerHTML = `
+                                                        <input type="hidden" name="_method" value="DELETE" />
+                                                        <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''}" />
+                                                    `;
+                                                    document.body.appendChild(form);
+                                                    form.submit();
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Delete Product
+                                        </button>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -615,6 +693,155 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             </div>
                                             <span className="text-sm text-gray-900 dark:text-white">{formatDate(product.updated_at)}</span>
                                         </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* SEO Preview */}
+                            <Card className="dark:bg-gray-800 dark:border-gray-700">
+                                <CardHeader>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Search className="h-5 w-5 text-purple-600" />
+                                        SEO Preview
+                                    </h2>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600">
+                                        {/* Google-style preview */}
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                <Globe className="h-3 w-3" />
+                                                <span className="truncate">demo.hardrock-co.com › product › {data.slug || 'product-slug'}</span>
+                                            </div>
+                                            <h3 className="text-blue-600 dark:text-blue-400 text-base font-medium hover:underline cursor-pointer line-clamp-1">
+                                                {data.name || 'Product Name'} | HardRock Store
+                                            </h3>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                {data.short_description || data.description || 'No description provided. Add a short description to improve SEO.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {/* SEO Tips */}
+                                    <div className="mt-3 space-y-2">
+                                        {!data.short_description && (
+                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                <span>Add a short description for better SEO</span>
+                                            </div>
+                                        )}
+                                        {data.name && data.name.length < 20 && (
+                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                <span>Consider a longer, more descriptive title</span>
+                                            </div>
+                                        )}
+                                        {data.name && data.name.length >= 20 && data.short_description && (
+                                            <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                <span>SEO looks good!</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Activity Log */}
+                            <Card className="dark:bg-gray-800 dark:border-gray-700">
+                                <CardHeader>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <History className="h-5 w-5 text-purple-600" />
+                                        Recent Activity
+                                    </h2>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {/* Last Update Info */}
+                                        {undoMeta?.available && undoMeta.changes && undoMeta.changes.length > 0 ? (
+                                            <>
+                                                <div className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700">
+                                                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                                                        <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm text-gray-900 dark:text-white">
+                                                            Product updated
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                            {formatDate(undoMeta.saved_at)}
+                                                        </p>
+                                                        <div className="mt-2 space-y-1">
+                                                            {undoMeta.changes.slice(0, 3).map((change, idx) => (
+                                                                <p key={idx} className="text-xs text-gray-600 dark:text-gray-400">
+                                                                    • {change.label} changed
+                                                                </p>
+                                                            ))}
+                                                            {undoMeta.changes.length > 3 && (
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    +{undoMeta.changes.length - 3} more changes
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : null}
+
+                                        {/* Creation Info */}
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                                <Package className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-gray-900 dark:text-white">
+                                                    Product created
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                    {formatDate(product.created_at)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {!undoMeta?.available && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-2">
+                                                No recent changes recorded
+                                            </p>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Status */}
+                            <Card className="dark:bg-gray-800 dark:border-gray-700">
+                                <CardHeader>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Settings className="h-5 w-5 text-purple-600" />
+                                        Status
+                                    </h2>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                id="edit_is_active"
+                                                name="is_active"
+                                                type="checkbox"
+                                                checked={data.is_active}
+                                                onChange={(e) => setData('is_active', e.target.checked)}
+                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
+                                        </label>
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                id="edit_is_featured"
+                                                name="is_featured"
+                                                type="checkbox"
+                                                checked={data.is_featured}
+                                                onChange={(e) => setData('is_featured', e.target.checked)}
+                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
+                                        </label>
                                     </div>
                                 </CardContent>
                             </Card>
