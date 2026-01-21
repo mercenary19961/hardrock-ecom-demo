@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +17,9 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(
+        protected UndoService $undoService
+    ) {}
     public function index(Request $request): Response
     {
         $query = Product::with(['category', 'primaryImage']);
@@ -137,9 +141,13 @@ class ProductController extends Controller
         $product->load(['images', 'category']);
         $categories = Category::ordered()->get(['id', 'name', 'parent_id', 'low_stock_threshold']);
 
+        // Get undo metadata for this product
+        $undoMeta = $this->undoService->getUndoMeta('product', $product->id, $product);
+
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'undoMeta' => $undoMeta,
         ]);
     }
 
@@ -147,6 +155,9 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         unset($data['images'], $data['delete_images']);
+
+        // Save undo state before updating (only if there are actual changes)
+        $this->undoService->saveState($product, null, $data);
 
         $product->update($data);
 
@@ -181,7 +192,7 @@ class ProductController extends Controller
         }
 
         return redirect()
-            ->route('admin.products.index')
+            ->route('admin.products.edit', $product)
             ->with('success', 'Product updated successfully.');
     }
 

@@ -2,7 +2,7 @@ import { Link, Head } from "@inertiajs/react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTranslation } from "react-i18next";
 import { Home, ArrowLeft, RefreshCw } from "lucide-react";
-import { Button } from "@/Components/ui/button";
+import { Button } from "@/Components/ui";
 
 interface Props {
     status: number;

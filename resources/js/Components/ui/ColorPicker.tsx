@@ -55,7 +55,7 @@ export function ColorPicker({
     return (
         <div className="w-full space-y-3">
             {label && (
-                <span className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {label}
                 </span>
             )}
@@ -65,7 +65,7 @@ export function ColorPicker({
                 <div>
                     <label
                         htmlFor={nameId}
-                        className="block text-sm text-gray-600 mb-1"
+                        className="block text-sm text-gray-600 dark:text-gray-400 mb-1"
                     >
                         Color Name
                     </label>
@@ -76,7 +76,7 @@ export function ColorPicker({
                         onChange={(e) => onColorNameChange(e.target.value)}
                         placeholder="e.g., Black, Navy Blue"
                         className={cn(
-                            'flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-gray-900',
+                            'flex h-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-900 dark:focus:border-gray-400',
                             error && 'border-red-500 focus:border-red-500'
                         )}
                     />
@@ -86,13 +86,13 @@ export function ColorPicker({
                 <div>
                     <label
                         htmlFor={hexId}
-                        className="block text-sm text-gray-600 mb-1"
+                        className="block text-sm text-gray-600 dark:text-gray-400 mb-1"
                     >
                         Hex Code
                     </label>
                     <div className="flex gap-2">
                         <div
-                            className="h-10 w-10 rounded-lg border border-gray-300 flex-shrink-0"
+                            className="h-10 w-10 rounded-lg border border-gray-300 dark:border-gray-600 flex-shrink-0"
                             style={{
                                 backgroundColor: colorHex && /^#[0-9A-Fa-f]{6}$/.test(colorHex) ? colorHex : '#FFFFFF',
                             }}
@@ -105,7 +105,7 @@ export function ColorPicker({
                             placeholder="#000000"
                             maxLength={7}
                             className={cn(
-                                'flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono placeholder:text-gray-400 focus:outline-none focus:border-gray-900',
+                                'flex h-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm font-mono text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-900 dark:focus:border-gray-400',
                                 error && 'border-red-500 focus:border-red-500'
                             )}
                         />
@@ -115,7 +115,7 @@ export function ColorPicker({
 
             {/* Color Presets */}
             <div>
-                <span className="block text-sm text-gray-600 mb-2">
+                <span className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                     Quick Select
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -127,8 +127,8 @@ export function ColorPicker({
                             className={cn(
                                 'w-8 h-8 rounded-lg border-2 transition-all hover:scale-110',
                                 colorHex === preset.hex
-                                    ? 'border-gray-900 ring-2 ring-gray-400'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-gray-900 dark:border-white ring-2 ring-gray-400 dark:ring-gray-500'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                             )}
                             style={{ backgroundColor: preset.hex }}
                             title={preset.name}
@@ -138,7 +138,7 @@ export function ColorPicker({
             </div>
 
             {error && (
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
         </div>
     );
