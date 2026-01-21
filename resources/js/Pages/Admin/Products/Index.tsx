@@ -157,7 +157,7 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
                                                 </Badge>
                                             )}
                                             {isNewProduct(product.created_at) && (
-                                                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100">
                                                     New
                                                 </Badge>
                                             )}
@@ -421,8 +421,9 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     const [bulkActionLoading, setBulkActionLoading] = useState(false);
     const isFirstRender = useRef(true);
 
-    // Auto-refresh data every 30 seconds
-    usePolling({ interval: 30000 });
+    // Auto-refresh data every 30 seconds, but pause when items are selected
+    const hasSelection = selectedIds.size > 0;
+    usePolling({ interval: 30000, enabled: !hasSelection });
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -431,9 +432,18 @@ export default function ProductsIndex({ products: productsProp, categories, filt
         localStorage.setItem('productsViewMode', viewMode);
     }, [viewMode]);
 
-    // Clear selection when products change
+    // Preserve valid selections when products change (remove selections for products no longer in view)
     useEffect(() => {
-        setSelectedIds(new Set());
+        if (selectedIds.size > 0) {
+            const currentProductIds = new Set(productsData.map(p => p.id));
+            const validSelections = new Set(
+                Array.from(selectedIds).filter(id => currentProductIds.has(id))
+            );
+            // Only update if some selections were removed
+            if (validSelections.size !== selectedIds.size) {
+                setSelectedIds(validSelections);
+            }
+        }
     }, [productsData]);
 
     // SPA-style filter function
@@ -806,7 +816,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                             </Badge>
                                         )}
                                         {isNewProduct(product.created_at) && (
-                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
                                                 New
                                             </Badge>
                                         )}
@@ -960,7 +970,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                                             </span>
                                                         )}
                                                         {isNewProduct(product.created_at) && (
-                                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
                                                                 New
                                                             </Badge>
                                                         )}
@@ -1137,20 +1147,14 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="products-per-page" className="text-sm text-gray-500 dark:text-gray-400">Show:</label>
-                            <select
-                                id="products-per-page"
-                                name="per_page"
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Show:</span>
+                            <Select
                                 value={perPage}
-                                onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[80px]"
-                            >
-                                {perPageOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={handlePerPageChange}
+                                className="w-20"
+                                options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
+                                dropdownPosition="top"
+                            />
                         </div>
                     </div>
                 </div>

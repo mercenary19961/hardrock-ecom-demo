@@ -20,9 +20,10 @@ export interface SelectProps {
     id?: string;
     name?: string;
     label?: string;
+    dropdownPosition?: 'top' | 'bottom';
 }
 
-export function Select({ value, onChange, options, placeholder = 'Select...', className, id, name, label }: SelectProps) {
+export function Select({ value, onChange, options, placeholder = 'Select...', className, id, name, label, dropdownPosition = 'bottom' }: SelectProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
     const containerRef = useRef<HTMLDivElement>(null);
@@ -108,11 +109,19 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                     )}
                     {selectedOption?.label || placeholder}
                 </span>
-                <ChevronDown className={cn('h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform', isOpen && 'rotate-180')} />
+                <ChevronDown className={cn(
+                    'h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform',
+                    dropdownPosition === 'top'
+                        ? (isOpen ? '' : 'rotate-180')
+                        : (isOpen ? 'rotate-180' : '')
+                )} />
             </button>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                <div className={cn(
+                    "absolute z-50 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto",
+                    dropdownPosition === 'top' ? 'bottom-full mb-1' : 'mt-1'
+                )}>
                     {options.map((option) => {
                         // Group header (parent category) - selectable with expand/collapse button
                         if (option.isGroupHeader) {
