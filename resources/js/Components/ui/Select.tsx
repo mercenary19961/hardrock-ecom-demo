@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react';
-import { ChevronDown, ChevronRight, Check, CornerDownRight, Folder, FolderOpen } from 'lucide-react';
+import { ChevronDown, ChevronRight, Check, CornerDownRight, Folder, FolderOpen, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectOption {
@@ -9,6 +9,7 @@ export interface SelectOption {
     isGroupHeader?: boolean;
     childCount?: number;
     parentValue?: string; // Links child to its parent for collapsible behavior
+    icon?: LucideIcon; // Optional icon for the option
 }
 
 export interface SelectProps {
@@ -108,6 +109,9 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                 <span className={cn('flex items-center truncate', !selectedOption && 'text-gray-500 dark:text-gray-400')}>
                     {selectedOption?.isChild && (
                         <CornerDownRight className={cn('text-gray-400 mr-2 flex-shrink-0', size === 'sm' ? 'h-3 w-3' : 'h-4 w-4')} />
+                    )}
+                    {selectedOption?.icon && (
+                        <selectedOption.icon className={cn('text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0', size === 'sm' ? 'h-3 w-3' : 'h-4 w-4')} />
                     )}
                     {selectedOption?.label || placeholder}
                 </span>
@@ -213,6 +217,9 @@ export function Select({ value, onChange, options, placeholder = 'Select...', cl
                                 <span className="flex items-center truncate">
                                     {option.isChild && (
                                         <CornerDownRight className="h-3.5 w-3.5 text-gray-400 mr-2 flex-shrink-0" />
+                                    )}
+                                    {option.icon && (
+                                        <option.icon className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
                                     )}
                                     {option.label}
                                 </span>

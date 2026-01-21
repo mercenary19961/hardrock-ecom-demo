@@ -7,7 +7,9 @@ import { formatPrice } from '@/lib/utils';
 import {
     Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List,
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
-    Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare
+    Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
+    Clock, History, TrendingUp, TrendingDown, Flame, CircleCheck, CircleX,
+    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling } from '@/hooks';
@@ -361,12 +363,22 @@ function useDebounce<T>(value: T, delay: number): T {
 const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
 const sortOptions = [
-    { value: 'newest', label: 'Newest First' },
-    { value: 'oldest', label: 'Oldest First' },
-    { value: 'price_asc', label: 'Price: Low to High' },
-    { value: 'price_desc', label: 'Price: High to Low' },
-    { value: 'popularity', label: 'Most Popular' },
-    { value: 'rating', label: 'Highest Rated' },
+    { value: 'newest', label: 'Newest First', icon: Clock },
+    { value: 'oldest', label: 'Oldest First', icon: History },
+    { value: 'price_asc', label: 'Price: Low to High', icon: TrendingUp },
+    { value: 'price_desc', label: 'Price: High to Low', icon: TrendingDown },
+    { value: 'popularity', label: 'Most Popular', icon: Flame },
+    { value: 'rating', label: 'Highest Rated', icon: Star },
+];
+
+const statusOptions = [
+    { value: '', label: 'All Status', icon: Layers },
+    { value: 'active', label: 'Active', icon: CircleCheck },
+    { value: 'inactive', label: 'Inactive', icon: CircleX },
+    { value: 'featured', label: 'Featured', icon: Sparkles },
+    { value: 'on_sale', label: 'On Sale', icon: Percent },
+    { value: 'low_stock', label: 'Low Stock', icon: AlertTriangle },
+    { value: 'out_of_stock', label: 'Out of Stock', icon: PackageX },
 ];
 
 export default function ProductsIndex({ products: productsProp, categories, filters: filtersProp }: Props) {
@@ -653,15 +665,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 onChange={handleStatusChange}
                                 className="w-full sm:w-40"
                                 placeholder="All Status"
-                                options={[
-                                    { value: '', label: 'All Status' },
-                                    { value: 'active', label: 'Active' },
-                                    { value: 'inactive', label: 'Inactive' },
-                                    { value: 'featured', label: 'Featured' },
-                                    { value: 'on_sale', label: 'On Sale' },
-                                    { value: 'low_stock', label: 'Low Stock' },
-                                    { value: 'out_of_stock', label: 'Out of Stock' },
-                                ]}
+                                options={statusOptions}
                             />
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
@@ -698,6 +702,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                     onClick={() => handleBulkAction('activate')}
                                     disabled={bulkActionLoading}
                                 >
+                                    <Power className="h-3 w-3 mr-1" />
                                     Activate
                                 </Button>
                                 <Button
@@ -706,6 +711,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                     onClick={() => handleBulkAction('deactivate')}
                                     disabled={bulkActionLoading}
                                 >
+                                    <PowerOff className="h-3 w-3 mr-1" />
                                     Deactivate
                                 </Button>
                                 <Button
@@ -723,6 +729,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                     onClick={() => handleBulkAction('unfeature')}
                                     disabled={bulkActionLoading}
                                 >
+                                    <StarOff className="h-3 w-3 mr-1" />
                                     Unfeature
                                 </Button>
                                 <Button
