@@ -1076,85 +1076,131 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 href={productsLinks[0]?.url || '#'}
                                 preserveScroll
                                 preserveState
-                                className={`px-3 py-2 rounded-lg text-sm ${
+                                className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
                                     productsLinks[0]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
                             >
-                                <ChevronLeft className="h-4 w-4" />
+                                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Link>
 
-                            {/* Page Numbers */}
-                            {productsLinks.slice(1, -1).map((link, index) => {
-                                const pageNum = index + 1;
+                            {/* Page Numbers - Smart pagination with ellipsis */}
+                            {(() => {
                                 const currentPage = products.current_page;
                                 const lastPage = products.last_page;
+                                const pageLinks = productsLinks.slice(1, -1);
 
-                                // On small screens: show first, current, last, and neighbors of current
-                                const showOnMobile = pageNum === 1 ||
-                                    pageNum === lastPage ||
-                                    pageNum === currentPage ||
-                                    pageNum === currentPage - 1 ||
-                                    pageNum === currentPage + 1;
+                                // Build pages to show with different neighbor counts for mobile/desktop
+                                const buildPages = (neighborCount: number) => {
+                                    const pages: (number | 'ellipsis')[] = [];
+                                    for (let i = 1; i <= lastPage; i++) {
+                                        const isFirst = i === 1;
+                                        const isLast = i === lastPage;
+                                        const isCurrent = i === currentPage;
+                                        const isNeighbor = Math.abs(i - currentPage) <= neighborCount;
 
-                                // Show ellipsis markers
-                                const showLeftEllipsis = pageNum === currentPage - 1 && currentPage > 3;
-                                const showRightEllipsis = pageNum === currentPage + 1 && currentPage < lastPage - 2;
+                                        if (isFirst || isLast || isCurrent || isNeighbor) {
+                                            const prevShown = pages[pages.length - 1];
+                                            if (typeof prevShown === 'number' && i - prevShown > 1) {
+                                                pages.push('ellipsis');
+                                            }
+                                            pages.push(i);
+                                        }
+                                    }
+                                    return pages;
+                                };
 
-                                return (
-                                    <span key={index} className={!showOnMobile ? 'hidden sm:inline' : ''}>
-                                        {showLeftEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 sm:hidden">...</span>
-                                        )}
+                                const mobilePages = buildPages(1);  // 1 neighbor on mobile
+                                const desktopPages = buildPages(2); // 2 neighbors on desktop
+
+                                // Render helper
+                                const renderPage = (item: number | 'ellipsis', index: number, isMobile: boolean) => {
+                                    if (item === 'ellipsis') {
+                                        return (
+                                            <span key={`ellipsis-${isMobile ? 'm' : 'd'}-${index}`} className={`text-gray-400 dark:text-gray-500 ${isMobile ? 'px-1 py-1.5 text-xs' : 'px-2 py-2 text-sm'}`}>
+                                                ...
+                                            </span>
+                                        );
+                                    }
+
+                                    const pageNum = item;
+                                    const link = pageLinks[pageNum - 1];
+
+                                    return (
                                         <Link
-                                            href={link.url || '#'}
+                                            key={`page-${isMobile ? 'm' : 'd'}-${pageNum}`}
+                                            href={link?.url || '#'}
                                             preserveScroll
                                             preserveState
-                                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm ${
-                                                link.active
+                                            className={`rounded-lg ${isMobile ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'} ${
+                                                link?.active
                                                     ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                                    : link.url
+                                                    : link?.url
                                                     ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                                     : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                             }`}
                                         >
                                             {pageNum}
                                         </Link>
-                                        {showRightEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 sm:hidden">...</span>
-                                        )}
-                                    </span>
+                                    );
+                                };
+
+                                return (
+                                    <>
+                                        {/* Mobile: 1 neighbor */}
+                                        <span className="flex sm:hidden gap-1">
+                                            {mobilePages.map((item, index) => renderPage(item, index, true))}
+                                        </span>
+                                        {/* Desktop: 2 neighbors */}
+                                        <span className="hidden sm:flex gap-1 sm:gap-2">
+                                            {desktopPages.map((item, index) => renderPage(item, index, false))}
+                                        </span>
+                                    </>
                                 );
-                            })}
+                            })()}
 
                             {/* Next Button */}
                             <Link
                                 href={productsLinks[productsLinks.length - 1]?.url || '#'}
                                 preserveScroll
                                 preserveState
-                                className={`px-3 py-2 rounded-lg text-sm ${
+                                className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
                                     productsLinks[productsLinks.length - 1]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
                             >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Link>
                         </div>
                     ) : (
                         <div className="flex-1" />
                     )}
                     <div className="flex-1 flex justify-end">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">Show:</span>
-                            <Select
-                                value={perPage}
-                                onChange={handlePerPageChange}
-                                className="w-20"
-                                options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
-                                dropdownPosition="top"
-                            />
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Show:</span>
+                            {/* Mobile: small select */}
+                            <div className="sm:hidden">
+                                <Select
+                                    value={perPage}
+                                    onChange={handlePerPageChange}
+                                    className="w-14"
+                                    options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
+                                    dropdownPosition="top"
+                                    size="sm"
+                                />
+                            </div>
+                            {/* Desktop: default select */}
+                            <div className="hidden sm:block">
+                                <Select
+                                    value={perPage}
+                                    onChange={handlePerPageChange}
+                                    className="w-20"
+                                    options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
+                                    dropdownPosition="top"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
