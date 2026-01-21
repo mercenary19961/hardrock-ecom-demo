@@ -45,14 +45,40 @@ class ProductController extends Controller
             } elseif ($request->status === 'on_sale') {
                 $query->whereNotNull('compare_price')
                     ->whereColumn('compare_price', '>', 'price');
+            } elseif ($request->status === 'featured') {
+                $query->where('is_featured', true);
             }
         }
 
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
-            ? (int) $request->per_page
-            : 15;
+        // Sorting
+        $sortField = $request->input('sort', 'newest');
+        switch ($sortField) {
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'popularity':
+                $query->orderBy('times_purchased', 'desc');
+                break;
+            case 'rating':
+                $query->orderBy('average_rating', 'desc')->orderBy('rating_count', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
 
-        $products = $query->latest()->paginate($perPage)->withQueryString();
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
+            ? (int) $request->per_page
+            : 16;
+
+        $products = $query->paginate($perPage)->withQueryString();
 
         // Add effective threshold to each product
         $products->getCollection()->transform(function ($product) {
@@ -68,7 +94,7 @@ class ProductController extends Controller
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category', 'status', 'per_page']),
+            'filters' => $request->only(['search', 'category', 'status', 'per_page', 'sort']),
         ]);
     }
 
@@ -188,5 +214,82 @@ class ProductController extends Controller
         return redirect()
             ->route('admin.products.index')
             ->with('success', 'Product deleted successfully.');
+    }
+
+    public function toggleFeatured(Product $product): RedirectResponse
+    {
+        $product->update(['is_featured' => !$product->is_featured]);
+
+        return back()->with('success', $product->is_featured ? 'Product marked as featured.' : 'Product removed from featured.');
+    }
+
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'action' => 'required|in:activate,deactivate,feature,unfeature,delete',
+            'product_ids' => 'required|array|min:1',
+            'product_ids.*' => 'exists:products,id',
+        ]);
+
+        $productIds = $request->product_ids;
+        $action = $request->action;
+        $count = count($productIds);
+
+        switch ($action) {
+            case 'activate':
+                Product::whereIn('id', $productIds)->update(['is_active' => true]);
+                return back()->with('success', "{$count} product(s) activated.");
+
+            case 'deactivate':
+                Product::whereIn('id', $productIds)->update(['is_active' => false]);
+                return back()->with('success', "{$count} product(s) deactivated.");
+
+            case 'feature':
+                Product::whereIn('id', $productIds)->update(['is_featured' => true]);
+                return back()->with('success', "{$count} product(s) marked as featured.");
+
+            case 'unfeature':
+                Product::whereIn('id', $productIds)->update(['is_featured' => false]);
+                return back()->with('success', "{$count} product(s) removed from featured.");
+
+            case 'delete':
+                $activeOrderStatuses = ['pending', 'processing', 'shipped'];
+                $deletedCount = 0;
+                $skippedCount = 0;
+
+                foreach ($productIds as $productId) {
+                    $product = Product::with('images')->find($productId);
+                    if (!$product) continue;
+
+                    // Check for active orders
+                    $hasActiveOrders = $product->orderItems()
+                        ->whereHas('order', function ($query) use ($activeOrderStatuses) {
+                            $query->whereIn('status', $activeOrderStatuses);
+                        })
+                        ->exists();
+
+                    // Check for cart items
+                    if ($hasActiveOrders || $product->cartItems()->exists()) {
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    // Delete images
+                    foreach ($product->images as $image) {
+                        Storage::disk('public')->delete($image->path);
+                    }
+
+                    $product->delete();
+                    $deletedCount++;
+                }
+
+                $message = "{$deletedCount} product(s) deleted.";
+                if ($skippedCount > 0) {
+                    $message .= " {$skippedCount} skipped (active orders or in carts).";
+                }
+                return back()->with('success', $message);
+        }
+
+        return back();
     }
 }

@@ -4,9 +4,57 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Product, Category, PaginatedData } from '@/types/models';
 import { formatPrice } from '@/lib/utils';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List, MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+    Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List,
+    MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
+    Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare
+} from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling } from '@/hooks';
+
+// Helper to check if product is new (created within last 30 days)
+function isNewProduct(createdAt: string): boolean {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return new Date(createdAt) > thirtyDaysAgo;
+}
+
+// Format date for display
+function formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+}
+
+// Star rating display component
+function StarRating({ rating, count }: { rating: number; count: number }) {
+    const fullStars = Math.floor(rating);
+    const hasHalf = rating % 1 >= 0.5;
+
+    return (
+        <div className="flex items-center gap-1">
+            <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                    <Star
+                        key={i}
+                        className={`h-3 w-3 ${
+                            i < fullStars
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : i === fullStars && hasHalf
+                                ? 'fill-yellow-400/50 text-yellow-400'
+                                : 'text-gray-300 dark:text-gray-600'
+                        }`}
+                    />
+                ))}
+            </div>
+            {count > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+            )}
+        </div>
+    );
+}
 
 // Product Detail Modal Component
 function ProductDetailModal({ product, onClose, language }: { product: Product | null; onClose: () => void; language: string }) {
@@ -101,11 +149,29 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
                                 <div>
                                     <div className="flex items-start justify-between gap-4 mb-2">
                                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">{product.name}</h3>
-                                        <Badge variant={product.is_active ? 'success' : 'default'}>
-                                            {product.is_active ? 'Active' : 'Inactive'}
-                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                            {product.is_featured && (
+                                                <Badge variant="warning">
+                                                    <Sparkles className="h-3 w-3 mr-1" />
+                                                    Featured
+                                                </Badge>
+                                            )}
+                                            {isNewProduct(product.created_at) && (
+                                                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                                    New
+                                                </Badge>
+                                            )}
+                                            <Badge variant={product.is_active ? 'success' : 'default'}>
+                                                {product.is_active ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                        </div>
                                     </div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">SKU: {product.sku}</p>
+                                    {product.rating_count > 0 && (
+                                        <div className="mt-2">
+                                            <StarRating rating={product.average_rating} count={product.rating_count} />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Price */}
@@ -150,15 +216,13 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
                                             {!product.low_stock_threshold && <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">(default)</span>}
                                         </p>
                                     </div>
-                                    {product.is_featured && (
-                                        <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-3">
-                                            <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-sm mb-1">
-                                                <Tag className="h-4 w-4" />
-                                                <span>Featured</span>
-                                            </div>
-                                            <p className="font-medium text-yellow-700 dark:text-yellow-300">This product is featured</p>
+                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-1">
+                                            <Calendar className="h-4 w-4" />
+                                            <span>Created</span>
                                         </div>
-                                    )}
+                                        <p className="font-medium text-gray-900 dark:text-white">{formatDate(product.created_at)}</p>
+                                    </div>
                                 </div>
 
                                 {/* Variant Information */}
@@ -242,14 +306,18 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
 interface Props {
     products: PaginatedData<Product>;
     categories: (Category & { children?: Category[] })[];
-    filters: { search?: string; category?: string; status?: string; per_page?: string };
+    filters?: { search?: string; category?: string; status?: string; per_page?: string; sort?: string };
 }
 
 // Helper function to build hierarchical category options
-function buildCategoryOptions(categories: (Category & { children?: Category[] })[]) {
+function buildCategoryOptions(categories?: (Category & { children?: Category[] })[] | null) {
     const options: { value: string; label: string; isChild?: boolean; isGroupHeader?: boolean; childCount?: number; parentValue?: string }[] = [
         { value: '', label: 'All Categories' },
     ];
+
+    if (!categories || !Array.isArray(categories)) {
+        return options;
+    }
 
     categories.forEach((category) => {
         const parentValue = String(category.id);
@@ -290,15 +358,58 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['5', '10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
-export default function ProductsIndex({ products, categories, filters }: Props) {
+const sortOptions = [
+    { value: 'newest', label: 'Newest First' },
+    { value: 'oldest', label: 'Oldest First' },
+    { value: 'price_asc', label: 'Price: Low to High' },
+    { value: 'price_desc', label: 'Price: High to Low' },
+    { value: 'popularity', label: 'Most Popular' },
+    { value: 'rating', label: 'Highest Rated' },
+];
+
+export default function ProductsIndex({ products: productsProp, categories, filters: filtersProp }: Props) {
     const { i18n } = useTranslation();
     const language = i18n.language;
-    const [search, setSearch] = useState(filters.search || '');
-    const [category, setCategory] = useState(filters.category || '');
-    const [status, setStatus] = useState(filters.status || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+
+    // Safe defaults for filters - use Object.assign to create a plain object copy
+    const safeFilters: Record<string, string | undefined> = {};
+    if (filtersProp && typeof filtersProp === 'object' && !Array.isArray(filtersProp)) {
+        if (filtersProp.search) safeFilters.search = String(filtersProp.search);
+        if (filtersProp.category) safeFilters.category = String(filtersProp.category);
+        if (filtersProp.status) safeFilters.status = String(filtersProp.status);
+        if (filtersProp.sort) safeFilters.sortOrder = String(filtersProp.sort);
+        if (filtersProp.per_page) safeFilters.per_page = String(filtersProp.per_page);
+    }
+
+    // Safe defaults for products
+    const defaultProducts = { data: [], links: [], current_page: 1, last_page: 1, total: 0, per_page: 15, from: 0, to: 0 };
+    const products = productsProp && typeof productsProp === 'object' ? { ...defaultProducts, ...productsProp } : defaultProducts;
+    const productsData = Array.isArray(products.data) ? products.data : [];
+    const productsLinks = Array.isArray(products.links) ? products.links : [];
+
+    const [search, setSearch] = useState(safeFilters.search || '');
+    const [category, setCategory] = useState(safeFilters.category || '');
+    const [status, setStatus] = useState(safeFilters.status || '');
+    const [sortValue, setSortValue] = useState(safeFilters.sortOrder || 'newest');
+    const [perPage, setPerPage] = useState(safeFilters.per_page || '16');
+
+    // Sync state with URL params when props change (for SPA navigation)
+    // Use safeFilters values (which rename 'sort' to 'sortOrder' to avoid prototype collision)
+    useEffect(() => {
+        setSearch(safeFilters.search || '');
+        setCategory(safeFilters.category || '');
+        setStatus(safeFilters.status || '');
+        setSortValue(safeFilters.sortOrder || 'newest');
+        setPerPage(safeFilters.per_page || '16');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        // Use JSON.stringify to create stable dependency from filtersProp
+        // This avoids directly accessing filtersProp.sort which causes prototype collision
+        JSON.stringify(filtersProp)
+    ]);
+
     const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
         if (typeof window !== 'undefined') {
             return (localStorage.getItem('productsViewMode') as 'table' | 'grid') || 'table';
@@ -306,6 +417,8 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
         return 'table';
     });
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [bulkActionLoading, setBulkActionLoading] = useState(false);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
@@ -318,15 +431,21 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
         localStorage.setItem('productsViewMode', viewMode);
     }, [viewMode]);
 
+    // Clear selection when products change
+    useEffect(() => {
+        setSelectedIds(new Set());
+    }, [productsData]);
+
     // SPA-style filter function
-    const applyFilters = useCallback((searchVal: string, categoryVal: string, statusVal: string, perPageVal: string) => {
+    const applyFilters = useCallback((searchVal: string, categoryVal: string, statusVal: string, sortVal: string, perPageVal: string) => {
         router.get(
             '/admin/products',
             {
                 search: searchVal || undefined,
                 category: categoryVal || undefined,
                 status: statusVal || undefined,
-                per_page: perPageVal !== '15' ? perPageVal : undefined,
+                sort: sortVal !== 'newest' ? sortVal : undefined,
+                per_page: perPageVal !== '16' ? perPageVal : undefined,
             },
             {
                 preserveState: true,
@@ -342,38 +461,112 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, category, status, perPage);
+        applyFilters(debouncedSearch, category, status, sortValue, perPage);
     }, [debouncedSearch, applyFilters]);
 
     // Instant filter for dropdowns
     const handleCategoryChange = (value: string) => {
         setCategory(value);
-        applyFilters(search, value, status, perPage);
+        applyFilters(search, value, status, sortValue, perPage);
     };
 
     const handleStatusChange = (value: string) => {
         setStatus(value);
-        applyFilters(search, category, value, perPage);
+        applyFilters(search, category, value, sortValue, perPage);
+    };
+
+    const handleSortChange = (value: string) => {
+        setSortValue(value);
+        applyFilters(search, category, status, value, perPage);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, category, status, value);
+        applyFilters(search, category, status, sortValue, value);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setCategory('');
         setStatus('');
-        applyFilters('', '', '', perPage);
+        setSortValue('newest');
+        applyFilters('', '', '', 'newest', perPage);
     };
 
-    const hasActiveFilters = filters.search || filters.category || filters.status;
+    const hasActiveFilters = safeFilters.search || safeFilters.category || safeFilters.status || (safeFilters.sortOrder && safeFilters.sortOrder !== 'newest');
 
     const handleDelete = (product: Product) => {
         if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
             router.delete(`/admin/products/${product.id}`);
         }
+    };
+
+    const handleToggleFeatured = (product: Product, e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.patch(`/admin/products/${product.id}/toggle-featured`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    // Bulk selection handlers
+    const allSelected = useMemo(() =>
+        productsData.length > 0 && productsData.every(p => selectedIds.has(p.id)),
+        [productsData, selectedIds]
+    );
+
+    const someSelected = useMemo(() =>
+        productsData.some(p => selectedIds.has(p.id)) && !allSelected,
+        [productsData, selectedIds, allSelected]
+    );
+
+    const toggleSelectAll = () => {
+        if (allSelected) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(productsData.map(p => p.id)));
+        }
+    };
+
+    const toggleSelect = (productId: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(productId)) {
+                newSet.delete(productId);
+            } else {
+                newSet.add(productId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleBulkAction = (action: string) => {
+        if (selectedIds.size === 0) return;
+
+        const actionLabels: Record<string, string> = {
+            activate: 'activate',
+            deactivate: 'deactivate',
+            feature: 'mark as featured',
+            unfeature: 'remove from featured',
+            delete: 'delete',
+        };
+
+        if (!confirm(`Are you sure you want to ${actionLabels[action]} ${selectedIds.size} product(s)?`)) {
+            return;
+        }
+
+        setBulkActionLoading(true);
+        router.post('/admin/products/bulk-action', {
+            action,
+            product_ids: Array.from(selectedIds),
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            onFinish: () => {
+                setBulkActionLoading(false);
+                setSelectedIds(new Set());
+            },
+        });
     };
 
     const getStockBadgeVariant = (product: Product): 'danger' | 'warning' | 'success' => {
@@ -388,7 +581,10 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Package className="h-6 w-6 text-purple-600" />
+                        Products
+                    </h1>
                     <div className="flex items-center gap-2">
                         {/* View Toggle - hidden on mobile */}
                         <div className="hidden sm:flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
@@ -419,58 +615,128 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
                 {/* Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="relative flex-1">
-                            <label htmlFor="products-search" className="sr-only">Search products</label>
-                            <input
-                                id="products-search"
-                                name="search"
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search products..."
-                                autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-brand-purple-700 dark:focus:border-brand-purple-400 outline-none"
+                    <div className="p-4 space-y-3">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div className="relative flex-1">
+                                <label htmlFor="products-search" className="sr-only">Search products</label>
+                                <input
+                                    id="products-search"
+                                    name="search"
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search products..."
+                                    autoComplete="off"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-brand-purple-700 dark:focus:border-brand-purple-400 outline-none"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            </div>
+                            <Select
+                                value={category}
+                                onChange={handleCategoryChange}
+                                className="w-full sm:w-48"
+                                placeholder="All Categories"
+                                options={buildCategoryOptions(categories)}
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Select
+                                value={status}
+                                onChange={handleStatusChange}
+                                className="w-full sm:w-40"
+                                placeholder="All Status"
+                                options={[
+                                    { value: '', label: 'All Status' },
+                                    { value: 'active', label: 'Active' },
+                                    { value: 'inactive', label: 'Inactive' },
+                                    { value: 'featured', label: 'Featured' },
+                                    { value: 'on_sale', label: 'On Sale' },
+                                    { value: 'low_stock', label: 'Low Stock' },
+                                    { value: 'out_of_stock', label: 'Out of Stock' },
+                                ]}
+                            />
                         </div>
-                        <Select
-                            value={category}
-                            onChange={handleCategoryChange}
-                            className="w-full sm:w-48"
-                            placeholder="All Categories"
-                            options={buildCategoryOptions(categories)}
-                        />
-                        <Select
-                            value={status}
-                            onChange={handleStatusChange}
-                            className="w-full sm:w-40"
-                            placeholder="All Status"
-                            options={[
-                                { value: '', label: 'All Status' },
-                                { value: 'active', label: 'Active' },
-                                { value: 'inactive', label: 'Inactive' },
-                                { value: 'on_sale', label: 'On Sale' },
-                                { value: 'low_stock', label: 'Low Stock' },
-                                { value: 'out_of_stock', label: 'Out of Stock' },
-                            ]}
-                        />
-                        {hasActiveFilters && (
-                            <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">
-                                <X className="h-4 w-4 mr-2" />
-                                Clear Filters
-                            </Button>
-                        )}
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                            <div className="flex items-center gap-2">
+                                <ArrowUpDown className="h-4 w-4 text-gray-400" />
+                                <Select
+                                    value={sortValue}
+                                    onChange={handleSortChange}
+                                    className="w-full sm:w-44"
+                                    options={sortOptions}
+                                />
+                            </div>
+                            {hasActiveFilters && (
+                                <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">
+                                    <X className="h-4 w-4 mr-2" />
+                                    Clear Filters
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </Card>
+
+                {/* Bulk Actions Bar */}
+                {selectedIds.size > 0 && (
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                                {selectedIds.size} product(s) selected
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('activate')}
+                                    disabled={bulkActionLoading}
+                                >
+                                    Activate
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('deactivate')}
+                                    disabled={bulkActionLoading}
+                                >
+                                    Deactivate
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('feature')}
+                                    disabled={bulkActionLoading}
+                                >
+                                    <Sparkles className="h-3 w-3 mr-1" />
+                                    Feature
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('unfeature')}
+                                    disabled={bulkActionLoading}
+                                >
+                                    Unfeature
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleBulkAction('delete')}
+                                    disabled={bulkActionLoading}
+                                    className="text-red-600 hover:text-red-700 dark:text-red-400"
+                                >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                )}
 
                 {/* Grid View - shown on mobile always, on desktop when grid selected */}
                 <div className={`${viewMode === 'grid' ? 'block' : 'block sm:hidden'}`}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {products.data.map((product) => (
-                            <Card key={product.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700" onClick={() => setSelectedProduct(product)}>
+                        {productsData.map((product) => (
+                            <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
                                 {/* Product Image */}
-                                <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative">
+                                <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative cursor-pointer" onClick={() => setSelectedProduct(product)}>
                                     {product.primary_image?.url ? (
                                         <img
                                             src={product.primary_image.url}
@@ -482,6 +748,17 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                             <ImageIcon className="h-12 w-12 text-gray-300 dark:text-gray-500" />
                                         </div>
                                     )}
+                                    {/* Selection Checkbox */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}
+                                        className="absolute top-2 left-2 p-1 bg-white dark:bg-gray-800 rounded shadow"
+                                    >
+                                        {selectedIds.has(product.id) ? (
+                                            <CheckSquare className="h-5 w-5 text-purple-600" />
+                                        ) : (
+                                            <Square className="h-5 w-5 text-gray-400" />
+                                        )}
+                                    </button>
                                     {/* Dropdown Menu */}
                                     <div className="absolute top-2 right-2">
                                         <div className="relative">
@@ -495,7 +772,14 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                             >
                                                 <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                                             </button>
-                                            <div className="hidden absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
+                                            <div className="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
+                                                <button
+                                                    onClick={(e) => handleToggleFeatured(product, e)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
+                                                >
+                                                    <Sparkles className="h-4 w-4" />
+                                                    {product.is_featured ? 'Unfeature' : 'Feature'}
+                                                </button>
                                                 <Link
                                                     href={`/admin/products/${product.id}/edit`}
                                                     preserveScroll
@@ -514,9 +798,19 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Status Badge */}
-                                    <div className="absolute top-2 left-2">
-                                        <Badge variant={product.is_active ? 'success' : 'default'}>
+                                    {/* Badges */}
+                                    <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                                        {product.is_featured && (
+                                            <Badge variant="warning" className="text-xs">
+                                                <Sparkles className="h-3 w-3" />
+                                            </Badge>
+                                        )}
+                                        {isNewProduct(product.created_at) && (
+                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                New
+                                            </Badge>
+                                        )}
+                                        <Badge variant={product.is_active ? 'success' : 'default'} className="text-xs">
                                             {product.is_active ? 'Active' : 'Inactive'}
                                         </Badge>
                                     </div>
@@ -526,6 +820,13 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                 <div className="p-3">
                                     <h3 className="font-medium text-gray-900 dark:text-white truncate">{product.name}</h3>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{product.category?.name || 'No category'}</p>
+
+                                    {/* Rating */}
+                                    {product.rating_count > 0 && (
+                                        <div className="mb-2">
+                                            <StarRating rating={product.average_rating} count={product.rating_count} />
+                                        </div>
+                                    )}
 
                                     {/* Variant Indicators */}
                                     {(product.color || (product.available_sizes && product.available_sizes.length > 0)) && (
@@ -565,7 +866,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             </Card>
                         ))}
                     </div>
-                    {products.data.length === 0 && (
+                    {productsData.length === 0 && (
                         <Card className="dark:bg-gray-800 dark:border-gray-700">
                             <div className="text-center py-12 text-gray-500 dark:text-gray-400">No products found</div>
                         </Card>
@@ -578,6 +879,17 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
                                 <tr>
+                                    <th className="w-10 px-4 py-3">
+                                        <button onClick={toggleSelectAll} className="p-1">
+                                            {allSelected ? (
+                                                <CheckSquare className="h-5 w-5 text-purple-600" />
+                                            ) : someSelected ? (
+                                                <MinusSquare className="h-5 w-5 text-purple-600" />
+                                            ) : (
+                                                <Square className="h-5 w-5 text-gray-400" />
+                                            )}
+                                        </button>
+                                    </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Product
                                     </th>
@@ -590,17 +902,32 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                     <th className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Stock
                                     </th>
+                                    <th className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Rating
+                                    </th>
+                                    <th className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Created
+                                    </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th className="text-right pr-12 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <th className="text-right pr-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {products.data.map((product) => (
-                                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                {productsData.map((product) => (
+                                    <tr key={product.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}>
+                                        <td className="px-4 py-4">
+                                            <button onClick={() => toggleSelect(product.id)} className="p-1">
+                                                {selectedIds.has(product.id) ? (
+                                                    <CheckSquare className="h-5 w-5 text-purple-600" />
+                                                ) : (
+                                                    <Square className="h-5 w-5 text-gray-400" />
+                                                )}
+                                            </button>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <button
@@ -620,17 +947,23 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                     )}
                                                 </button>
                                                 <div className="min-w-0">
-                                                    <div className="relative group/name">
+                                                    <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => setSelectedProduct(product)}
-                                                            className="font-medium text-gray-900 dark:text-white truncate max-w-[100px] lg:max-w-[120px] xl:max-w-[200px] hover:text-blue-600 dark:hover:text-blue-400 text-left"
+                                                            className="font-medium text-gray-900 dark:text-white truncate max-w-[100px] lg:max-w-[150px] xl:max-w-[200px] hover:text-blue-600 dark:hover:text-blue-400 text-left"
                                                         >
                                                             {product.name}
                                                         </button>
-                                                        {/* Tooltip */}
-                                                        <div className="absolute left-0 top-full mt-1 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded shadow-lg opacity-0 invisible group-hover/name:opacity-100 group-hover/name:visible transition-opacity z-20 whitespace-nowrap max-w-[300px]">
-                                                            {product.name}
-                                                        </div>
+                                                        {product.is_featured && (
+                                                            <span title="Featured">
+                                                                <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                                                            </span>
+                                                        )}
+                                                        {isNewProduct(product.created_at) && (
+                                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                                New
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                                         <span>SKU: {product.sku}</span>
@@ -669,13 +1002,27 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                                                 {product.stock}
                                             </Badge>
                                         </td>
+                                        <td className="hidden xl:table-cell px-6 py-4">
+                                            <StarRating rating={product.average_rating} count={product.rating_count} />
+                                        </td>
+                                        <td className="hidden xl:table-cell px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                            {formatDate(product.created_at)}
+                                        </td>
                                         <td className="px-6 py-4">
                                             <Badge variant={product.is_active ? 'success' : 'default'}>
                                                 {product.is_active ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </td>
                                         <td className="pr-4 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-0 sm:gap-0 md:gap-1 lg:gap-1">
+                                            <div className="flex items-center justify-end gap-0">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => handleToggleFeatured(product, e)}
+                                                    title={product.is_featured ? 'Remove from featured' : 'Mark as featured'}
+                                                >
+                                                    <Sparkles className={`h-4 w-4 ${product.is_featured ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} />
+                                                </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -704,7 +1051,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             </tbody>
                         </table>
                     </div>
-                    {products.data.length === 0 && (
+                    {productsData.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No products found</div>
                     )}
                 </Card>
@@ -716,11 +1063,11 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                         <div className="flex justify-center gap-1 sm:gap-2">
                             {/* Previous Button */}
                             <Link
-                                href={products.links[0].url || '#'}
+                                href={productsLinks[0]?.url || '#'}
                                 preserveScroll
                                 preserveState
                                 className={`px-3 py-2 rounded-lg text-sm ${
-                                    products.links[0].url
+                                    productsLinks[0]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
@@ -729,7 +1076,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                             </Link>
 
                             {/* Page Numbers */}
-                            {products.links.slice(1, -1).map((link, index) => {
+                            {productsLinks.slice(1, -1).map((link, index) => {
                                 const pageNum = index + 1;
                                 const currentPage = products.current_page;
                                 const lastPage = products.last_page;
@@ -773,11 +1120,11 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
 
                             {/* Next Button */}
                             <Link
-                                href={products.links[products.links.length - 1].url || '#'}
+                                href={productsLinks[productsLinks.length - 1]?.url || '#'}
                                 preserveScroll
                                 preserveState
                                 className={`px-3 py-2 rounded-lg text-sm ${
-                                    products.links[products.links.length - 1].url
+                                    productsLinks[productsLinks.length - 1]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
