@@ -102,12 +102,40 @@ class ProductController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $categories = Category::ordered()->get(['id', 'name', 'parent_id']);
 
+        $duplicateProduct = null;
+        if ($request->filled('duplicate')) {
+            $sourceProduct = Product::find($request->duplicate);
+            if ($sourceProduct) {
+                $duplicateProduct = [
+                    'category_id' => $sourceProduct->category_id,
+                    'name' => $sourceProduct->name . ' (Copy)',
+                    'name_ar' => $sourceProduct->name_ar ? $sourceProduct->name_ar . ' (نسخة)' : '',
+                    'description' => $sourceProduct->description,
+                    'description_ar' => $sourceProduct->description_ar,
+                    'short_description' => $sourceProduct->short_description,
+                    'short_description_ar' => $sourceProduct->short_description_ar,
+                    'price' => $sourceProduct->price,
+                    'compare_price' => $sourceProduct->compare_price,
+                    'stock' => $sourceProduct->stock,
+                    'low_stock_threshold' => $sourceProduct->low_stock_threshold,
+                    'is_active' => false, // Default to inactive for duplicates
+                    'is_featured' => false,
+                    'color' => $sourceProduct->color,
+                    'color_hex' => $sourceProduct->color_hex,
+                    'available_sizes' => $sourceProduct->available_sizes,
+                    'size_stock' => $sourceProduct->size_stock,
+                    'product_group' => $sourceProduct->product_group,
+                ];
+            }
+        }
+
         return Inertia::render('Admin/Products/Create', [
             'categories' => $categories,
+            'duplicateProduct' => $duplicateProduct,
         ]);
     }
 

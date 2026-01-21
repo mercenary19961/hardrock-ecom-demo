@@ -31,6 +31,18 @@ export function AdminThemeProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         // Save to localStorage
         localStorage.setItem(STORAGE_KEY, theme);
+
+        // Apply dark class to html element for CSS variable-based styling
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Cleanup: Remove dark class when leaving admin pages
+        return () => {
+            document.documentElement.classList.remove('dark');
+        };
     }, [theme]);
 
     const toggleTheme = () => {
