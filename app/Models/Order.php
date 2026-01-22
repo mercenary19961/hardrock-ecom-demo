@@ -32,6 +32,7 @@ class Order extends Model
         'shipping_address',
         'billing_address',
         'notes',
+        'admin_notes',
         'tracking_number',
         'carrier',
     ];
@@ -82,6 +83,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(OrderActivity::class)->orderBy('created_at', 'desc');
     }
 
     public function scopeStatus($query, string $status)

@@ -21,6 +21,8 @@ class OrderSeeder extends Seeder
         }
 
         $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        $paymentStatuses = ['pending', 'paid', 'paid', 'paid', 'failed', 'refunded'];
+        $paymentMethods = ['card', 'paypal', 'cod'];
         $addresses = [
             [
                 'street' => '123 Main Street',
@@ -62,10 +64,27 @@ class OrderSeeder extends Seeder
             $tax = round($subtotal * 0.1, 2); // 10% tax
             $total = $subtotal + $tax;
 
+            $orderStatus = $statuses[array_rand($statuses)];
+            $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
+
+            // Determine payment status based on order status
+            if ($orderStatus === 'delivered') {
+                $paymentStatus = 'paid';
+            } elseif ($orderStatus === 'cancelled') {
+                $paymentStatus = ['failed', 'refunded'][array_rand(['failed', 'refunded'])];
+            } else {
+                $paymentStatus = $paymentStatuses[array_rand($paymentStatuses)];
+            }
+
+            $createdAt = now()->subDays(rand(1, 30));
+
             $order = Order::create([
                 'user_id' => $customer->id,
                 'order_number' => Order::generateOrderNumber(),
-                'status' => $statuses[array_rand($statuses)],
+                'status' => $orderStatus,
+                'payment_status' => $paymentStatus,
+                'payment_method' => $paymentMethod,
+                'paid_at' => $paymentStatus === 'paid' ? $createdAt->copy()->addMinutes(rand(1, 60)) : null,
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'total' => $total,
@@ -75,7 +94,7 @@ class OrderSeeder extends Seeder
                 'shipping_address' => $addresses[array_rand($addresses)],
                 'billing_address' => $addresses[0],
                 'notes' => $i % 3 === 0 ? 'Please leave at the door.' : null,
-                'created_at' => now()->subDays(rand(1, 30)),
+                'created_at' => $createdAt,
             ]);
 
             foreach ($items as $item) {
