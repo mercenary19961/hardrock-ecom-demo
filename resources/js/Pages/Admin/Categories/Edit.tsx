@@ -19,6 +19,7 @@ import {
     Pencil,
     RotateCcw,
     Settings,
+    AlertTriangle,
 } from 'lucide-react';
 
 // Map category slugs to default homepage images
@@ -52,16 +53,24 @@ interface UndoMeta {
     changes?: FieldChange[];
 }
 
+interface ActiveChild {
+    id: number;
+    name: string;
+}
+
 interface Props {
     category: Category;
     parentCategories: Category[];
     undoMeta: UndoMeta | null;
+    activeChildren: ActiveChild[];
 }
 
-export default function EditCategory({ category, parentCategories, undoMeta }: Props) {
+export default function EditCategory({ category, parentCategories, undoMeta, activeChildren }: Props) {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
+    const [showCascadeModal, setShowCascadeModal] = useState(false);
+    const shouldSubmitAfterCascadeRef = useRef<boolean>(false);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -76,6 +85,7 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
         is_active: category.is_active,
         low_stock_threshold: category.low_stock_threshold ?? 10,
         image: null as File | null,
+        cascade_inactive: false,
     };
 
     const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm(initialValues);
@@ -94,6 +104,7 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
             is_active: category.is_active,
             low_stock_threshold: category.low_stock_threshold ?? 10,
             image: null,
+            cascade_inactive: false,
         });
         setImagePreview(null);
     }, [category.id, category.updated_at]); // Reset when category is updated
@@ -186,13 +197,48 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // Check if we're deactivating a parent with active children
+    const isDeactivatingWithActiveChildren =
+        category.is_active &&
+        !data.is_active &&
+        activeChildren.length > 0;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Show confirmation modal if deactivating parent with active children
+        if (isDeactivatingWithActiveChildren && !data.cascade_inactive) {
+            setShowCascadeModal(true);
+            return;
+        }
+
+        submitForm();
+    };
+
+    const submitForm = () => {
         post(`/admin/categories/${category.id}`, {
             forceFormData: true,
             preserveScroll: true,
         });
     };
+
+    const handleCascadeConfirm = (cascade: boolean) => {
+        setShowCascadeModal(false);
+        shouldSubmitAfterCascadeRef.current = true;
+        // Update the form data - effect will handle submit
+        setData('cascade_inactive', cascade);
+    };
+
+    // Effect to submit form after cascade decision is made
+    useEffect(() => {
+        if (shouldSubmitAfterCascadeRef.current) {
+            shouldSubmitAfterCascadeRef.current = false;
+            post(`/admin/categories/${category.id}`, {
+                forceFormData: true,
+                preserveScroll: true,
+            });
+        }
+    }, [data.cascade_inactive]);
 
     return (
         <AdminLayout>
@@ -553,6 +599,66 @@ export default function EditCategory({ category, parentCategories, undoMeta }: P
                     >
                         <X className="h-4 w-4 text-green-600" />
                     </button>
+                </div>
+            )}
+
+            {/* Cascade Deactivation Confirmation Modal */}
+            {showCascadeModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setShowCascadeModal(false)}
+                    />
+
+                    {/* Modal */}
+                    <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    Deactivate Subcategories?
+                                </h3>
+                                <p className="mt-2 text-sm text-gray-600">
+                                    This category has <span className="font-medium">{activeChildren.length} active subcategories</span>:
+                                </p>
+                                <ul className="mt-2 text-sm text-gray-700 list-disc list-inside max-h-32 overflow-y-auto">
+                                    {activeChildren.map((child) => (
+                                        <li key={child.id}>{child.name}</li>
+                                    ))}
+                                </ul>
+                                <p className="mt-3 text-sm text-gray-600">
+                                    Would you like to deactivate them as well? Inactive subcategories will be hidden from the storefront.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowCascadeModal(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleCascadeConfirm(false)}
+                            >
+                                Keep Subcategories Active
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => handleCascadeConfirm(true)}
+                                className="bg-amber-600 hover:bg-amber-700"
+                            >
+                                Deactivate All
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
         </AdminLayout>

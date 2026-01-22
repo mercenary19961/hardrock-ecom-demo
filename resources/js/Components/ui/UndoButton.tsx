@@ -73,13 +73,13 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
     const renderChangeItem = (change: FieldChange, index: number) => {
         return (
             <div key={index} className="flex items-start gap-2 text-xs">
-                <span className="font-medium text-gray-700 min-w-[100px] flex-shrink-0">
+                <span className="font-medium text-gray-700 dark:text-gray-300 min-w-[100px] flex-shrink-0">
                     {change.label}:
                 </span>
-                <span className="flex items-center gap-1 text-gray-600 flex-wrap">
-                    <span className="text-red-600 line-through">{change.old}</span>
-                    <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                    <span className="text-green-600">{change.new}</span>
+                <span className="flex items-center gap-1 text-gray-600 dark:text-gray-400 flex-wrap">
+                    <span className="text-red-600 dark:text-red-400 line-through">{change.old}</span>
+                    <ArrowRight className="h-3 w-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                    <span className="text-green-600 dark:text-green-400">{change.new}</span>
                 </span>
             </div>
         );
@@ -87,11 +87,11 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
 
     if (showConfirm) {
         return (
-            <div className={`flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg ${className}`}>
-                <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+            <div className={`flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg ${className}`}>
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-amber-800">Restore previous version?</p>
-                    <p className="text-xs text-amber-600">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Restore previous version?</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
                         This will revert {changes.length} field{changes.length !== 1 ? 's' : ''} to their previous values.
                     </p>
                 </div>
@@ -110,7 +110,7 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
                         size="sm"
                         onClick={handleUndo}
                         disabled={processing}
-                        className="bg-amber-600 hover:bg-amber-700"
+                        className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700"
                     >
                         {processing ? 'Restoring...' : 'Restore'}
                     </Button>
@@ -126,17 +126,17 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
                 onClick={() => setShowConfirm(true)}
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             >
                 <History className="h-4 w-4" />
                 <span>Undo Last Update</span>
                 {changes.length > 0 && (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 rounded text-xs text-blue-600">
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-xs text-blue-600 dark:text-blue-300">
                         <Info className="h-3 w-3" />
                         {changes.length} change{changes.length !== 1 ? 's' : ''}
                     </span>
                 )}
-                <span className="flex items-center gap-1 text-xs text-blue-500">
+                <span className="flex items-center gap-1 text-xs text-blue-500 dark:text-blue-400">
                     <Clock className="h-3 w-3" />
                     {formatTimeAgo(undoMeta.saved_at)}
                 </span>
@@ -144,17 +144,17 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
 
             {/* Tooltip showing changes */}
             {showTooltip && changes.length > 0 && (
-                <div className="absolute top-full left-0 mt-2 z-50 w-80 max-w-sm bg-white border border-gray-200 rounded-lg shadow-lg p-3 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100">
-                        <Info className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-gray-800">
+                <div className="absolute top-full left-0 mt-2 z-50 w-80 max-w-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-700">
+                        <Info className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                             Changes made in last update:
                         </span>
                     </div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                         {changes.map((change, index) => renderChangeItem(change, index))}
                     </div>
-                    <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                         Click to restore previous values
                     </div>
                 </div>

@@ -63,5 +63,31 @@
         "location": "Khalda - Amman, Jordan",
         "phone": "+962 79 170 0034",
         "tagline": "Reach The Peak - A demo e-commerce platform by HardRock Marketing & Technology."
+    },
+    "errors": {
+        "404": {
+            "title": "Page Not Found",
+            "description": "Sorry, the page you are looking for could not be found."
+        },
+        "403": {
+            "title": "Forbidden",
+            "description": "Sorry, you are forbidden from accessing this page."
+        },
+        "500": {
+            "title": "Server Error",
+            "description": "Whoops, something went wrong on our servers."
+        },
+        "503": {
+            "title": "Service Unavailable",
+            "description": "Sorry, we are doing some maintenance. Please check back soon."
+        },
+        "default": {
+            "title": "Error",
+            "description": "An unexpected error occurred."
+        },
+        "goBack": "Go Back",
+        "goHome": "Go Home",
+        "tryAgain": "Try Again",
+        "needHelp": "Need help? Contact our support team."
     }
 }

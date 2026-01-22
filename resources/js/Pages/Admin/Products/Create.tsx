@@ -1,37 +1,59 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor, Badge } from '@/Components/ui';
 import { Category } from '@/types/models';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Copy } from 'lucide-react';
+
+interface DuplicateProduct {
+    category_id: number;
+    name: string;
+    name_ar: string;
+    description: string;
+    description_ar: string;
+    short_description: string;
+    short_description_ar: string;
+    price: string;
+    compare_price: string | null;
+    stock: number;
+    low_stock_threshold: number | null;
+    is_active: boolean;
+    is_featured: boolean;
+    color: string | null;
+    color_hex: string | null;
+    available_sizes: string[] | null;
+    size_stock: Record<string, number> | null;
+    product_group: string | null;
+}
 
 interface Props {
     categories: Category[];
+    duplicateProduct?: DuplicateProduct | null;
 }
 
-export default function CreateProduct({ categories }: Props) {
+export default function CreateProduct({ categories, duplicateProduct }: Props) {
     const { data, setData, post, processing, errors } = useForm({
-        category_id: '',
-        name: '',
-        name_ar: '',
+        category_id: duplicateProduct?.category_id?.toString() || '',
+        name: duplicateProduct?.name || '',
+        name_ar: duplicateProduct?.name_ar || '',
         slug: '',
-        description: '',
-        description_ar: '',
-        short_description: '',
-        short_description_ar: '',
-        price: '',
-        compare_price: '',
+        description: duplicateProduct?.description || '',
+        description_ar: duplicateProduct?.description_ar || '',
+        short_description: duplicateProduct?.short_description || '',
+        short_description_ar: duplicateProduct?.short_description_ar || '',
+        price: duplicateProduct?.price?.toString() || '',
+        compare_price: duplicateProduct?.compare_price?.toString() || '',
         sku: '',
-        stock: 0,
-        low_stock_threshold: '',
-        is_active: true,
-        is_featured: false,
+        stock: duplicateProduct?.stock ?? 0,
+        low_stock_threshold: duplicateProduct?.low_stock_threshold?.toString() || '',
+        is_active: duplicateProduct?.is_active ?? true,
+        is_featured: duplicateProduct?.is_featured ?? false,
         images: [] as File[],
         // Variant fields
-        color: '',
-        color_hex: '',
-        available_sizes: [] as string[],
-        size_stock: {} as Record<string, number>,
-        product_group: '',
+        color: duplicateProduct?.color || '',
+        color_hex: duplicateProduct?.color_hex || '',
+        available_sizes: duplicateProduct?.available_sizes || [] as string[],
+        size_stock: duplicateProduct?.size_stock || {} as Record<string, number>,
+        product_group: duplicateProduct?.product_group || '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -47,23 +69,41 @@ export default function CreateProduct({ categories }: Props) {
 
     return (
         <AdminLayout>
-            <Head title="Create Product" />
+            <Head title={duplicateProduct ? "Duplicate Product" : "Create Product"} />
 
             <div className="max-w-3xl">
                 <div className="mb-6">
                     <Link
                         href="/admin/products"
-                        className="inline-flex items-center text-gray-600 hover:text-gray-900"
+                        className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Products
                     </Link>
                 </div>
 
+                {/* Duplicate Product Banner */}
+                {duplicateProduct && (
+                    <div className="mb-6 flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <Copy className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                Duplicating Product
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                                A new slug and SKU will be auto-generated. Images must be uploaded separately.
+                            </p>
+                        </div>
+                        <Badge variant="info" className="text-xs">
+                            Inactive by default
+                        </Badge>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardHeader>
-                            <h2 className="text-lg font-semibold">Basic Information</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h2>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
@@ -81,7 +121,7 @@ export default function CreateProduct({ categories }: Props) {
                                     }))}
                                 />
                                 {errors.category_id && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>
+                                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.category_id}</p>
                                 )}
                             </div>
 
@@ -153,9 +193,9 @@ export default function CreateProduct({ categories }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardHeader>
-                            <h2 className="text-lg font-semibold">Pricing & Inventory</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Pricing & Inventory</h2>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -210,17 +250,17 @@ export default function CreateProduct({ categories }: Props) {
                                     error={errors.low_stock_threshold}
                                     placeholder="Inherit from category"
                                 />
-                                <p className="mt-1 text-sm text-gray-500">
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                     Leave empty to use the category's threshold. Set a value to override for this product only.
                                 </p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardHeader>
-                            <h2 className="text-lg font-semibold">Variant Options</h2>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Variant Options</h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 Optional: Add color and size variants for this product
                             </p>
                         </CardHeader>
@@ -250,18 +290,18 @@ export default function CreateProduct({ categories }: Props) {
                                 error={errors.product_group}
                                 placeholder="Group related color variants together"
                             />
-                            <p className="text-sm text-gray-500 -mt-3">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 -mt-3">
                                 Use the same group name for products that are color variants of each other.
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardHeader>
-                            <h2 className="text-lg font-semibold">Images</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Images</h2>
                         </CardHeader>
                         <CardContent>
-                            <label htmlFor="images" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="images" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Product Images
                             </label>
                             <input
@@ -271,20 +311,20 @@ export default function CreateProduct({ categories }: Props) {
                                 accept="image/*"
                                 multiple
                                 onChange={handleImageChange}
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                                className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-300 hover:file:bg-gray-200 dark:hover:file:bg-gray-600"
                             />
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 Upload up to 5 images. First image will be the primary.
                             </p>
                             {errors.images && (
-                                <p className="mt-1 text-sm text-red-600">{errors.images}</p>
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.images}</p>
                             )}
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardHeader>
-                            <h2 className="text-lg font-semibold">Status</h2>
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Status</h2>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
@@ -295,9 +335,9 @@ export default function CreateProduct({ categories }: Props) {
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
                                     />
-                                    <label htmlFor="is_active" className="text-sm text-gray-700">Active</label>
+                                    <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">Active</label>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -306,9 +346,9 @@ export default function CreateProduct({ categories }: Props) {
                                         type="checkbox"
                                         checked={data.is_featured}
                                         onChange={(e) => setData('is_featured', e.target.checked)}
-                                        className="rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
                                     />
-                                    <label htmlFor="is_featured" className="text-sm text-gray-700">Featured</label>
+                                    <label htmlFor="is_featured" className="text-sm text-gray-700 dark:text-gray-300">Featured</label>
                                 </div>
                             </div>
                         </CardContent>

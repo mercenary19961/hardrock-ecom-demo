@@ -4,7 +4,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Session\TokenMismatchException;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,6 +36,22 @@ return Application::configure(basePath: dirname(__DIR__))
                     return back()->with('error', 'Your session has expired. Please try again.');
                 }
             }
+
+            // Render Inertia error pages for HTTP exceptions (404, 500, etc.)
+            if ($e instanceof HttpExceptionInterface) {
+                $status = $e->getStatusCode();
+
+                // Only render custom error pages for specific status codes
+                if (in_array($status, [403, 404, 500, 503])) {
+                    return Inertia::render('Error', [
+                        'status' => $status,
+                        'message' => $e->getMessage(),
+                    ])
+                        ->toResponse($request)
+                        ->setStatusCode($status);
+                }
+            }
+
             return $response;
         });
     })->create();

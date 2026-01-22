@@ -71,19 +71,19 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
             <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {statCards.map((stat) => {
                         const Icon = stat.icon;
                         return (
-                            <Card key={stat.name}>
+                            <Card key={stat.name} className="dark:bg-gray-800 dark:border-gray-700">
                                 <CardContent className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm text-gray-500">{stat.name}</p>
-                                            <p className="text-2xl font-bold mt-1">{stat.value}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{stat.name}</p>
+                                            <p className="text-2xl font-bold mt-1 dark:text-white">{stat.value}</p>
                                         </div>
                                         <div className={`p-3 rounded-lg ${stat.color}`}>
                                             <Icon className="h-6 w-6" />
@@ -97,13 +97,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Recent Orders */}
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold">Recent Orders</h2>
+                                <h2 className="text-lg font-semibold dark:text-white">Recent Orders</h2>
                                 <Link
                                     href="/admin/orders"
-                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                    className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                                 >
                                     View all
                                 </Link>
@@ -112,16 +112,16 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                 {recentOrders.map((order) => (
                                     <div
                                         key={order.id}
-                                        className="flex items-center justify-between py-3 border-b last:border-0"
+                                        className="flex items-center justify-between py-3 border-b last:border-0 dark:border-gray-700"
                                     >
                                         <div>
                                             <Link
                                                 href={`/admin/orders/${order.id}`}
-                                                className="font-medium hover:text-gray-600"
+                                                className="font-medium hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
                                             >
                                                 {order.order_number}
                                             </Link>
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
                                                 {order.customer_name}
                                             </p>
                                         </div>
@@ -129,30 +129,30 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                             <Badge className={getStatusColor(order.status)}>
                                                 {order.status}
                                             </Badge>
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                                 {formatPrice(order.total, language)}
                                             </p>
                                         </div>
                                     </div>
                                 ))}
                                 {recentOrders.length === 0 && (
-                                    <p className="text-gray-500 text-center py-4">No orders yet</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">No orders yet</p>
                                 )}
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Low Stock Products */}
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
                                     <AlertTriangle className="h-5 w-5 text-yellow-500" />
                                     Low Stock Products
                                 </h2>
                                 <Link
                                     href="/admin/products?status=low_stock"
-                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                    className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                                 >
                                     View all
                                 </Link>
@@ -161,16 +161,16 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                 {lowStockProducts.map((product) => (
                                     <div
                                         key={product.id}
-                                        className="flex items-center justify-between py-3 border-b last:border-0"
+                                        className="flex items-center justify-between py-3 border-b last:border-0 dark:border-gray-700"
                                     >
                                         <div>
                                             <Link
                                                 href={`/admin/products/${product.id}/edit`}
-                                                className="font-medium hover:text-gray-600"
+                                                className="font-medium hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
                                             >
                                                 {product.name}
                                             </Link>
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
                                                 SKU: {product.sku}
                                             </p>
                                         </div>
@@ -180,7 +180,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     </div>
                                 ))}
                                 {lowStockProducts.length === 0 && (
-                                    <p className="text-gray-500 text-center py-4">
+                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">
                                         All products are well stocked
                                     </p>
                                 )}

@@ -76,7 +76,7 @@ export function SizeStockEditor({
     return (
         <div className="w-full space-y-4">
             {label && (
-                <span className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {label}
                 </span>
             )}
@@ -84,11 +84,11 @@ export function SizeStockEditor({
             {/* Size Presets */}
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Letter Sizes</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Letter Sizes</span>
                     <button
                         type="button"
                         onClick={() => addAllPresets(PRESET_SIZES)}
-                        className="text-xs text-gray-500 hover:text-gray-700"
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                         Add All
                     </button>
@@ -103,8 +103,8 @@ export function SizeStockEditor({
                             className={cn(
                                 'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                                 sizes.includes(size)
-                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600'
                             )}
                         >
                             {size}
@@ -115,11 +115,11 @@ export function SizeStockEditor({
 
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Numeric Sizes (Shoes)</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Numeric Sizes (Shoes)</span>
                     <button
                         type="button"
                         onClick={() => addAllPresets(NUMERIC_SIZES)}
-                        className="text-xs text-gray-500 hover:text-gray-700"
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                         Add All
                     </button>
@@ -134,8 +134,8 @@ export function SizeStockEditor({
                             className={cn(
                                 'px-3 py-1.5 text-sm rounded-lg border transition-colors',
                                 sizes.includes(size)
-                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600'
                             )}
                         >
                             {size}
@@ -146,7 +146,7 @@ export function SizeStockEditor({
 
             {/* Custom Size Input */}
             <div>
-                <label htmlFor={customSizeId} className="block text-sm text-gray-600 mb-1">
+                <label htmlFor={customSizeId} className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
                     Custom Size
                 </label>
                 <div className="flex gap-2">
@@ -155,7 +155,7 @@ export function SizeStockEditor({
                         type="text"
                         placeholder="Enter custom size"
                         onKeyDown={handleCustomSizeKeyDown}
-                        className="flex h-10 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:border-gray-900"
+                        className="flex h-10 flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-900 dark:focus:border-gray-400"
                     />
                     <button
                         type="button"
@@ -164,7 +164,7 @@ export function SizeStockEditor({
                             addSize(input.value);
                             input.value = '';
                         }}
-                        className="px-4 h-10 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                        className="px-4 h-10 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
                     >
                         <Plus className="h-4 w-4" />
                     </button>
@@ -175,13 +175,13 @@ export function SizeStockEditor({
             {sizes.length > 0 && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Stock per Size ({sizes.length} sizes)
                         </span>
                         <button
                             type="button"
                             onClick={clearAll}
-                            className="text-xs text-red-500 hover:text-red-700"
+                            className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                         >
                             Clear All
                         </button>
@@ -190,9 +190,9 @@ export function SizeStockEditor({
                         {sizes.map((size) => (
                             <div
                                 key={size}
-                                className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200"
+                                className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
                             >
-                                <span className="text-sm font-medium text-gray-700 min-w-[40px]">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 min-w-[40px]">
                                     {size}
                                 </span>
                                 <input
@@ -200,32 +200,32 @@ export function SizeStockEditor({
                                     min="0"
                                     value={sizeStock[size] ?? 0}
                                     onChange={(e) => updateStock(size, parseInt(e.target.value) || 0)}
-                                    className="flex-1 h-8 w-full min-w-0 rounded border border-gray-300 px-2 text-sm text-center focus:outline-none focus:border-gray-900"
+                                    className="flex-1 h-8 w-full min-w-0 rounded border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-600 px-2 text-sm text-center text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-gray-400"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => removeSize(size)}
-                                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
                         ))}
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                         Total stock: {Object.values(sizeStock).reduce((a, b) => a + b, 0)} units
                     </p>
                 </div>
             )}
 
             {sizes.length === 0 && (
-                <p className="text-sm text-gray-500 italic">
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                     No sizes selected. Click on size buttons above or add a custom size.
                 </p>
             )}
 
             {error && (
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
         </div>
     );

@@ -16,7 +16,14 @@ class LandingController extends Controller
 {
     public function show(Request $request, Category $category): Response
     {
+        // Check if this category is active
         if (!$category->is_active) {
+            abort(404);
+        }
+
+        // If this is a subcategory, also check if parent is active
+        // This prevents "orphaned" subcategories from being accessible
+        if ($category->parent_id && $category->parent && !$category->parent->is_active) {
             abort(404);
         }
 
