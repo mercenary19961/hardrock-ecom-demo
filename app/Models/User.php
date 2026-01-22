@@ -73,4 +73,13 @@ class User extends Authenticatable
             ->where('status', 'delivered')
             ->exists();
     }
+
+    /**
+     * Get the duration (in minutes) the remember me cookie should be valid.
+     * 30 days = 43200 minutes
+     */
+    public function getRememberDuration(): int
+    {
+        return config('auth.remember_me_duration', 43200);
+    }
 }

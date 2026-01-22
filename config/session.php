@@ -34,6 +34,18 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Session Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | This option specifies an extended session lifetime for admin users.
+    | Admins often work for longer periods and need extended sessions.
+    |
+    */
+
+    'admin_lifetime' => (int) env('SESSION_ADMIN_LIFETIME', 480),
+
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*

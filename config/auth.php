@@ -112,4 +112,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Remember Me Duration
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the duration (in minutes) that the "remember me"
+    | cookie will be valid. 43200 minutes = 30 days.
+    |
+    */
+
+    'remember_me_duration' => env('AUTH_REMEMBER_ME_DURATION', 43200),
+
 ];

@@ -18,6 +18,10 @@ class AdminMiddleware
             abort(403, 'Unauthorized. Admin access required.');
         }
 
+        // Extend session lifetime for admin users
+        $adminLifetime = config('session.admin_lifetime', 480);
+        config(['session.lifetime' => $adminLifetime]);
+
         return $next($request);
     }
 }
