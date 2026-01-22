@@ -129,13 +129,35 @@ export type OrderStatus =
     | "delivered"
     | "cancelled";
 
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+export type PaymentMethod = "card" | "paypal" | "cod";
+
+export interface OrderActivity {
+    id: number;
+    order_id: number;
+    user_id: number | null;
+    action: string;
+    description: string;
+    old_value: string | null;
+    new_value: string | null;
+    user?: User;
+    created_at: string;
+}
+
 export interface Order {
     id: number;
     user_id: number | null;
+    coupon_id: number | null;
+    coupon_code: string | null;
     order_number: string;
     status: OrderStatus;
+    payment_method: PaymentMethod | null;
+    payment_status: PaymentStatus;
+    transaction_id: string | null;
+    paid_at: string | null;
     subtotal: number;
     tax: number;
+    discount: number;
     total: number;
     customer_name: string;
     customer_email: string;
@@ -143,9 +165,15 @@ export interface Order {
     shipping_address: Address;
     billing_address: Address | null;
     notes: string | null;
+    admin_notes: string | null;
+    tracking_number: string | null;
+    carrier: string | null;
     items?: OrderItem[];
     user?: User;
+    coupon?: Coupon;
+    activities?: OrderActivity[];
     status_color?: string;
+    payment_status_color?: string;
     created_at: string;
     updated_at: string;
 }
