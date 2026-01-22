@@ -26,7 +26,7 @@ interface Props {
     };
 }
 
-const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const statuses = ['all', 'pending', 'processing', 'delivered', 'cancelled'];
 const paymentStatuses = ['all', 'pending', 'paid', 'failed', 'refunded'];
 const datePresets = [
     { value: '', label: 'All Time' },

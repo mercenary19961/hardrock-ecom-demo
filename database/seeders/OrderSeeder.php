@@ -20,7 +20,7 @@ class OrderSeeder extends Seeder
             return;
         }
 
-        $statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        $statuses = ['pending', 'processing', 'delivered', 'cancelled'];
         $paymentStatuses = ['pending', 'paid', 'paid', 'paid', 'failed', 'refunded'];
         $paymentMethods = ['card', 'paypal', 'cod'];
         $addresses = [

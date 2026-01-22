@@ -7,7 +7,8 @@ use App\Models\Order;
 use App\Models\OrderActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -99,7 +100,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $request->validate([
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+            'status' => 'required|in:pending,processing,delivered,cancelled',
         ]);
 
         $oldStatus = $order->status;
@@ -109,7 +110,7 @@ class OrderController extends Controller
             $order->update(['status' => $newStatus]);
 
             // Log the activity
-            OrderActivity::logStatusChange($order, $oldStatus, $newStatus, auth()->id());
+            OrderActivity::logStatusChange($order, $oldStatus, $newStatus, Auth::id());
         }
 
         return back()->with('success', 'Order status updated successfully.');
@@ -128,7 +129,7 @@ class OrderController extends Controller
         ]);
 
         // Log the activity
-        OrderActivity::logTrackingUpdate($order, $request->tracking_number, $request->carrier, auth()->id());
+        OrderActivity::logTrackingUpdate($order, $request->tracking_number, $request->carrier, Auth::id());
 
         return back()->with('success', 'Tracking information updated successfully.');
     }
@@ -146,7 +147,7 @@ class OrderController extends Controller
 
         // Log the activity only if notes were added/changed
         if ($newNotes && $newNotes !== $oldNotes) {
-            OrderActivity::logAdminNote($order, $newNotes, auth()->id());
+            OrderActivity::logAdminNote($order, $newNotes, Auth::id());
         }
 
         return back()->with('success', 'Admin notes updated successfully.');
@@ -157,7 +158,7 @@ class OrderController extends Controller
         $request->validate([
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'exists:orders,id',
-            'status' => 'required|in:pending,processing,shipped,delivered,cancelled',
+            'status' => 'required|in:pending,processing,delivered,cancelled',
         ]);
 
         $orders = Order::whereIn('id', $request->order_ids)->get();
@@ -167,7 +168,7 @@ class OrderController extends Controller
             if ($order->status !== $request->status) {
                 $oldStatus = $order->status;
                 $order->update(['status' => $request->status]);
-                OrderActivity::logStatusChange($order, $oldStatus, $request->status, auth()->id());
+                OrderActivity::logStatusChange($order, $oldStatus, $request->status, Auth::id());
                 $updatedCount++;
             }
         }
@@ -175,7 +176,7 @@ class OrderController extends Controller
         return back()->with('success', "{$updatedCount} order(s) updated successfully.");
     }
 
-    public function export(Request $request): Response
+    public function export(Request $request): StreamedResponse
     {
         $query = Order::with('items');
 

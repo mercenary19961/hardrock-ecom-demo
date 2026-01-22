@@ -25,7 +25,7 @@ interface Props {
     order: Order;
 }
 
-const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+const statuses = ['pending', 'processing', 'delivered', 'cancelled'];
 
 const paymentStatusColors: Record<string, string> = {
     pending: 'bg-yellow-500/20 text-yellow-400',
