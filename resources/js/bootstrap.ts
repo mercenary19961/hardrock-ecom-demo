@@ -4,3 +4,113 @@ window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
+
+/**
+ * Graceful 419 (CSRF Token Mismatch) Error Handler
+ * Instead of showing a dead page, we handle it gracefully
+ */
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response?.status === 419) {
+            // CSRF token expired - show user-friendly message and reload
+
+            // Create and show a modal notification
+            const modal = document.createElement('div');
+            modal.id = 'session-expired-modal';
+            modal.innerHTML = `
+                <div style="
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 99999;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 24px;
+                        border-radius: 12px;
+                        max-width: 400px;
+                        text-align: center;
+                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    ">
+                        <div style="
+                            width: 48px;
+                            height: 48px;
+                            background: #FEF3C7;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin: 0 auto 16px;
+                        ">
+                            <svg width="24" height="24" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #111827;">
+                            Session Expired
+                        </h3>
+                        <p style="margin: 0 0 20px; color: #6B7280; font-size: 14px;">
+                            Your session has expired for security reasons. Click below to refresh and continue working.
+                        </p>
+                        <button
+                            onclick="window.location.reload()"
+                            style="
+                                background: #7C3AED;
+                                color: white;
+                                border: none;
+                                padding: 10px 24px;
+                                border-radius: 8px;
+                                font-size: 14px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: background 0.2s;
+                            "
+                            onmouseover="this.style.background='#6D28D9'"
+                            onmouseout="this.style.background='#7C3AED'"
+                        >
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Remove any existing modal first
+            const existingModal = document.getElementById('session-expired-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            document.body.appendChild(modal);
+
+            // Don't reject - we've handled it
+            return new Promise(() => {}); // Never resolves, prevents further error handling
+        }
+        return Promise.reject(error);
+    }
+);
+
+/**
+ * Auto-refresh CSRF token every 30 minutes
+ * This prevents 419 errors while actively working
+ */
+const CSRF_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+function refreshCsrfToken() {
+    axios.get('/sanctum/csrf-cookie').catch(() => {
+        // Silently fail - the 419 handler will catch actual issues
+    });
+}
+
+// Start the auto-refresh interval
+setInterval(refreshCsrfToken, CSRF_REFRESH_INTERVAL);
+
+// Also refresh on visibility change (when user returns to tab)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        refreshCsrfToken();
+    }
+});
