@@ -313,8 +313,8 @@ interface Props {
 
 // Helper function to build hierarchical category options
 function buildCategoryOptions(categories?: (Category & { children?: Category[] })[] | null) {
-    const options: { value: string; label: string; isChild?: boolean; isGroupHeader?: boolean; childCount?: number; parentValue?: string }[] = [
-        { value: '', label: 'All Categories' },
+    const options: { value: string; label: string; isChild?: boolean; isGroupHeader?: boolean; childCount?: number; parentValue?: string; icon?: typeof Layers }[] = [
+        { value: '', label: 'All Categories', icon: Layers },
     ];
 
     if (!categories || !Array.isArray(categories)) {
@@ -656,14 +656,14 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                             <Select
                                 value={category}
                                 onChange={handleCategoryChange}
-                                className="w-full sm:w-48"
+                                className="w-full sm:w-52 lg:w-56"
                                 placeholder="All Categories"
                                 options={buildCategoryOptions(categories)}
                             />
                             <Select
                                 value={status}
                                 onChange={handleStatusChange}
-                                className="w-full sm:w-40"
+                                className="w-full sm:w-44 lg:w-48"
                                 placeholder="All Status"
                                 options={statusOptions}
                             />

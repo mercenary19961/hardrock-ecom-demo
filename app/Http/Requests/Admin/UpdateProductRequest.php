@@ -44,6 +44,8 @@ class UpdateProductRequest extends FormRequest
             'images.*' => 'image|max:2048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'integer|exists:product_images,id',
+            'image_order' => 'nullable|array',
+            'image_order.*' => 'integer|exists:product_images,id',
             // Variant fields
             'color' => 'nullable|string|max:100',
             'color_hex' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],

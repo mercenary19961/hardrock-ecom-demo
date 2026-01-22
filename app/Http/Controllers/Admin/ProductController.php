@@ -182,7 +182,7 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['images'], $data['delete_images']);
+        unset($data['images'], $data['delete_images'], $data['image_order']);
 
         // Save undo state before updating (only if there are actual changes)
         $this->undoService->saveState($product, null, $data);
@@ -200,6 +200,18 @@ class ProductController extends Controller
             }
         }
 
+        // Handle image reordering
+        if ($request->has('image_order') && is_array($request->image_order)) {
+            foreach ($request->image_order as $index => $imageId) {
+                ProductImage::where('id', $imageId)
+                    ->where('product_id', $product->id)
+                    ->update([
+                        'sort_order' => $index,
+                        'is_primary' => $index === 0, // First image is primary
+                    ]);
+            }
+        }
+
         // Handle new images
         if ($request->hasFile('images')) {
             $maxOrder = $product->images()->max('sort_order') ?? -1;
@@ -214,9 +226,9 @@ class ProductController extends Controller
             }
         }
 
-        // Set primary image if none exists
+        // Set primary image if none exists (fallback)
         if (!$product->images()->where('is_primary', true)->exists()) {
-            $product->images()->first()?->update(['is_primary' => true]);
+            $product->images()->orderBy('sort_order')->first()?->update(['is_primary' => true]);
         }
 
         return redirect()
