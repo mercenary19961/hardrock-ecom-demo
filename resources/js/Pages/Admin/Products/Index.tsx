@@ -1135,7 +1135,11 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {productsData.map((product) => (
-                                    <tr key={product.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}>
+                                    <tr
+                                        key={product.id}
+                                        className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
+                                        onContextMenu={(e) => handleContextMenu(e, product)}
+                                    >
                                         <td className="px-4 py-4">
                                             <button onClick={() => toggleSelect(product.id)} className="p-1">
                                                 {selectedIds.has(product.id) ? (
