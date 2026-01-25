@@ -935,7 +935,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 <Select
                                     value={sortValue}
                                     onChange={handleSortChange}
-                                    className="w-full sm:w-40"
+                                    className="w-full sm:w-48"
                                     options={sortOptions}
                                 />
                             </div>
