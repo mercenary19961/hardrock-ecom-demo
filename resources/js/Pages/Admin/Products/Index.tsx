@@ -14,6 +14,171 @@ import {
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling } from '@/hooks';
 
+// Product Card Image component with navigation for multiple images
+function ProductCardImage({
+    product,
+    onProductClick,
+    isSelected,
+    onToggleSelect,
+    onToggleFeatured,
+    onDelete,
+}: {
+    product: Product;
+    onProductClick: () => void;
+    isSelected: boolean;
+    onToggleSelect: () => void;
+    onToggleFeatured: (e: React.MouseEvent) => void;
+    onDelete: () => void;
+}) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const images = product.images && product.images.length > 0 ? product.images : [];
+    const hasMultipleImages = images.length > 1;
+    const currentImage = images[currentImageIndex]?.url || product.primary_image?.url;
+
+    const handlePrevImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    };
+
+    return (
+        <div
+            className="aspect-square bg-gray-100 dark:bg-gray-700 relative cursor-pointer"
+            onClick={onProductClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {currentImage ? (
+                <img
+                    src={currentImage}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="h-12 w-12 text-gray-300 dark:text-gray-500" />
+                </div>
+            )}
+
+            {/* Image Navigation Arrows */}
+            {hasMultipleImages && isHovered && (
+                <>
+                    <button
+                        onClick={handlePrevImage}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all z-10"
+                        aria-label="Previous image"
+                    >
+                        <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                    </button>
+                    <button
+                        onClick={handleNextImage}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all z-10"
+                        aria-label="Next image"
+                    >
+                        <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                    </button>
+
+                    {/* Image Dots Indicator */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10">
+                        {images.map((_, index) => (
+                            <span
+                                key={index}
+                                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                    index === currentImageIndex
+                                        ? 'bg-gray-900 dark:bg-white'
+                                        : 'bg-gray-400 dark:bg-gray-500'
+                                }`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* Selection Checkbox */}
+            <button
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+                className="absolute top-2 left-2 p-1 bg-white dark:bg-gray-800 rounded shadow"
+            >
+                {isSelected ? (
+                    <CheckSquare className="h-5 w-5 text-purple-600" />
+                ) : (
+                    <Square className="h-5 w-5 text-gray-400" />
+                )}
+            </button>
+
+            {/* Dropdown Menu */}
+            <div className="absolute top-2 right-2">
+                <div className="relative">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const menu = e.currentTarget.nextElementSibling;
+                            menu?.classList.toggle('hidden');
+                        }}
+                        className="p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    </button>
+                    <div className="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-20">
+                        <button
+                            onClick={onToggleFeatured}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                            {product.is_featured ? 'Unfeature' : 'Feature'}
+                        </button>
+                        <Link
+                            href={`/admin/products/${product.id}/edit`}
+                            preserveScroll
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            <Edit className="h-4 w-4" />
+                            Edit
+                        </Link>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Badges */}
+            <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                {product.is_featured && (
+                    <Badge variant="warning" className="text-xs">
+                        <Sparkles className="h-3 w-3" />
+                    </Badge>
+                )}
+                {isNewProduct(product.created_at) && (
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
+                        New
+                    </Badge>
+                )}
+                <Badge variant={product.is_active ? 'success' : 'default'} className="text-xs">
+                    {product.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+            </div>
+
+            {/* Image count indicator (when not hovered) */}
+            {hasMultipleImages && !isHovered && (
+                <div className="absolute top-2 right-12 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                    {images.length} <ImageIcon className="h-3 w-3 inline-block" />
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Helper to check if product is new (created within last 30 days)
 function isNewProduct(createdAt: string): boolean {
     const thirtyDaysAgo = new Date();
@@ -752,86 +917,15 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {productsData.map((product) => (
                             <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
-                                {/* Product Image */}
-                                <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative cursor-pointer" onClick={() => setSelectedProduct(product)}>
-                                    {product.primary_image?.url ? (
-                                        <img
-                                            src={product.primary_image.url}
-                                            alt={product.name}
-                                            className="w-full h-full object-contain"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <ImageIcon className="h-12 w-12 text-gray-300 dark:text-gray-500" />
-                                        </div>
-                                    )}
-                                    {/* Selection Checkbox */}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}
-                                        className="absolute top-2 left-2 p-1 bg-white dark:bg-gray-800 rounded shadow"
-                                    >
-                                        {selectedIds.has(product.id) ? (
-                                            <CheckSquare className="h-5 w-5 text-purple-600" />
-                                        ) : (
-                                            <Square className="h-5 w-5 text-gray-400" />
-                                        )}
-                                    </button>
-                                    {/* Dropdown Menu */}
-                                    <div className="absolute top-2 right-2">
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const menu = e.currentTarget.nextElementSibling;
-                                                    menu?.classList.toggle('hidden');
-                                                }}
-                                                className="p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                            >
-                                                <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                                            </button>
-                                            <div className="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
-                                                <button
-                                                    onClick={(e) => handleToggleFeatured(product, e)}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
-                                                >
-                                                    <Sparkles className="h-4 w-4" />
-                                                    {product.is_featured ? 'Unfeature' : 'Feature'}
-                                                </button>
-                                                <Link
-                                                    href={`/admin/products/${product.id}/edit`}
-                                                    preserveScroll
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                    Edit
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(product)}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Badges */}
-                                    <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
-                                        {product.is_featured && (
-                                            <Badge variant="warning" className="text-xs">
-                                                <Sparkles className="h-3 w-3" />
-                                            </Badge>
-                                        )}
-                                        {isNewProduct(product.created_at) && (
-                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
-                                                New
-                                            </Badge>
-                                        )}
-                                        <Badge variant={product.is_active ? 'success' : 'default'} className="text-xs">
-                                            {product.is_active ? 'Active' : 'Inactive'}
-                                        </Badge>
-                                    </div>
-                                </div>
+                                {/* Product Image with Navigation */}
+                                <ProductCardImage
+                                    product={product}
+                                    onProductClick={() => setSelectedProduct(product)}
+                                    isSelected={selectedIds.has(product.id)}
+                                    onToggleSelect={() => toggleSelect(product.id)}
+                                    onToggleFeatured={(e) => handleToggleFeatured(product, e)}
+                                    onDelete={() => handleDelete(product)}
+                                />
 
                                 {/* Product Info */}
                                 <div className="p-3">
