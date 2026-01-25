@@ -9,7 +9,7 @@ import {
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
     Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
     Clock, History, TrendingUp, TrendingDown, Flame, CircleCheck, CircleX,
-    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff
+    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling } from '@/hooks';
@@ -772,9 +772,16 @@ export default function ProductsIndex({ products: productsProp, categories, filt
         }
     };
 
-    const handleToggleFeatured = (product: Product, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleToggleFeatured = (product: Product, e?: React.MouseEvent) => {
+        e?.stopPropagation();
         router.patch(`/admin/products/${product.id}/toggle-featured`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleToggleActive = (product: Product) => {
+        router.patch(`/admin/products/${product.id}/toggle-active`, {}, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -1407,35 +1414,97 @@ export default function ProductsIndex({ products: productsProp, categories, filt
             {contextMenu && (
                 <div
                     ref={contextMenuRef}
-                    className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[150px] animate-in fade-in zoom-in-95 duration-100"
+                    className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100"
                     style={{ top: contextMenu.y, left: contextMenu.x }}
                 >
+                    {/* View Details */}
                     <button
                         onClick={() => {
                             setSelectedProduct(contextMenu.product);
                             closeContextMenu();
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        View
+                        View Details
                     </button>
+
+                    {/* Edit */}
                     <Link
                         href={`/admin/products/${contextMenu.product.id}/edit`}
                         preserveScroll
                         onClick={closeContextMenu}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <Edit className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                         Edit
                     </Link>
+
+                    {/* View on Store */}
+                    <a
+                        href={`/product/${contextMenu.product.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={closeContextMenu}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <ExternalLink className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        View on Store
+                    </a>
+
                     <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                    {/* Feature/Unfeature */}
+                    <button
+                        onClick={() => {
+                            handleToggleFeatured(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        {contextMenu.product.is_featured ? (
+                            <>
+                                <StarOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                Unfeature
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="h-4 w-4 text-yellow-500" />
+                                Feature
+                            </>
+                        )}
+                    </button>
+
+                    {/* Activate/Deactivate */}
+                    <button
+                        onClick={() => {
+                            handleToggleActive(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        {contextMenu.product.is_active ? (
+                            <>
+                                <PowerOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                Deactivate
+                            </>
+                        ) : (
+                            <>
+                                <Power className="h-4 w-4 text-green-500" />
+                                Activate
+                            </>
+                        )}
+                    </button>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                    {/* Delete */}
                     <button
                         onClick={() => {
                             handleDelete(contextMenu.product);
                             closeContextMenu();
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                     >
                         <Trash2 className="h-4 w-4" />
                         Delete

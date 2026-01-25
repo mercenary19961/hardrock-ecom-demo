@@ -274,6 +274,13 @@ class ProductController extends Controller
         return back()->with('success', $product->is_featured ? 'Product marked as featured.' : 'Product removed from featured.');
     }
 
+    public function toggleActive(Product $product): RedirectResponse
+    {
+        $product->update(['is_active' => !$product->is_active]);
+
+        return back()->with('success', $product->is_active ? 'Product activated.' : 'Product deactivated.');
+    }
+
     public function bulkAction(Request $request): RedirectResponse
     {
         $request->validate([
