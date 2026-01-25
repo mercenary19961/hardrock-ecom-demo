@@ -142,6 +142,7 @@ function formatDate(dateString: string): string {
 interface ValidationErrors {
     name?: string;
     price?: string;
+    compare_price?: string;
     stock?: string;
     sku?: string;
     slug?: string;
@@ -748,19 +749,67 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             onChange={(e) => {
                                                 setData('price', e.target.value);
                                                 handleFieldChange('price', e.target.value);
+                                                // Re-validate compare_price when price changes
+                                                if (data.compare_price) {
+                                                    const price = parseFloat(e.target.value) || 0;
+                                                    const comparePrice = parseFloat(data.compare_price) || 0;
+                                                    if (comparePrice > 0 && comparePrice <= price) {
+                                                        setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                    } else {
+                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                    }
+                                                }
                                             }}
                                             error={liveErrors.price || errors.price}
                                             required
                                         />
-                                        <Input
-                                            label="Compare Price"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.compare_price}
-                                            onChange={(e) => setData('compare_price', e.target.value)}
-                                            error={errors.compare_price}
-                                        />
+                                        <div>
+                                            <Input
+                                                label="Compare Price"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={data.compare_price}
+                                                onChange={(e) => {
+                                                    setData('compare_price', e.target.value);
+                                                    const comparePrice = parseFloat(e.target.value) || 0;
+                                                    const price = parseFloat(data.price) || 0;
+                                                    if (comparePrice > 0 && comparePrice <= price) {
+                                                        setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                    } else {
+                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                    }
+                                                }}
+                                                error={liveErrors.compare_price || errors.compare_price}
+                                                placeholder="Original price before discount"
+                                            />
+                                            {/* Helper indicator */}
+                                            {(() => {
+                                                const price = parseFloat(data.price) || 0;
+                                                const comparePrice = parseFloat(data.compare_price) || 0;
+
+                                                if (!data.compare_price || comparePrice === 0) {
+                                                    return (
+                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                            Leave empty if not on sale. Set higher than price to show discount.
+                                                        </p>
+                                                    );
+                                                }
+
+                                                if (comparePrice > price && price > 0) {
+                                                    const discountPercent = Math.round(((comparePrice - price) / comparePrice) * 100);
+                                                    const savings = (comparePrice - price).toFixed(2);
+                                                    return (
+                                                        <p className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                            <Check className="h-3 w-3" />
+                                                            {discountPercent}% off (saves {savings} JOD)
+                                                        </p>
+                                                    );
+                                                }
+
+                                                return null;
+                                            })()}
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
