@@ -782,7 +782,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                             }
                                                         }
                                                     }}
-                                                    className={`w-full px-3 py-2 pr-24 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                                                    className={`w-full px-3 py-2 pr-24 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                                                         liveErrors.price || errors.price
                                                             ? 'border-red-500 dark:border-red-500'
                                                             : 'border-gray-300 dark:border-gray-600'
@@ -790,43 +790,68 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                     required
                                                 />
                                                 {/* Apply Sale button - only show when compare_price is set */}
-                                                {parseFloat(data.compare_price) > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowSaleDropdown(!showSaleDropdown)}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/60 transition-colors flex items-center gap-1"
-                                                    >
-                                                        <Tag className="h-3 w-3" />
-                                                        Apply Sale
-                                                    </button>
-                                                )}
+                                                {parseFloat(data.compare_price) > 0 && (() => {
+                                                    const price = parseFloat(data.price) || 0;
+                                                    const comparePrice = parseFloat(data.compare_price) || 0;
+                                                    const hasSale = comparePrice > price && price > 0;
+                                                    const currentDiscount = hasSale ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
+
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowSaleDropdown(!showSaleDropdown)}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium rounded transition-colors flex items-center gap-1 ${
+                                                                hasSale
+                                                                    ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/60'
+                                                                    : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60'
+                                                            }`}
+                                                        >
+                                                            <Tag className="h-3 w-3" />
+                                                            {hasSale ? `${currentDiscount}% Off` : 'Apply Sale'}
+                                                        </button>
+                                                    );
+                                                })()}
                                                 {/* Sale percentage dropdown */}
-                                                {showSaleDropdown && parseFloat(data.compare_price) > 0 && (
-                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1">
-                                                        <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                                                            Select discount %
+                                                {showSaleDropdown && parseFloat(data.compare_price) > 0 && (() => {
+                                                    const currentPrice = parseFloat(data.price) || 0;
+                                                    const comparePrice = parseFloat(data.compare_price) || 0;
+                                                    const currentDiscountPercent = comparePrice > currentPrice && currentPrice > 0
+                                                        ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100)
+                                                        : 0;
+
+                                                    return (
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1">
+                                                            <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                                                                {currentDiscountPercent > 0 ? 'Change discount %' : 'Select discount %'}
+                                                            </div>
+                                                            {[5, 10, 15, 20, 25, 30, 40, 50, 60, 70].map((percent) => {
+                                                                const newPrice = (comparePrice * (1 - percent / 100)).toFixed(2);
+                                                                const isActive = percent === currentDiscountPercent;
+                                                                return (
+                                                                    <button
+                                                                        key={percent}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setData('price', newPrice);
+                                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                                            setShowSaleDropdown(false);
+                                                                        }}
+                                                                        className={`w-full px-3 py-2 text-left text-sm flex justify-between items-center transition-colors ${
+                                                                            isActive
+                                                                                ? 'bg-green-50 dark:bg-green-900/20'
+                                                                                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                        }`}
+                                                                    >
+                                                                        <span className={`font-medium ${isActive ? 'text-green-700 dark:text-green-300' : 'text-gray-900 dark:text-white'}`}>
+                                                                            {percent}% off {isActive && <Check className="h-3 w-3 inline ml-1" />}
+                                                                        </span>
+                                                                        <span className={isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>{newPrice} JOD</span>
+                                                                    </button>
+                                                                );
+                                                            })}
                                                         </div>
-                                                        {[5, 10, 15, 20, 25, 30, 40, 50, 60, 70].map((percent) => {
-                                                            const comparePrice = parseFloat(data.compare_price) || 0;
-                                                            const newPrice = (comparePrice * (1 - percent / 100)).toFixed(2);
-                                                            return (
-                                                                <button
-                                                                    key={percent}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setData('price', newPrice);
-                                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
-                                                                        setShowSaleDropdown(false);
-                                                                    }}
-                                                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center transition-colors"
-                                                                >
-                                                                    <span className="font-medium text-gray-900 dark:text-white">{percent}% off</span>
-                                                                    <span className="text-gray-500 dark:text-gray-400">{newPrice} JOD</span>
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
                                             </div>
                                             {(liveErrors.price || errors.price) && (
                                                 <p className="mt-1 text-sm text-red-500">{liveErrors.price || errors.price}</p>
@@ -855,7 +880,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                         }
                                                     }}
                                                     placeholder="Original price before discount"
-                                                    className={`w-full px-3 py-2 pr-28 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                                                    className={`w-full px-3 py-2 pr-28 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                                                         liveErrors.compare_price || errors.compare_price
                                                             ? 'border-red-500 dark:border-red-500'
                                                             : 'border-gray-300 dark:border-gray-600'
