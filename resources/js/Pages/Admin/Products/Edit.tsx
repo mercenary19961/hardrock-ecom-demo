@@ -7,7 +7,7 @@ import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload
+    History, AlertCircle, GripVertical, Upload, Tag
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -193,6 +193,10 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
     // Real-time validation state
     const [liveErrors, setLiveErrors] = useState<ValidationErrors>({});
+
+    // Sale percentage dropdown state
+    const [showSaleDropdown, setShowSaleDropdown] = useState(false);
+    const saleDropdownRef = useRef<HTMLDivElement>(null);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -492,6 +496,19 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // Close sale dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (saleDropdownRef.current && !saleDropdownRef.current.contains(event.target as Node)) {
+                setShowSaleDropdown(false);
+            }
+        };
+        if (showSaleDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showSaleDropdown]);
+
     // Show success message when form is submitted successfully
     useEffect(() => {
         if (recentlySuccessful) {
@@ -740,49 +757,142 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="Price"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.price}
-                                            onChange={(e) => {
-                                                setData('price', e.target.value);
-                                                handleFieldChange('price', e.target.value);
-                                                // Re-validate compare_price when price changes
-                                                if (data.compare_price) {
-                                                    const price = parseFloat(e.target.value) || 0;
-                                                    const comparePrice = parseFloat(data.compare_price) || 0;
-                                                    if (comparePrice > 0 && comparePrice <= price) {
-                                                        setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
-                                                    } else {
-                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
-                                                    }
-                                                }
-                                            }}
-                                            error={liveErrors.price || errors.price}
-                                            required
-                                        />
+                                        {/* Price field with sale percentage dropdown */}
                                         <div>
-                                            <Input
-                                                label="Compare Price"
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={data.compare_price}
-                                                onChange={(e) => {
-                                                    setData('compare_price', e.target.value);
-                                                    const comparePrice = parseFloat(e.target.value) || 0;
-                                                    const price = parseFloat(data.price) || 0;
-                                                    if (comparePrice > 0 && comparePrice <= price) {
-                                                        setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
-                                                    } else {
-                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
-                                                    }
-                                                }}
-                                                error={liveErrors.compare_price || errors.compare_price}
-                                                placeholder="Original price before discount"
-                                            />
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Price <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative" ref={saleDropdownRef}>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.price}
+                                                    onChange={(e) => {
+                                                        setData('price', e.target.value);
+                                                        handleFieldChange('price', e.target.value);
+                                                        // Re-validate compare_price when price changes
+                                                        if (data.compare_price) {
+                                                            const price = parseFloat(e.target.value) || 0;
+                                                            const comparePrice = parseFloat(data.compare_price) || 0;
+                                                            if (comparePrice > 0 && comparePrice <= price) {
+                                                                setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                            } else {
+                                                                setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`w-full px-3 py-2 pr-24 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                                                        liveErrors.price || errors.price
+                                                            ? 'border-red-500 dark:border-red-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
+                                                    }`}
+                                                    required
+                                                />
+                                                {/* Apply Sale button - only show when compare_price is set */}
+                                                {parseFloat(data.compare_price) > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowSaleDropdown(!showSaleDropdown)}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/60 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <Tag className="h-3 w-3" />
+                                                        Apply Sale
+                                                    </button>
+                                                )}
+                                                {/* Sale percentage dropdown */}
+                                                {showSaleDropdown && parseFloat(data.compare_price) > 0 && (
+                                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1">
+                                                        <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                                                            Select discount %
+                                                        </div>
+                                                        {[5, 10, 15, 20, 25, 30, 40, 50, 60, 70].map((percent) => {
+                                                            const comparePrice = parseFloat(data.compare_price) || 0;
+                                                            const newPrice = (comparePrice * (1 - percent / 100)).toFixed(2);
+                                                            return (
+                                                                <button
+                                                                    key={percent}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setData('price', newPrice);
+                                                                        setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                                        setShowSaleDropdown(false);
+                                                                    }}
+                                                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex justify-between items-center transition-colors"
+                                                                >
+                                                                    <span className="font-medium text-gray-900 dark:text-white">{percent}% off</span>
+                                                                    <span className="text-gray-500 dark:text-gray-400">{newPrice} JOD</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {(liveErrors.price || errors.price) && (
+                                                <p className="mt-1 text-sm text-red-500">{liveErrors.price || errors.price}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Compare Price field with copy button */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Compare Price
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.compare_price}
+                                                    onChange={(e) => {
+                                                        setData('compare_price', e.target.value);
+                                                        const comparePrice = parseFloat(e.target.value) || 0;
+                                                        const price = parseFloat(data.price) || 0;
+                                                        if (comparePrice > 0 && comparePrice <= price) {
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                        } else {
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }
+                                                    }}
+                                                    placeholder="Original price before discount"
+                                                    className={`w-full px-3 py-2 pr-28 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                                                        liveErrors.compare_price || errors.compare_price
+                                                            ? 'border-red-500 dark:border-red-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
+                                                    }`}
+                                                />
+                                                {/* Copy price button - show when price exists and compare_price is empty */}
+                                                {parseFloat(data.price) > 0 && !data.compare_price && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData('compare_price', data.price);
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <Copy className="h-3 w-3" />
+                                                        Copy Price
+                                                    </button>
+                                                )}
+                                                {/* Clear button - show when compare_price is set */}
+                                                {data.compare_price && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData('compare_price', '');
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {(liveErrors.compare_price || errors.compare_price) && (
+                                                <p className="mt-1 text-sm text-red-500">{liveErrors.compare_price || errors.compare_price}</p>
+                                            )}
                                             {/* Helper indicator */}
                                             {(() => {
                                                 const price = parseFloat(data.price) || 0;
@@ -790,8 +900,8 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
                                                 if (!data.compare_price || comparePrice === 0) {
                                                     return (
-                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                            Leave empty if not on sale. Set higher than price to show discount.
+                                                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                                            Click "Copy Price" to start setting up a sale.
                                                         </p>
                                                     );
                                                 }
@@ -800,9 +910,17 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                     const discountPercent = Math.round(((comparePrice - price) / comparePrice) * 100);
                                                     const savings = (comparePrice - price).toFixed(2);
                                                     return (
-                                                        <p className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                        <p className="mt-1.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                                                             <Check className="h-3 w-3" />
                                                             {discountPercent}% off (saves {savings} JOD)
+                                                        </p>
+                                                    );
+                                                }
+
+                                                if (comparePrice > 0 && comparePrice === price) {
+                                                    return (
+                                                        <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                                                            Now use "Apply Sale" on the Price field or manually reduce it.
                                                         </p>
                                                     );
                                                 }
