@@ -22,6 +22,7 @@ function ProductCardImage({
     onToggleSelect,
     onToggleFeatured,
     onDelete,
+    onDropdownOpen,
 }: {
     product: Product;
     onProductClick: () => void;
@@ -29,6 +30,7 @@ function ProductCardImage({
     onToggleSelect: () => void;
     onToggleFeatured: (e: React.MouseEvent) => void;
     onDelete: () => void;
+    onDropdownOpen?: () => void;
 }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovered, setIsHovered] = useState(false);
@@ -116,8 +118,17 @@ function ProductCardImage({
             <div className="absolute top-2 right-2">
                 <div className="relative">
                     <button
+                        data-dropdown-trigger
                         onClick={(e) => {
                             e.stopPropagation();
+                            // Close context menu if open
+                            onDropdownOpen?.();
+                            // Close other dropdown menus first
+                            document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+                                if (menu !== e.currentTarget.nextElementSibling) {
+                                    menu.classList.add('hidden');
+                                }
+                            });
                             const menu = e.currentTarget.nextElementSibling;
                             menu?.classList.toggle('hidden');
                         }}
@@ -125,7 +136,7 @@ function ProductCardImage({
                     >
                         <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                     </button>
-                    <div className="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-20">
+                    <div className="product-dropdown-menu hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-20">
                         <button
                             onClick={onToggleFeatured}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
@@ -596,6 +607,8 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [bulkActionLoading, setBulkActionLoading] = useState(false);
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; product: Product } | null>(null);
+    const contextMenuRef = useRef<HTMLDivElement>(null);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds, but pause when items are selected
@@ -608,6 +621,77 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     useEffect(() => {
         localStorage.setItem('productsViewMode', viewMode);
     }, [viewMode]);
+
+    // Context menu handlers
+    const handleContextMenu = useCallback((e: React.MouseEvent, product: Product) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Close any open dropdown menus (MoreVertical menus)
+        document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+
+        // Calculate position, ensuring menu stays within viewport
+        const x = Math.min(e.clientX, window.innerWidth - 160); // 160px menu width
+        const y = Math.min(e.clientY, window.innerHeight - 120); // ~120px menu height
+
+        setContextMenu({ x, y, product });
+    }, []);
+
+    const closeContextMenu = useCallback(() => {
+        setContextMenu(null);
+    }, []);
+
+    // Close context menu on click outside or escape key
+    useEffect(() => {
+        if (!contextMenu) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+                closeContextMenu();
+            }
+        };
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                closeContextMenu();
+            }
+        };
+
+        const handleScroll = () => {
+            closeContextMenu();
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        window.addEventListener('scroll', handleScroll, true);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [contextMenu, closeContextMenu]);
+
+    // Close dropdown menus when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // Check if click is outside any dropdown menu and its trigger button
+            const isInsideDropdown = target.closest('.product-dropdown-menu');
+            const isDropdownTrigger = target.closest('[data-dropdown-trigger]');
+
+            if (!isInsideDropdown && !isDropdownTrigger) {
+                document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Preserve valid selections when products change (remove selections for products no longer in view)
     useEffect(() => {
@@ -916,7 +1000,11 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 <div className={`${viewMode === 'grid' ? 'block' : 'block sm:hidden'}`}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {productsData.map((product) => (
-                            <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
+                            <Card
+                                key={product.id}
+                                className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700"
+                                onContextMenu={(e) => handleContextMenu(e, product)}
+                            >
                                 {/* Product Image with Navigation */}
                                 <ProductCardImage
                                     product={product}
@@ -925,6 +1013,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                     onToggleSelect={() => toggleSelect(product.id)}
                                     onToggleFeatured={(e) => handleToggleFeatured(product, e)}
                                     onDelete={() => handleDelete(product)}
+                                    onDropdownOpen={closeContextMenu}
                                 />
 
                                 {/* Product Info */}
@@ -1313,6 +1402,46 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 onClose={() => setSelectedProduct(null)}
                 language={language}
             />
+
+            {/* Context Menu */}
+            {contextMenu && (
+                <div
+                    ref={contextMenuRef}
+                    className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[150px] animate-in fade-in zoom-in-95 duration-100"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                >
+                    <button
+                        onClick={() => {
+                            setSelectedProduct(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        View
+                    </button>
+                    <Link
+                        href={`/admin/products/${contextMenu.product.id}/edit`}
+                        preserveScroll
+                        onClick={closeContextMenu}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Edit className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        Edit
+                    </Link>
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                    <button
+                        onClick={() => {
+                            handleDelete(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                    </button>
+                </div>
+            )}
         </AdminLayout>
     );
 }
