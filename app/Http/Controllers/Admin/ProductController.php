@@ -182,7 +182,7 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['images'], $data['delete_images'], $data['image_order']);
+        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors']);
 
         // Save undo state before updating (only if there are actual changes)
         $this->undoService->saveState($product, null, $data);
@@ -208,6 +208,17 @@ class ProductController extends Controller
                     ->update([
                         'sort_order' => $index,
                         'is_primary' => $index === 0, // First image is primary
+                    ]);
+            }
+        }
+
+        // Handle image color assignments
+        if ($request->has('image_colors') && is_array($request->image_colors)) {
+            foreach ($request->image_colors as $imageId => $color) {
+                ProductImage::where('id', $imageId)
+                    ->where('product_id', $product->id)
+                    ->update([
+                        'color' => $color ?: null, // Convert empty string to null
                     ]);
             }
         }

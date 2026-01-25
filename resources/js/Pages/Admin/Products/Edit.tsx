@@ -1,19 +1,186 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor, Badge, UndoButton } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton } from '@/Components/ui';
+import { ColorOption, VariantStock } from '@/types/models';
 import { Category, Product } from '@/types/models';
 import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload, Tag
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
+// Preset colors for quick selection
+const PRESET_COLORS: ColorOption[] = [
+    { name: 'Black', hex: '#000000' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Navy', hex: '#1e3a5f' },
+    { name: 'Red', hex: '#dc2626' },
+    { name: 'Grey', hex: '#6b7280' },
+    { name: 'Beige', hex: '#d4b896' },
+    { name: 'Blue', hex: '#3b82f6' },
+    { name: 'Green', hex: '#22c55e' },
+    { name: 'Pink', hex: '#ec4899' },
+    { name: 'Brown', hex: '#78350f' },
+];
+
+// Image Color Info - stores both name and hex
+interface ImageColorInfo {
+    name: string;
+    hex: string;
+}
+
+// Image Color Picker Component
+interface ImageColorPickerProps {
+    imageId: number;
+    colorInfo: ImageColorInfo | null;
+    onColorChange: (imageId: number, color: ImageColorInfo | null) => void;
+}
+
+function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPickerProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [customName, setCustomName] = useState('');
+    const [customHex, setCustomHex] = useState('#000000');
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const colorInputRef = useRef<HTMLInputElement>(null);
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const handlePresetSelect = (color: ColorOption) => {
+        onColorChange(imageId, color);
+        setIsOpen(false);
+    };
+
+    const handleCustomAdd = () => {
+        if (customName.trim()) {
+            onColorChange(imageId, { name: customName.trim(), hex: customHex });
+            setCustomName('');
+            setIsOpen(false);
+        }
+    };
+
+    const handleClear = () => {
+        onColorChange(imageId, null);
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded border transition-colors ${
+                    colorInfo
+                        ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300'
+                        : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-purple-400'
+                }`}
+            >
+                {colorInfo ? (
+                    <>
+                        <span
+                            className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-500"
+                            style={{ backgroundColor: colorInfo.hex }}
+                        />
+                        <span className="max-w-[60px] truncate">{colorInfo.name}</span>
+                    </>
+                ) : (
+                    <>
+                        <Palette className="h-3 w-3" />
+                        <span>Set color</span>
+                    </>
+                )}
+                <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-20 top-full mt-1 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                    {/* Preset colors */}
+                    <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick select</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {PRESET_COLORS.map((color) => (
+                                <button
+                                    key={color.name}
+                                    type="button"
+                                    onClick={() => handlePresetSelect(color)}
+                                    className={`w-6 h-6 rounded-full border-2 transition-all ${
+                                        colorInfo?.name === color.name
+                                            ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
+                                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-400'
+                                    }`}
+                                    style={{ backgroundColor: color.hex }}
+                                    title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Custom color */}
+                    <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Custom color</p>
+                        <div className="flex gap-1">
+                            <input
+                                type="text"
+                                placeholder="Name"
+                                value={customName}
+                                onChange={(e) => setCustomName(e.target.value)}
+                                className="flex-1 h-7 px-2 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                            />
+                            <div className="relative">
+                                <input
+                                    ref={colorInputRef}
+                                    type="color"
+                                    value={customHex}
+                                    onChange={(e) => setCustomHex(e.target.value)}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <div
+                                    className="w-7 h-7 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
+                                    style={{ backgroundColor: customHex }}
+                                    onClick={() => colorInputRef.current?.click()}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCustomAdd}
+                                disabled={!customName.trim()}
+                                className="px-2 h-7 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Clear option */}
+                    <div className="p-2">
+                        <button
+                            type="button"
+                            onClick={handleClear}
+                            className="w-full text-left text-xs text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            {colorInfo ? 'Remove color (show for all)' : 'No color (universal image)'}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Draggable Image Component for reordering
 interface DraggableImageProps {
-    image: { id: number; path: string; is_primary: boolean; sort_order: number };
+    image: { id: number; path: string; is_primary: boolean; sort_order: number; color?: string | null };
     productId: number;
     index: number;
     onDelete: (id: number) => void;
@@ -22,39 +189,57 @@ interface DraggableImageProps {
     onDragEnd: () => void;
     isDragging: boolean;
     dragOverIndex: number | null;
+    imageColorInfo: ImageColorInfo | null;
+    onColorChange: (imageId: number, color: ImageColorInfo | null) => void;
 }
 
-function DraggableImage({ image, productId, index, onDelete, onDragStart, onDragOver, onDragEnd, isDragging, dragOverIndex }: DraggableImageProps) {
+function DraggableImage({ image, productId, index, onDelete, onDragStart, onDragOver, onDragEnd, isDragging, dragOverIndex, imageColorInfo, onColorChange }: DraggableImageProps) {
     return (
-        <div
-            draggable
-            onDragStart={() => onDragStart(index)}
-            onDragOver={(e) => onDragOver(e, index)}
-            onDragEnd={onDragEnd}
-            className={`relative group cursor-move transition-all duration-200 ${
-                isDragging ? 'opacity-50 scale-95' : ''
-            } ${dragOverIndex === index ? 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-800' : ''}`}
-        >
-            <div className="absolute top-1 left-1 z-10 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                <GripVertical className="h-4 w-4 text-white" />
-            </div>
-            <img
-                src={getImageUrl(image.path, productId, image.sort_order)}
-                alt=""
-                className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
-            />
-            <button
-                type="button"
-                onClick={() => onDelete(image.id)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+        <div className="flex flex-col items-center gap-2">
+            <div
+                draggable
+                onDragStart={() => onDragStart(index)}
+                onDragOver={(e) => onDragOver(e, index)}
+                onDragEnd={onDragEnd}
+                className={`relative group cursor-move transition-all duration-200 ${
+                    isDragging ? 'opacity-50 scale-95' : ''
+                } ${dragOverIndex === index ? 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-800' : ''}`}
             >
-                <X className="h-3 w-3" />
-            </button>
-            {index === 0 && (
-                <span className="absolute bottom-1 left-1 text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded">
-                    Primary
-                </span>
-            )}
+                <div className="absolute top-1 left-1 z-10 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-4 w-4 text-white" />
+                </div>
+                <img
+                    src={getImageUrl(image.path, productId, image.sort_order)}
+                    alt=""
+                    className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                />
+                <button
+                    type="button"
+                    onClick={() => onDelete(image.id)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                    <X className="h-3 w-3" />
+                </button>
+                {index === 0 && (
+                    <span className="absolute bottom-1 left-1 text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded">
+                        Primary
+                    </span>
+                )}
+                {/* Color indicator badge */}
+                {imageColorInfo && (
+                    <span
+                        className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                        style={{ backgroundColor: imageColorInfo.hex }}
+                        title={imageColorInfo.name}
+                    />
+                )}
+            </div>
+            {/* Color picker */}
+            <ImageColorPicker
+                imageId={image.id}
+                colorInfo={imageColorInfo}
+                onColorChange={onColorChange}
+            />
         </div>
     );
 }
@@ -191,6 +376,9 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [imageOrder, setImageOrder] = useState<number[]>([]);
 
+    // Image colors state - tracks color assignment for each image (now stores full color info)
+    const [imageColors, setImageColors] = useState<Record<number, ImageColorInfo | null>>({});
+
     // Real-time validation state
     const [liveErrors, setLiveErrors] = useState<ValidationErrors>({});
 
@@ -219,15 +407,19 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         images: [] as File[],
         delete_images: [] as number[],
         image_order: [] as number[],
+        image_colors: {} as Record<number, string | null>,
         // Variant fields
         color: product.color || '',
         color_hex: product.color_hex || '',
+        available_colors: product.available_colors || [] as ColorOption[],
         available_sizes: product.available_sizes || [] as string[],
         size_stock: product.size_stock || {} as Record<string, number>,
+        variant_stock: product.variant_stock || {} as VariantStock,
         product_group: product.product_group || '',
     };
 
-    const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm(initialValues);
+    const { data, setData, errors, reset } = useForm(initialValues);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset form when product prop changes (e.g., after undo restore)
     useEffect(() => {
@@ -251,10 +443,13 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
             images: [],
             delete_images: [],
             image_order: [],
+            image_colors: {},
             color: product.color || '',
             color_hex: product.color_hex || '',
+            available_colors: product.available_colors || [],
             available_sizes: product.available_sizes || [],
             size_stock: product.size_stock || {},
+            variant_stock: product.variant_stock || {},
             product_group: product.product_group || '',
         });
     }, [product.id, product.updated_at]);
@@ -264,6 +459,26 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         if (product.images && product.images.length > 0) {
             const sortedImages = [...product.images].sort((a, b) => a.sort_order - b.sort_order);
             setImageOrder(sortedImages.map(img => img.id));
+        }
+    }, [product.id, product.images]);
+
+    // Initialize image colors from product images (convert string color names to full color info)
+    useEffect(() => {
+        if (product.images && product.images.length > 0) {
+            const colors: Record<number, ImageColorInfo | null> = {};
+            product.images.forEach(img => {
+                if (img.color) {
+                    // Try to find hex from presets, or use a default
+                    const preset = PRESET_COLORS.find(c => c.name.toLowerCase() === img.color?.toLowerCase());
+                    colors[img.id] = {
+                        name: img.color,
+                        hex: preset?.hex || '#808080', // Default to grey if not found
+                    };
+                } else {
+                    colors[img.id] = null;
+                }
+            });
+            setImageColors(colors);
         }
     }, [product.id, product.images]);
 
@@ -277,6 +492,28 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         if (imageOrder.length !== originalImageOrder.length) return false;
         return imageOrder.some((id, idx) => id !== originalImageOrder[idx]);
     }, [imageOrder, originalImageOrder]);
+
+    // Check if image colors have changed (compare by color name)
+    const originalImageColorNames = useMemo(() => {
+        if (!product.images) return {};
+        const colors: Record<number, string | null> = {};
+        product.images.forEach(img => {
+            colors[img.id] = img.color || null;
+        });
+        return colors;
+    }, [product.images]);
+
+    const imageColorsChanged = useMemo(() => {
+        const currentKeys = Object.keys(imageColors);
+        const originalKeys = Object.keys(originalImageColorNames);
+        if (currentKeys.length !== originalKeys.length) return true;
+        return currentKeys.some(key => {
+            const currentColor = imageColors[Number(key)];
+            const originalColor = originalImageColorNames[Number(key)];
+            // Compare by name (what gets sent to backend)
+            return (currentColor?.name || null) !== originalColor;
+        });
+    }, [imageColors, originalImageColorNames]);
 
     // Check if form has changes
     const hasChanges =
@@ -302,7 +539,8 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         JSON.stringify(data.size_stock) !== JSON.stringify(initialValues.size_stock) ||
         data.images.length > 0 ||
         data.delete_images.length > 0 ||
-        imageOrderChanged;
+        imageOrderChanged ||
+        imageColorsChanged;
 
     // Real-time validation handler
     const handleFieldChange = useCallback((field: string, value: string | number) => {
@@ -336,6 +574,14 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         setDragOverIndex(null);
     }, [dragIndex, dragOverIndex]);
 
+    // Handler for image color changes (now accepts full color info)
+    const handleImageColorChange = useCallback((imageId: number, color: ImageColorInfo | null) => {
+        setImageColors(prev => ({
+            ...prev,
+            [imageId]: color
+        }));
+    }, []);
+
     // Remove a new image from the upload queue
     const handleRemoveNewImage = useCallback((index: number) => {
         setData('images', data.images.filter((_, i) => i !== index));
@@ -350,11 +596,22 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
     const handleRevertChanges = useCallback(() => {
         reset();
         setImageOrder(originalImageOrder);
+        // Reconstruct full color info from original names
+        const restoredColors: Record<number, ImageColorInfo | null> = {};
+        Object.entries(originalImageColorNames).forEach(([id, colorName]) => {
+            if (colorName) {
+                const preset = PRESET_COLORS.find(c => c.name.toLowerCase() === colorName.toLowerCase());
+                restoredColors[Number(id)] = { name: colorName, hex: preset?.hex || '#808080' };
+            } else {
+                restoredColors[Number(id)] = null;
+            }
+        });
+        setImageColors(restoredColors);
         setLiveErrors({});
         clearAutoSaveDraft();
         const fileInput = document.getElementById('edit_images') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
-    }, [reset, originalImageOrder]);
+    }, [reset, originalImageOrder, originalImageColorNames]);
 
     // Auto-save functions
     const saveAutoSaveDraft = useCallback(() => {
@@ -463,7 +720,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
             // Ctrl+S or Cmd+S to save
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                if (hasChanges && !processing) {
+                if (hasChanges && !isSubmitting) {
                     formRef.current?.requestSubmit();
                 }
             }
@@ -480,7 +737,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [hasChanges, processing, handleRevertChanges]);
+    }, [hasChanges, isSubmitting, handleRevertChanges]);
 
     // Track scroll position to show/hide floating action bar
     useEffect(() => {
@@ -509,19 +766,15 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showSaleDropdown]);
 
-    // Show success message when form is submitted successfully
+    // Auto-hide success message after 5 seconds
     useEffect(() => {
-        if (recentlySuccessful) {
-            setShowSuccess(true);
-            const fileInput = document.getElementById('edit_images') as HTMLInputElement;
-            if (fileInput) fileInput.value = '';
-
+        if (showSuccess) {
             if (successTimerRef.current) {
                 clearTimeout(successTimerRef.current);
             }
             successTimerRef.current = setTimeout(() => setShowSuccess(false), 5000);
         }
-    }, [recentlySuccessful]);
+    }, [showSuccess]);
 
     // Cleanup timers on unmount
     useEffect(() => {
@@ -541,17 +794,93 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Add image_order to form data before submission
-        setData('image_order', imageOrder);
-        // Use setTimeout to ensure setData completes before post
-        setTimeout(() => {
-            post(`/admin/products/${product.id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    clearAutoSaveDraft();
-                },
-            });
-        }, 0);
+        // Convert ImageColorInfo to just color names for backend
+        const imageColorsForBackend: Record<number, string | null> = {};
+        Object.entries(imageColors).forEach(([id, info]) => {
+            imageColorsForBackend[parseInt(id)] = info?.name || null;
+        });
+
+        // Build FormData with all fields including image_order and image_colors
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('category_id', data.category_id);
+        formData.append('name', data.name);
+        formData.append('name_ar', data.name_ar);
+        formData.append('slug', data.slug);
+        formData.append('description', data.description);
+        formData.append('description_ar', data.description_ar);
+        formData.append('short_description', data.short_description);
+        formData.append('short_description_ar', data.short_description_ar);
+        formData.append('price', data.price);
+        formData.append('compare_price', data.compare_price);
+        formData.append('sku', data.sku);
+        formData.append('stock', data.stock.toString());
+        formData.append('low_stock_threshold', data.low_stock_threshold);
+        formData.append('is_active', data.is_active ? '1' : '0');
+        formData.append('is_featured', data.is_featured ? '1' : '0');
+        formData.append('color', data.color);
+        formData.append('color_hex', data.color_hex);
+        formData.append('product_group', data.product_group);
+
+        // Add sizes
+        data.available_sizes.forEach((size, index) => {
+            formData.append(`available_sizes[${index}]`, size);
+        });
+
+        // Add colors from images
+        colorsFromImages.forEach((color, index) => {
+            formData.append(`available_colors[${index}][name]`, color.name);
+            formData.append(`available_colors[${index}][hex]`, color.hex);
+        });
+
+        // Add variant stock
+        Object.entries(data.variant_stock).forEach(([key, value]) => {
+            formData.append(`variant_stock[${key}]`, value.toString());
+        });
+
+        // Add size stock
+        Object.entries(data.size_stock).forEach(([key, value]) => {
+            formData.append(`size_stock[${key}]`, value.toString());
+        });
+
+        // Add image order
+        imageOrder.forEach((id, index) => {
+            formData.append(`image_order[${index}]`, id.toString());
+        });
+
+        // Add image colors
+        Object.entries(imageColorsForBackend).forEach(([imageId, colorName]) => {
+            formData.append(`image_colors[${imageId}]`, colorName || '');
+        });
+
+        // Add delete_images
+        data.delete_images.forEach((id, index) => {
+            formData.append(`delete_images[${index}]`, id.toString());
+        });
+
+        // Add new images
+        data.images.forEach((file) => {
+            formData.append('images[]', file);
+        });
+
+        setIsSubmitting(true);
+        router.post(`/admin/products/${product.id}`, formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onStart: () => {
+                setIsSubmitting(true);
+            },
+            onSuccess: () => {
+                clearAutoSaveDraft();
+                setShowSuccess(true);
+                // Clear file input
+                const fileInput = document.getElementById('edit_images') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
+            },
+            onFinish: () => {
+                setIsSubmitting(false);
+            },
+        });
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -566,6 +895,21 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         // Also remove from imageOrder
         setImageOrder(prev => prev.filter(id => id !== imageId));
     };
+
+    // Derive available colors from image color assignments
+    const colorsFromImages = useMemo((): ColorOption[] => {
+        const uniqueColors: ColorOption[] = [];
+        const seenNames = new Set<string>();
+
+        Object.values(imageColors).forEach(info => {
+            if (info && info.name && !seenNames.has(info.name.toLowerCase())) {
+                seenNames.add(info.name.toLowerCase());
+                uniqueColors.push({ name: info.name, hex: info.hex });
+            }
+        });
+
+        return uniqueColors;
+    }, [imageColors]);
 
     // Get existing images sorted by the current imageOrder
     const existingImages = useMemo(() => {
@@ -605,12 +949,12 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                         <Button
                             type="submit"
                             form="product-edit-form"
-                            disabled={processing || !hasChanges}
+                            disabled={isSubmitting || !hasChanges}
                             className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
                             title="Ctrl+S"
                         >
                             <Save className="h-4 w-4 mr-2" />
-                            {processing ? 'Saving...' : 'Update Product'}
+                            {isSubmitting ? 'Saving...' : 'Update Product'}
                         </Button>
                         {hasChanges && (
                             <Button
@@ -1006,40 +1350,20 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                         Variant Options
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Optional: Add color and size variants for this product
+                                        Optional: Add color and size variants with stock tracking per combination
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <ColorPicker
-                                        label="Color"
-                                        colorName={data.color}
-                                        colorHex={data.color_hex}
-                                        onColorNameChange={(value) => setData('color', value)}
-                                        onColorHexChange={(value) => setData('color_hex', value)}
-                                        error={errors.color || errors.color_hex}
-                                    />
-
-                                    <SizeStockEditor
-                                        label="Sizes & Stock"
+                                    <VariantStockEditor
+                                        colors={colorsFromImages}
                                         sizes={data.available_sizes}
-                                        sizeStock={data.size_stock}
+                                        variantStock={data.variant_stock}
+                                        onColorsChange={() => {}} // Colors are derived from images, not editable here
                                         onSizesChange={(sizes) => setData('available_sizes', sizes)}
-                                        onSizeStockChange={(stock) => setData('size_stock', stock)}
-                                        error={errors.available_sizes || errors.size_stock}
+                                        onVariantStockChange={(stock) => setData('variant_stock', stock)}
+                                        error={errors.available_colors || errors.available_sizes || errors.variant_stock}
+                                        colorsFromImages={true}
                                     />
-
-                                    <div>
-                                        <Input
-                                            label="Product Group (optional)"
-                                            value={data.product_group}
-                                            onChange={(e) => setData('product_group', e.target.value)}
-                                            error={errors.product_group}
-                                            placeholder="Group related color variants together"
-                                        />
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Use the same group name for products that are color variants of each other.
-                                        </p>
-                                    </div>
                                 </CardContent>
                             </Card>
 
@@ -1071,6 +1395,8 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                     onDragOver={handleDragOver}
                                                     onDragEnd={handleDragEnd}
                                                     isDragging={dragIndex === index}
+                                                    imageColorInfo={imageColors[image.id] ?? null}
+                                                    onColorChange={handleImageColorChange}
                                                     dragOverIndex={dragOverIndex}
                                                 />
                                             ))}
@@ -1468,10 +1794,10 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                             type="submit"
                             form="product-edit-form"
                             size="sm"
-                            disabled={processing}
+                            disabled={isSubmitting}
                         >
                             <Save className="h-4 w-4 mr-1" />
-                            {processing ? 'Saving...' : 'Save'}
+                            {isSubmitting ? 'Saving...' : 'Save'}
                         </Button>
                     </div>
                 </div>

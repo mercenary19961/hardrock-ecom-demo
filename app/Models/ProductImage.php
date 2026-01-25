@@ -16,6 +16,7 @@ class ProductImage extends Model
         'alt_text',
         'sort_order',
         'is_primary',
+        'color',
     ];
 
     protected $appends = ['url'];

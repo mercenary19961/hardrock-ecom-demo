@@ -95,6 +95,8 @@
     "apply": "Apply",
     "selectSize": "Select Size",
     "pleaseSelectSize": "Please select a size",
+    "selectColor": "Select Color",
+    "pleaseSelectColor": "Please select a color",
     "inStockCount": "{{count}} in stock",
     "size": "Size",
     "color": "Color",

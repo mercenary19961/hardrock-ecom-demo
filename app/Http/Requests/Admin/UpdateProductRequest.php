@@ -46,13 +46,20 @@ class UpdateProductRequest extends FormRequest
             'delete_images.*' => 'integer|exists:product_images,id',
             'image_order' => 'nullable|array',
             'image_order.*' => 'integer|exists:product_images,id',
+            'image_colors' => 'nullable|array',
+            'image_colors.*' => 'nullable|string|max:100',
             // Variant fields
             'color' => 'nullable|string|max:100',
             'color_hex' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'available_colors' => 'nullable|array',
+            'available_colors.*.name' => 'required_with:available_colors|string|max:100',
+            'available_colors.*.hex' => ['required_with:available_colors', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'available_sizes' => 'nullable|array',
             'available_sizes.*' => 'string|max:20',
             'size_stock' => 'nullable|array',
             'size_stock.*' => 'integer|min:0',
+            'variant_stock' => 'nullable|array',
+            'variant_stock.*' => 'integer|min:0',
             'product_group' => 'nullable|string|max:100',
         ];
     }

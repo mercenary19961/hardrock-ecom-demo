@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Head, Link, Deferred } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
@@ -134,18 +134,60 @@ function ProductContent({
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-    // Check if product has sizes
+    // Check if product has sizes and colors
     const hasSizes =
         product.available_sizes && product.available_sizes.length > 0;
+    const hasColors =
+        product.available_colors && product.available_colors.length > 0;
+    const hasVariantStock =
+        hasColors && hasSizes && product.variant_stock && Object.keys(product.variant_stock).length > 0;
     const sizeStock = product.size_stock || {};
+    const variantStock = product.variant_stock || {};
 
-    // Get stock for selected size (or total stock if no sizes)
+    // Helper to create variant key
+    const createVariantKey = (colorName: string, size: string): string => {
+        return `${colorName.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+    };
+
+    // Get stock for selected variant (color+size), or size only, or total stock
     const getAvailableStock = () => {
-        if (!hasSizes || !selectedSize) {
-            return product.stock;
+        // If using variant stock system (colors + sizes)
+        if (hasVariantStock && selectedColor && selectedSize) {
+            const key = createVariantKey(selectedColor, selectedSize);
+            return variantStock[key] || 0;
         }
-        return sizeStock[selectedSize] || 0;
+        // If only sizes (no colors or color not selected)
+        if (hasSizes && selectedSize) {
+            // Check variant stock first if color is selected
+            if (hasVariantStock && selectedColor) {
+                const key = createVariantKey(selectedColor, selectedSize);
+                return variantStock[key] || 0;
+            }
+            return sizeStock[selectedSize] || 0;
+        }
+        return product.stock;
+    };
+
+    // Check if a specific size is in stock (considering selected color if variant system)
+    const isSizeInStock = (size: string): boolean => {
+        if (hasVariantStock && selectedColor) {
+            const key = createVariantKey(selectedColor, size);
+            return (variantStock[key] || 0) > 0;
+        }
+        return (sizeStock[size] || 0) > 0;
+    };
+
+    // Check if a specific color has any stock (across all sizes)
+    const isColorInStock = (colorName: string): boolean => {
+        if (hasVariantStock && hasSizes) {
+            return product.available_sizes!.some(size => {
+                const key = createVariantKey(colorName, size);
+                return (variantStock[key] || 0) > 0;
+            });
+        }
+        return true; // If no variant stock, assume in stock
     };
 
     // Get localized content
@@ -170,7 +212,19 @@ function ProductContent({
         localStorage.setItem(storageKey, "true");
     };
 
-    const images = product.images || [];
+    // Filter images based on selected color
+    // If no color selected, show all images
+    // If color selected, show images tagged with that color OR images with no color tag (universal images)
+    const allImages = product.images || [];
+    const images = selectedColor
+        ? allImages.filter(img => img.color === selectedColor || img.color === null)
+        : allImages;
+
+    // Reset selected image when color changes (to avoid showing invalid index)
+    useEffect(() => {
+        setSelectedImage(0);
+    }, [selectedColor]);
+
     const hasDiscount =
         product.compare_price && product.compare_price > product.price;
 
@@ -345,6 +399,62 @@ function ProductContent({
                             </p>
                         )}
 
+                        {/* Color Selector */}
+                        {hasColors && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-sm font-medium text-gray-900">
+                                        {t("shop:selectColor")}
+                                    </h3>
+                                    {selectedColor && (
+                                        <span className="text-sm text-gray-500">
+                                            {selectedColor}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {product.available_colors!.map((color) => {
+                                        const colorInStock = isColorInStock(color.name);
+                                        const isSelected = selectedColor === color.name;
+
+                                        return (
+                                            <button
+                                                key={color.name}
+                                                onClick={() =>
+                                                    colorInStock &&
+                                                    setSelectedColor(color.name)
+                                                }
+                                                disabled={!colorInStock}
+                                                title={color.name}
+                                                className={`
+                                                    w-10 h-10 rounded-full border-2 transition-all relative
+                                                    ${
+                                                        isSelected
+                                                            ? "border-brand-purple ring-2 ring-brand-purple ring-offset-2"
+                                                            : !colorInStock
+                                                            ? "border-gray-200 opacity-40 cursor-not-allowed"
+                                                            : "border-gray-300 hover:border-brand-purple"
+                                                    }
+                                                `}
+                                                style={{ backgroundColor: color.hex }}
+                                            >
+                                                {!colorInStock && (
+                                                    <span className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="w-full h-0.5 bg-gray-400 rotate-45 absolute" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {!selectedColor && (
+                                    <p className="mt-2 text-sm text-amber-600">
+                                        {t("shop:pleaseSelectColor")}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Size Selector */}
                         {hasSizes && (
                             <div className="mb-6">
@@ -355,35 +465,30 @@ function ProductContent({
                                     {selectedSize && (
                                         <span className="text-sm text-gray-500">
                                             {t("shop:inStockCount", {
-                                                count:
-                                                    sizeStock[selectedSize] ||
-                                                    0,
+                                                count: getAvailableStock(),
                                             })}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {product.available_sizes!.map((size) => {
-                                        const stockForSize =
-                                            sizeStock[size] || 0;
-                                        const isOutOfStock = stockForSize === 0;
-                                        const isSelected =
-                                            selectedSize === size;
+                                        const inStock = isSizeInStock(size);
+                                        const isSelected = selectedSize === size;
 
                                         return (
                                             <button
                                                 key={size}
                                                 onClick={() =>
-                                                    !isOutOfStock &&
+                                                    inStock &&
                                                     setSelectedSize(size)
                                                 }
-                                                disabled={isOutOfStock}
+                                                disabled={!inStock}
                                                 className={`
                                                     min-w-[3rem] px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
                                                     ${
                                                         isSelected
                                                             ? "border-brand-purple bg-brand-purple text-white"
-                                                            : isOutOfStock
+                                                            : !inStock
                                                             ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
                                                             : "border-gray-300 bg-white text-gray-700 hover:border-brand-purple"
                                                     }
@@ -415,8 +520,8 @@ function ProductContent({
                                     disabled={
                                         loading ||
                                         added ||
-                                        (hasSizes === true &&
-                                            selectedSize === null)
+                                        (hasSizes === true && selectedSize === null) ||
+                                        (hasColors === true && selectedColor === null)
                                     }
                                     size="lg"
                                     className="flex-1"

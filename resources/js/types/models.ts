@@ -36,11 +36,21 @@ export interface ProductImage {
     alt_text: string | null;
     sort_order: number;
     is_primary: boolean;
+    color: string | null;  // Color name this image represents (e.g., "Black", "Navy Blue")
     url: string;
 }
 
 export interface SizeStock {
     [size: string]: number;
+}
+
+export interface ColorOption {
+    name: string;
+    hex: string;
+}
+
+export interface VariantStock {
+    [colorSize: string]: number; // e.g., "black_S": 10, "red_M": 15
 }
 
 export interface Product {
@@ -67,8 +77,10 @@ export interface Product {
     // Variant fields
     color?: string | null;
     color_hex?: string | null;
+    available_colors?: ColorOption[] | null;
     available_sizes?: string[] | null;
     size_stock?: SizeStock | null;
+    variant_stock?: VariantStock | null;
     product_group?: string | null;
     // Relations
     category?: Category;
