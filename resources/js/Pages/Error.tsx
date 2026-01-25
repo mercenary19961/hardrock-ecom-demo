@@ -76,7 +76,15 @@ export default function Error({ status, message }: Props) {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Button
                             variant="outline"
-                            onClick={() => window.history.back()}
+                            onClick={() => {
+                                // Check if there's history to go back to
+                                if (window.history.length > 1) {
+                                    window.history.back();
+                                } else {
+                                    // Fallback to home if no history (e.g., opened in new tab)
+                                    window.location.href = '/';
+                                }
+                            }}
                             className="gap-2"
                         >
                             <ArrowLeft className="h-4 w-4" />
