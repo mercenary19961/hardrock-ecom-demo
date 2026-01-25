@@ -894,6 +894,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 {/* Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-4 space-y-3">
+                        {/* Search and Filter Row */}
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             <div className="relative flex-1">
                                 <label htmlFor="products-search" className="sr-only">Search products</label>
@@ -924,21 +925,30 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 options={statusOptions}
                             />
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-                            <div className="flex items-center gap-2">
-                                <ArrowUpDown className="h-4 w-4 text-gray-400" />
+
+                        {/* Sort and Clear Filters Row */}
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+                            {/* Sort Section - slightly different styling */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <ArrowUpDown className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sort</span>
                                 <Select
                                     value={sortValue}
                                     onChange={handleSortChange}
-                                    className="w-full sm:w-44"
+                                    className="w-full sm:w-40"
                                     options={sortOptions}
                                 />
                             </div>
+
+                            {/* Clear Filters - distinct action styling */}
                             {hasActiveFilters && (
-                                <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear Filters
-                                </Button>
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                >
+                                    <X className="h-4 w-4" />
+                                    Clear All Filters
+                                </button>
                             )}
                         </div>
                     </div>
