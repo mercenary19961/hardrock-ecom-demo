@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { NumberInput } from './NumberInput';
 export { Textarea } from './Textarea';
 export { Badge } from './Badge';
 export { ColorPicker } from './ColorPicker';

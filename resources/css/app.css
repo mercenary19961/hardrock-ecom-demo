@@ -439,3 +439,226 @@ body.dark:has(.admin-scrollbar)::-webkit-scrollbar-corner {
 .dark .admin-scrollbar .overflow-x-auto::-webkit-scrollbar-track {
     background: #374151;
 }
+
+/* ================================================
+   Admin Scrollbar Arrow Buttons (Up/Down)
+   ================================================ */
+
+/* Main page scrollbar buttons */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    border-radius: 6px;
+    height: 14px;
+    width: 14px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:hover,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:active,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:active {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+/* Vertical scrollbar arrows */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:decrement,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:increment,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+/* Horizontal scrollbar arrows */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:decrement,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:increment,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+/* Dark mode scrollbar buttons */
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-button,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-button,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-button,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-button:hover,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-button:hover,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-button:hover,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+/* Nested element scrollbar buttons */
+.admin-scrollbar::-webkit-scrollbar-button,
+.admin-scrollbar *::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    border-radius: 4px;
+    height: 10px;
+    width: 10px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-button:hover,
+.admin-scrollbar *::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+/* Nested vertical arrows */
+.admin-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+.admin-scrollbar *::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-button:vertical:increment,
+.admin-scrollbar *::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 6px;
+}
+
+/* Dark mode nested buttons */
+.dark .admin-scrollbar::-webkit-scrollbar-button,
+.dark .admin-scrollbar *::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+/* ================================================
+   Admin Number Input Spinners (Up/Down Buttons)
+   ================================================ */
+
+/* Custom number input spinners for admin panel */
+.admin-scrollbar input[type="number"] {
+    -moz-appearance: textfield; /* Firefox: hide default spinners */
+}
+
+/* Show spinners on webkit browsers */
+.admin-scrollbar input[type="number"]::-webkit-outer-spin-button,
+.admin-scrollbar input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Custom spinner wrapper - we'll use a custom component approach */
+/* Since native spinners are limited, add styles for custom spinner buttons */
+.admin-number-spinner {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.admin-number-spinner input[type="number"] {
+    -moz-appearance: textfield;
+    padding-right: 2.5rem;
+}
+
+.admin-number-spinner input[type="number"]::-webkit-outer-spin-button,
+.admin-number-spinner input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.admin-spinner-buttons {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    display: flex;
+    flex-direction: column;
+    width: 1.75rem;
+    border-left: 1px solid #e5e7eb;
+    border-radius: 0 0.375rem 0.375rem 0;
+    overflow: hidden;
+}
+
+.dark .admin-spinner-buttons {
+    border-left-color: #4b5563;
+}
+
+.admin-spinner-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #f3e8ff 0%, #ede9fe 100%);
+    color: #7c3aed;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    padding: 0;
+}
+
+.admin-spinner-btn:hover {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    color: white;
+}
+
+.admin-spinner-btn:active {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+}
+
+.admin-spinner-btn:first-child {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .admin-spinner-btn {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+    color: #a855f7;
+}
+
+.dark .admin-spinner-btn:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+}
+
+.dark .admin-spinner-btn:first-child {
+    border-bottom-color: #4b5563;
+}
+
+.admin-spinner-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.5;
+}
+
+.admin-spinner-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-spinner-btn:disabled:hover {
+    background: linear-gradient(180deg, #f3e8ff 0%, #ede9fe 100%);
+    color: #7c3aed;
+}
+
+.dark .admin-spinner-btn:disabled:hover {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+    color: #a855f7;
+}

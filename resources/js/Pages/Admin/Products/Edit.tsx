@@ -1,7 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton, NumberInput } from '@/Components/ui';
 import { ColorOption, VariantStock } from '@/types/models';
 import { Category, Product } from '@/types/models';
 import {
@@ -1466,10 +1466,9 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             error={liveErrors.sku || errors.sku}
                                         />
                                         <div>
-                                            <Input
+                                            <NumberInput
                                                 label="Stock"
-                                                type="number"
-                                                min="0"
+                                                min={0}
                                                 value={data.stock}
                                                 onChange={(e) => {
                                                     const value = parseInt(e.target.value) || 0;
@@ -1490,11 +1489,10 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                     </div>
 
                                     <div>
-                                        <Input
+                                        <NumberInput
                                             label="Low Stock Threshold (optional)"
-                                            type="number"
-                                            min="1"
-                                            max="1000"
+                                            min={1}
+                                            max={1000}
                                             value={data.low_stock_threshold}
                                             onChange={(e) => setData('low_stock_threshold', e.target.value)}
                                             error={errors.low_stock_threshold}
