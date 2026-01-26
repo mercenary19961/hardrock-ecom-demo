@@ -319,7 +319,7 @@ function ProductContent({
                                         images[selectedImage].sort_order
                                     )}
                                     alt={productName}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain"
                                     loading="eager"
                                     decoding="async"
                                     fetchPriority="high"
@@ -369,7 +369,7 @@ function ProductContent({
                                                 )}
                                                 alt={image.alt_text || productName}
                                                 className="w-full h-full"
-                                                style={{ objectFit: 'cover' }}
+                                                style={{ objectFit: 'contain' }}
                                             />
                                         </button>
                                     ))}
