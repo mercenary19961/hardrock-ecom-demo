@@ -1786,27 +1786,129 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             </p>
                                         </div>
                                     </div>
-                                    {/* SEO Tips */}
-                                    <div className="mt-3 space-y-2">
-                                        {!data.short_description && (
-                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>Add a short description for better SEO</span>
+                                    {/* SEO Analysis */}
+                                    {(() => {
+                                        const titleLength = data.name?.length || 0;
+                                        const shortDescLength = data.short_description?.length || 0;
+                                        const descLength = data.description?.length || 0;
+                                        const hasArabicName = !!data.name_ar;
+                                        const hasArabicDesc = !!data.short_description_ar;
+
+                                        const checks = {
+                                            titleExists: titleLength > 0,
+                                            titleGoodLength: titleLength >= 20 && titleLength <= 60,
+                                            titleNotTooLong: titleLength <= 60,
+                                            shortDescExists: shortDescLength > 0,
+                                            shortDescGoodLength: shortDescLength >= 50 && shortDescLength <= 160,
+                                            shortDescNotTooLong: shortDescLength <= 160,
+                                            descExists: descLength > 0,
+                                        };
+
+                                        const passedChecks = Object.values(checks).filter(Boolean).length;
+                                        const totalChecks = Object.keys(checks).length;
+                                        const score = Math.round((passedChecks / totalChecks) * 100);
+
+                                        return (
+                                            <div className="mt-3 space-y-3">
+                                                {/* SEO Score */}
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">SEO Score</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full transition-all ${
+                                                                    score >= 80 ? 'bg-green-500' :
+                                                                    score >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                                                                }`}
+                                                                style={{ width: `${score}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className={`text-xs font-bold ${
+                                                            score >= 80 ? 'text-green-600 dark:text-green-400' :
+                                                            score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                                                        }`}>
+                                                            {score}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Detailed Checks */}
+                                                <div className="space-y-1.5">
+                                                    {/* Title Checks */}
+                                                    {!checks.titleExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title missing:</strong> Add a product name for search engines to index</span>
+                                                        </div>
+                                                    ) : titleLength < 20 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title too short ({titleLength}/20+ chars):</strong> Add more descriptive keywords to improve searchability</span>
+                                                        </div>
+                                                    ) : titleLength > 60 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title too long ({titleLength}/60 chars):</strong> May be truncated in search results. Keep under 60 characters</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title length good</strong> ({titleLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Short Description Checks */}
+                                                    {!checks.shortDescExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description missing:</strong> Add a short description (50-160 chars) for search result snippets</span>
+                                                        </div>
+                                                    ) : shortDescLength < 50 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description short ({shortDescLength}/50+ chars):</strong> Expand to 50-160 characters for better click-through rates</span>
+                                                        </div>
+                                                    ) : shortDescLength > 160 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description long ({shortDescLength}/160 chars):</strong> Will be truncated in search results</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description good</strong> ({shortDescLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Full Description Check */}
+                                                    {!checks.descExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Full description missing:</strong> Detailed content helps with search rankings</span>
+                                                        </div>
+                                                    ) : descLength < 100 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Description brief ({descLength} chars):</strong> Consider adding more product details</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Full description good</strong> ({descLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Arabic Localization */}
+                                                    {(!hasArabicName || !hasArabicDesc) && (
+                                                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Arabic SEO:</strong> Add {!hasArabicName && 'Arabic name'}{!hasArabicName && !hasArabicDesc && ' and '}{!hasArabicDesc && 'Arabic description'} to reach Arabic-speaking customers</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                        {data.name && data.name.length < 20 && (
-                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>Consider a longer, more descriptive title</span>
-                                            </div>
-                                        )}
-                                        {data.name && data.name.length >= 20 && data.short_description && (
-                                            <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
-                                                <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>SEO looks good!</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                        );
+                                    })()}
                                 </CardContent>
                             </Card>
 
