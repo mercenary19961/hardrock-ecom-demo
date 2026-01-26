@@ -8,7 +8,7 @@ import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, Plus, Pencil
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, ChevronLeft, ChevronRight, Plus, Pencil
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -433,6 +433,9 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
     // Sale percentage dropdown state
     const [showSaleDropdown, setShowSaleDropdown] = useState(false);
     const saleDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Preview image navigation state
+    const [previewImageIndex, setPreviewImageIndex] = useState(0);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -1098,6 +1101,15 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         });
     }, [product.images, data.delete_images, imageOrder]);
 
+    // Reset preview image index when images change (e.g., deleted)
+    useEffect(() => {
+        if (previewImageIndex >= existingImages.length && existingImages.length > 0) {
+            setPreviewImageIndex(existingImages.length - 1);
+        } else if (existingImages.length === 0) {
+            setPreviewImageIndex(0);
+        }
+    }, [existingImages.length, previewImageIndex]);
+
     return (
         <AdminLayout>
             <Head title={`Edit ${product.name}`} />
@@ -1641,14 +1653,43 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-3">
-                                        {/* Product Image */}
-                                        <div className="aspect-square w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                        {/* Product Image with Navigation */}
+                                        <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
                                             {existingImages.length > 0 ? (
-                                                <img
-                                                    src={getImageUrl(existingImages[0].path, product.id, existingImages[0].sort_order)}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                <>
+                                                    <img
+                                                        src={getImageUrl(
+                                                            existingImages[Math.min(previewImageIndex, existingImages.length - 1)]?.path,
+                                                            product.id,
+                                                            existingImages[Math.min(previewImageIndex, existingImages.length - 1)]?.sort_order
+                                                        )}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                    {/* Navigation Arrows - only show if multiple images */}
+                                                    {existingImages.length > 1 && (
+                                                        <>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewImageIndex(prev => prev === 0 ? existingImages.length - 1 : prev - 1)}
+                                                                className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                                            >
+                                                                <ChevronLeft className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewImageIndex(prev => prev === existingImages.length - 1 ? 0 : prev + 1)}
+                                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+                                                            >
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            </button>
+                                                            {/* Image Counter */}
+                                                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full bg-black/50 text-white text-xs">
+                                                                {Math.min(previewImageIndex, existingImages.length - 1) + 1} / {existingImages.length}
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
                                                     <ImageIcon className="h-12 w-12 text-gray-400 dark:text-gray-500" />
