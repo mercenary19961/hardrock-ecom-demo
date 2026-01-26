@@ -8,7 +8,7 @@ import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, Plus, Pencil
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -337,10 +337,27 @@ interface UndoMeta {
     changes?: FieldChange[];
 }
 
+interface ActivityLog {
+    id: number;
+    model_type: string;
+    model_id: number;
+    model_name: string | null;
+    action: 'created' | 'updated' | 'deleted' | 'restored';
+    changes: FieldChange[] | null;
+    user_id: number | null;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
+    created_at: string;
+}
+
 interface Props {
     product: Product;
     categories: Category[];
     undoMeta: UndoMeta | null;
+    activityLogs: ActivityLog[];
 }
 
 // Format date for display
@@ -392,7 +409,7 @@ function validateField(field: string, value: string | number): string | undefine
 // Auto-save key for localStorage
 const getAutoSaveKey = (productId: number) => `product_draft_${productId}`;
 
-export default function EditProduct({ product, categories, undoMeta }: Props) {
+export default function EditProduct({ product, categories, undoMeta, activityLogs }: Props) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [showFloatingBar, setShowFloatingBar] = useState(false);
@@ -1978,83 +1995,111 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                     </h2>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-3">
-                                        {/* Last Update Info */}
-                                        {undoMeta?.available && undoMeta.changes && undoMeta.changes.length > 0 ? (
-                                            <>
-                                                <div className="pb-3 border-b border-gray-100 dark:border-gray-700">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                                                <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                    <div className={`space-y-3 ${activityLogs && activityLogs.length > 2 ? 'max-h-[280px] overflow-y-auto pr-2 custom-scrollbar' : ''}`}>
+                                        {activityLogs && activityLogs.length > 0 ? (
+                                            activityLogs.map((activity, index) => {
+                                                const getActionStyle = (action: string) => {
+                                                    switch (action) {
+                                                        case 'created':
+                                                            return { icon: Plus, bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' };
+                                                        case 'updated':
+                                                            return { icon: Pencil, bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' };
+                                                        case 'deleted':
+                                                            return { icon: Trash2, bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' };
+                                                        case 'restored':
+                                                            return { icon: RotateCcw, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' };
+                                                        default:
+                                                            return { icon: FileText, bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400' };
+                                                    }
+                                                };
+
+                                                const style = getActionStyle(activity.action);
+                                                const ActionIcon = style.icon;
+                                                const actionLabels: Record<string, string> = {
+                                                    created: 'Product created',
+                                                    updated: 'Product updated',
+                                                    deleted: 'Product deleted',
+                                                    restored: 'Changes restored',
+                                                };
+
+                                                return (
+                                                    <div
+                                                        key={activity.id}
+                                                        className={`${index !== activityLogs.length - 1 ? 'pb-3 border-b border-gray-100 dark:border-gray-700' : ''}`}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`p-1.5 ${style.bg} rounded-lg`}>
+                                                                    <ActionIcon className={`h-3.5 w-3.5 ${style.text}`} />
+                                                                </div>
+                                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {actionLabels[activity.action] || activity.action}
+                                                                </span>
                                                             </div>
-                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                Last Update
-                                                            </span>
+                                                            {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                                    {activity.changes.length} change{activity.changes.length !== 1 ? 's' : ''}
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
-                                                            {undoMeta.changes.length} change{undoMeta.changes.length !== 1 ? 's' : ''}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                        <span>{formatDate(undoMeta.saved_at)}</span>
-                                                        {undoMeta.saved_by_user && (
-                                                            <>
-                                                                <span className="text-gray-300 dark:text-gray-600">•</span>
-                                                                <span className="text-gray-600 dark:text-gray-300 font-medium" title={undoMeta.saved_by_user.email}>
-                                                                    {undoMeta.saved_by_user.name}
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        {undoMeta.changes.slice(0, 4).map((change, idx) => (
-                                                            <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
-                                                                <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px]">
-                                                                    {change.label}
-                                                                </span>
-                                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                                                    change.type === 'boolean' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
-                                                                    change.type === 'array' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
-                                                                    change.type === 'json' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                                                                    'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-                                                                }`}>
-                                                                    {change.type === 'boolean' ? 'Toggle' :
-                                                                     change.type === 'array' ? 'List' :
-                                                                     change.type === 'json' ? 'Data' :
-                                                                     'Text'}
-                                                                </span>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                            <span>{formatDate(activity.created_at)}</span>
+                                                            {activity.user && (
+                                                                <>
+                                                                    <span className="text-gray-300 dark:text-gray-600">•</span>
+                                                                    <span className="text-gray-600 dark:text-gray-300 font-medium" title={activity.user.email}>
+                                                                        {activity.user.name}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                {activity.changes.slice(0, 4).map((change, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
+                                                                        <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px]">
+                                                                            {change.label}
+                                                                        </span>
+                                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                                                            change.type === 'boolean' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                                                                            change.type === 'array' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                                                                            change.type === 'json' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                                                                            'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                                                                        }`}>
+                                                                            {change.type === 'boolean' ? 'Toggle' :
+                                                                             change.type === 'array' ? 'List' :
+                                                                             change.type === 'json' ? 'Data' :
+                                                                             'Text'}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                                {activity.changes.length > 4 && (
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                                                        +{activity.changes.length - 4} more
+                                                                    </p>
+                                                                )}
                                                             </div>
-                                                        ))}
-                                                        {undoMeta.changes.length > 4 && (
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                                                +{undoMeta.changes.length - 4} more
-                                                            </p>
                                                         )}
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <>
+                                                {/* Fallback: Show creation info from product */}
+                                                <div className="flex items-start gap-3">
+                                                    <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                                        <Plus className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm text-gray-900 dark:text-white">
+                                                            Product created
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                            {formatDate(product.created_at)}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </>
-                                        ) : null}
-
-                                        {/* Creation Info */}
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
-                                                <Package className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-gray-900 dark:text-white">
-                                                    Product created
-                                                </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                    {formatDate(product.created_at)}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {!undoMeta?.available && (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-2">
-                                                No recent changes recorded
-                                            </p>
                                         )}
                                     </div>
                                 </CardContent>

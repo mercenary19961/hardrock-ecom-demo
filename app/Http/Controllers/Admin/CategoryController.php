@@ -129,7 +129,10 @@ class CategoryController extends Controller
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
 
-        Category::create($data);
+        $category = Category::create($data);
+
+        // Log the create activity
+        $this->undoService->logActivity($category, 'created');
 
         return redirect()
             ->route('admin.categories.index')
@@ -180,9 +183,12 @@ class CategoryController extends Controller
         // Ensure is_active is explicitly set (handles false values in form data)
         $data['is_active'] = $request->boolean('is_active');
 
+        // Store old data for change tracking
+        $oldData = $category->toArray();
+
         // Save current state for undo BEFORE making changes (only if there are actual changes)
         $oldImagePath = $category->image;
-        $this->undoService->saveState($category, $oldImagePath, $data);
+        $hasChanges = $this->undoService->saveState($category, $oldImagePath, $data);
 
         if ($request->hasFile('image')) {
             // Mark old image for potential deletion (will be cleaned up if undo state is cleared)
@@ -190,9 +196,16 @@ class CategoryController extends Controller
                 $this->undoService->markImageForDeletion('category', $category->id, $category->image);
             }
             $data['image'] = $request->file('image')->store('categories', 'public');
+            $hasChanges = true; // Image change counts as a change
         }
 
         $category->update($data);
+
+        // Log the update activity if there were changes
+        if ($hasChanges) {
+            $changes = $this->undoService->getChanges($category, $oldData);
+            $this->undoService->logActivity($category, 'updated', $changes);
+        }
 
         // Auto-cascade: If parent category is set to inactive and cascade is confirmed,
         // also deactivate all active children
@@ -224,6 +237,9 @@ class CategoryController extends Controller
         if ($category->products()->exists()) {
             return back()->withErrors(['category' => 'Cannot delete category with products. Move or delete the products first.']);
         }
+
+        // Log the delete activity before deleting
+        $this->undoService->logActivity($category, 'deleted');
 
         // Delete image
         if ($category->image) {

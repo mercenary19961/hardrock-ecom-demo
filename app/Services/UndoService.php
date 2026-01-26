@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,44 @@ use Illuminate\Support\Facades\Storage;
 
 class UndoService
 {
+    protected ?ActivityLogService $activityLogService = null;
+
+    /**
+     * Get the activity log service (lazy loaded).
+     */
+    protected function getActivityLogService(): ActivityLogService
+    {
+        if (!$this->activityLogService) {
+            $this->activityLogService = app(ActivityLogService::class);
+        }
+        return $this->activityLogService;
+    }
+
+    /**
+     * Log an activity for a model update.
+     * Call this AFTER saving changes to the model.
+     */
+    public function logActivity(Model $model, string $action, array $changes = []): ?ActivityLog
+    {
+        try {
+            return $this->getActivityLogService()->log($model, $action, $changes);
+        } catch (\Exception $e) {
+            // Silently fail if activity logging fails (don't break the main operation)
+            report($e);
+            return null;
+        }
+    }
+
+    /**
+     * Get changes between old data and current model.
+     * Useful for logging what changed during an update.
+     */
+    public function getChanges(Model $model, array $oldData): array
+    {
+        $modelType = $this->getModelType($model);
+        return $this->computeChanges($modelType, $oldData, $model->toArray());
+    }
+
     /**
      * Save the current state of a model before updating.
      * Call this BEFORE making changes to the model.
@@ -106,6 +145,9 @@ class UndoService
         $fillable = $model->getFillable();
         $filteredData = array_intersect_key($data, array_flip($fillable));
 
+        // Get current data before restore for logging
+        $currentData = $model->toArray();
+
         // Update the model with restored data
         $model->fill($filteredData);
         $model->save();
@@ -115,6 +157,10 @@ class UndoService
             // Current image is different from restored, so delete current
             Storage::disk('public')->delete($currentImage);
         }
+
+        // Log the restore activity
+        $changes = $this->computeChanges($modelType, $currentData, $model->toArray());
+        $this->logActivity($model, 'restored', $changes);
 
         // Clear the undo state
         session()->forget($key);
