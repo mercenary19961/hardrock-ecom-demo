@@ -24,6 +24,7 @@ import {
     Layers,
     Globe,
     Languages,
+    User,
     LucideIcon,
 } from 'lucide-react';
 import { Button } from './Button';
@@ -48,6 +49,11 @@ interface UndoMeta {
     available: boolean;
     saved_at: string;
     saved_by: number;
+    saved_by_user?: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
     changes?: FieldChange[];
 }
 
@@ -256,14 +262,22 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
             {showTooltip && changes.length > 0 && (
                 <div className="absolute top-full left-0 mt-2 z-50 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 animate-in fade-in slide-in-from-top-1 duration-150">
                     {/* Header */}
-                    <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                                 <History className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                             </div>
-                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                Changes made in last update
-                            </span>
+                            <div>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">
+                                    Changes in last update
+                                </span>
+                                {undoMeta.saved_by_user && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        {undoMeta.saved_by_user.name}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <span className="px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-xs font-medium text-purple-600 dark:text-purple-300">
                             {changes.length} field{changes.length !== 1 ? 's' : ''}

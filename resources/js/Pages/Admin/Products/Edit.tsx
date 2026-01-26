@@ -329,6 +329,11 @@ interface UndoMeta {
     available: boolean;
     saved_at: string;
     saved_by: number;
+    saved_by_user?: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
     changes?: FieldChange[];
 }
 
@@ -1993,9 +1998,17 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                             {undoMeta.changes.length} change{undoMeta.changes.length !== 1 ? 's' : ''}
                                                         </span>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                                        {formatDate(undoMeta.saved_at)}
-                                                    </p>
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        <span>{formatDate(undoMeta.saved_at)}</span>
+                                                        {undoMeta.saved_by_user && (
+                                                            <>
+                                                                <span className="text-gray-300 dark:text-gray-600">•</span>
+                                                                <span className="text-gray-600 dark:text-gray-300 font-medium" title={undoMeta.saved_by_user.email}>
+                                                                    {undoMeta.saved_by_user.name}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                     <div className="space-y-1.5">
                                                         {undoMeta.changes.slice(0, 4).map((change, idx) => (
                                                             <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">

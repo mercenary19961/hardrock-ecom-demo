@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -158,10 +159,24 @@ class UndoService
             $changes = $this->computeChanges($modelType, $state['data'], $currentModel->toArray());
         }
 
+        // Look up user who made the changes
+        $savedByUser = null;
+        if ($state['saved_by']) {
+            $user = User::find($state['saved_by']);
+            if ($user) {
+                $savedByUser = [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ];
+            }
+        }
+
         return [
             'available' => true,
             'saved_at' => $state['saved_at'],
             'saved_by' => $state['saved_by'],
+            'saved_by_user' => $savedByUser,
             'changes' => $changes,
         ];
     }
