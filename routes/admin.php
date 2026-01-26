@@ -20,6 +20,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('products/bulk-action', [ProductController::class, 'bulkAction'])->name('products.bulk-action');
     Route::patch('products/{product:id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
     Route::patch('products/{product:id}/toggle-active', [ProductController::class, 'toggleActive'])->name('products.toggle-active');
+    Route::post('products/{product:id}/restore-activity/{activityLog}', [ProductController::class, 'restoreFromActivity'])->name('products.restore-activity');
 
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -381,5 +382,69 @@ class ProductController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Restore product to a previous state from activity log
+     */
+    public function restoreFromActivity(Product $product, ActivityLog $activityLog): RedirectResponse
+    {
+        // Verify the activity log belongs to this product
+        if ($activityLog->model_type !== 'Product' || $activityLog->model_id !== $product->id) {
+            return back()->withErrors(['error' => 'Invalid activity log for this product.']);
+        }
+
+        // Only allow restore from 'updated' activities
+        if ($activityLog->action !== 'updated') {
+            return back()->withErrors(['error' => 'Can only restore from update activities.']);
+        }
+
+        // Get the changes from the activity log
+        $changes = $activityLog->changes;
+        if (empty($changes)) {
+            return back()->withErrors(['error' => 'No changes found in this activity log.']);
+        }
+
+        // Store current state before restoring
+        $oldData = $product->toArray();
+
+        // Build the restore data from old values in changes
+        $restoreData = [];
+        foreach ($changes as $change) {
+            $field = $change['field'];
+            $oldValue = $change['old'] ?? null;
+            $type = $change['type'] ?? 'text';
+
+            // Convert values back to appropriate types
+            if ($type === 'boolean') {
+                $restoreData[$field] = filter_var($oldValue, FILTER_VALIDATE_BOOLEAN);
+            } elseif ($type === 'json' || $type === 'array') {
+                // For JSON/array fields, decode if it's a string
+                if (is_string($oldValue)) {
+                    $decoded = json_decode($oldValue, true);
+                    $restoreData[$field] = $decoded !== null ? $decoded : $oldValue;
+                } else {
+                    $restoreData[$field] = $oldValue;
+                }
+            } elseif (in_array($field, ['price', 'compare_price'])) {
+                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (float) $oldValue : null;
+            } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count'])) {
+                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (int) $oldValue : 0;
+            } else {
+                $restoreData[$field] = $oldValue;
+            }
+        }
+
+        // Save undo state before restoring (so user can undo the restore)
+        $this->undoService->saveState($product, null, $restoreData);
+
+        // Update the product
+        $product->update($restoreData);
+
+        // Log the restore activity
+        $restoredChanges = $this->undoService->getChanges($product, $oldData);
+        $this->activityLogService->log($product, 'restored', $restoredChanges);
+
+        return back()->with('success', 'Product restored to previous state.');
     }
 }
