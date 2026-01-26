@@ -44,6 +44,7 @@ function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPicke
     const [customName, setCustomName] = useState('');
     const [customHex, setCustomHex] = useState('#000000');
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const dropdownContentRef = useRef<HTMLDivElement>(null);
     const colorInputRef = useRef<HTMLInputElement>(null);
 
     // Close on click outside
@@ -55,6 +56,19 @@ function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPicke
         };
         if (isOpen) document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    // Scroll dropdown into view when opened
+    useEffect(() => {
+        if (isOpen && dropdownContentRef.current) {
+            // Small delay to ensure the dropdown is rendered
+            setTimeout(() => {
+                dropdownContentRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            }, 50);
+        }
     }, [isOpen]);
 
     const handlePresetSelect = (color: ColorOption) => {
@@ -104,7 +118,10 @@ function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPicke
             </button>
 
             {isOpen && (
-                <div className="absolute z-20 top-full mt-1 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <div
+                    ref={dropdownContentRef}
+                    className="absolute z-20 top-full mt-1 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+                >
                     {/* Preset colors */}
                     <div className="p-2 border-b border-gray-100 dark:border-gray-700">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick select</p>
@@ -129,36 +146,41 @@ function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPicke
                     {/* Custom color */}
                     <div className="p-2 border-b border-gray-100 dark:border-gray-700">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Custom color</p>
-                        <div className="flex gap-1">
+                        <div className="space-y-2">
+                            {/* Name input row */}
                             <input
                                 type="text"
                                 placeholder="Name"
                                 value={customName}
                                 onChange={(e) => setCustomName(e.target.value)}
-                                className="flex-1 h-7 px-2 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                                className="w-full h-7 px-2 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                             />
-                            <div className="relative">
-                                <input
-                                    ref={colorInputRef}
-                                    type="color"
-                                    value={customHex}
-                                    onChange={(e) => setCustomHex(e.target.value)}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                                <div
-                                    className="w-7 h-7 rounded border border-gray-300 dark:border-gray-600 cursor-pointer"
-                                    style={{ backgroundColor: customHex }}
-                                    onClick={() => colorInputRef.current?.click()}
-                                />
+                            {/* Color picker + Add button row */}
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <input
+                                        ref={colorInputRef}
+                                        type="color"
+                                        value={customHex}
+                                        onChange={(e) => setCustomHex(e.target.value)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    <div
+                                        className="w-7 h-7 rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:border-purple-400 transition-colors"
+                                        style={{ backgroundColor: customHex }}
+                                        onClick={() => colorInputRef.current?.click()}
+                                        title="Click to pick color"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCustomAdd}
+                                    disabled={!customName.trim()}
+                                    className="flex-1 h-7 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Add
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleCustomAdd}
-                                disabled={!customName.trim()}
-                                className="px-2 h-7 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Add
-                            </button>
                         </div>
                     </div>
 
@@ -537,6 +559,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         data.product_group !== initialValues.product_group ||
         JSON.stringify(data.available_sizes) !== JSON.stringify(initialValues.available_sizes) ||
         JSON.stringify(data.size_stock) !== JSON.stringify(initialValues.size_stock) ||
+        JSON.stringify(data.variant_stock) !== JSON.stringify(initialValues.variant_stock) ||
         data.images.length > 0 ||
         data.delete_images.length > 0 ||
         imageOrderChanged ||
@@ -894,6 +917,35 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         setData('delete_images', [...data.delete_images, imageId]);
         // Also remove from imageOrder
         setImageOrder(prev => prev.filter(id => id !== imageId));
+
+        // Remove the color assignment for this image
+        const deletedColorInfo = imageColors[imageId];
+        setImageColors(prev => {
+            const updated = { ...prev };
+            delete updated[imageId];
+            return updated;
+        });
+
+        // If this was the only image with this color, clean up variant_stock for that color
+        if (deletedColorInfo?.name) {
+            const colorName = deletedColorInfo.name.toLowerCase();
+            // Check if any other image has this color
+            const otherImagesWithSameColor = Object.entries(imageColors).some(
+                ([id, info]) => parseInt(id) !== imageId && info?.name?.toLowerCase() === colorName
+            );
+
+            if (!otherImagesWithSameColor) {
+                // Remove all variant_stock entries for this color
+                const colorKey = colorName.replace(/\s+/g, '_');
+                const newVariantStock = { ...data.variant_stock };
+                Object.keys(newVariantStock).forEach(key => {
+                    if (key.startsWith(`${colorKey}_`)) {
+                        delete newVariantStock[key];
+                    }
+                });
+                setData('variant_stock', newVariantStock);
+            }
+        }
     };
 
     // Derive available colors from image color assignments
@@ -910,6 +962,75 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
         return uniqueColors;
     }, [imageColors]);
+
+    // Track if we've migrated stock for this product session
+    const hasMigratedStockRef = useRef(false);
+
+    // Migrate old size_stock to variant_stock when colors are detected
+    // This handles products that had size-only stock before the color×size system
+    useEffect(() => {
+        // Only migrate once per session
+        if (hasMigratedStockRef.current) return;
+
+        // Only migrate if:
+        // 1. We have colors from images
+        // 2. We have sizes
+        // 3. We have old size_stock data with values
+        // 4. variant_stock is empty or doesn't have keys for current colors
+        if (colorsFromImages.length === 0) return;
+        if (data.available_sizes.length === 0) return;
+
+        const sizeStock = data.size_stock || {};
+        const hasOldSizeStock = Object.keys(sizeStock).length > 0 &&
+            Object.values(sizeStock).some(v => Number(v) > 0);
+
+        if (!hasOldSizeStock) return;
+
+        // Check if variant_stock already has keys for any current color
+        const firstColor = colorsFromImages[0];
+        const expectedKey = `${firstColor.name.toLowerCase().replace(/\s+/g, '_')}_${data.available_sizes[0]}`;
+        const hasNewVariantStock = data.variant_stock && data.variant_stock[expectedKey] !== undefined;
+
+        if (hasNewVariantStock) return;
+
+        // Mark as migrated before setting state
+        hasMigratedStockRef.current = true;
+
+        // Migrate: put all old size_stock under the first color
+        const migratedStock: VariantStock = {};
+        data.available_sizes.forEach(size => {
+            const oldValue = Number(sizeStock[size]) || 0;
+            if (oldValue > 0) {
+                const key = `${firstColor.name.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+                migratedStock[key] = oldValue;
+            }
+        });
+
+        // Initialize zero stock for other colors
+        colorsFromImages.slice(1).forEach(color => {
+            data.available_sizes.forEach(size => {
+                const key = `${color.name.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+                migratedStock[key] = 0;
+            });
+        });
+
+        if (Object.keys(migratedStock).length > 0) {
+            setData('variant_stock', migratedStock);
+        }
+    }, [colorsFromImages, data.available_sizes, data.size_stock, data.variant_stock]);
+
+    // Sync main stock field with variant_stock total when variants exist
+    useEffect(() => {
+        // Only sync if we have both colors and sizes (variant mode)
+        if (colorsFromImages.length === 0 || data.available_sizes.length === 0) return;
+
+        const variantTotal = Object.values(data.variant_stock || {}).reduce((sum, val) => sum + (Number(val) || 0), 0);
+
+        // Only update if different to avoid infinite loops
+        if (data.stock !== variantTotal) {
+            setData('stock', variantTotal);
+        }
+    }, [data.variant_stock, colorsFromImages.length, data.available_sizes.length]);
 
     // Get existing images sorted by the current imageOrder
     const existingImages = useMemo(() => {

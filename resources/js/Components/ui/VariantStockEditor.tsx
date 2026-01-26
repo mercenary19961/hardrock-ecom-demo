@@ -83,11 +83,11 @@ export function VariantStockEditor({
     // Get stock for a specific variant
     const getStock = (colorName: string, size: string): number => {
         const key = createVariantKey(colorName, size);
-        return variantStock[key] ?? 0;
+        return Number(variantStock[key]) || 0;
     };
 
     // Calculate totals
-    const getTotalStock = () => Object.values(variantStock).reduce((a, b) => a + b, 0);
+    const getTotalStock = () => Object.values(variantStock).reduce((a, b) => a + (Number(b) || 0), 0);
     const getColorTotal = (colorName: string) => {
         return sizes.reduce((total, size) => total + getStock(colorName, size), 0);
     };
@@ -162,22 +162,27 @@ export function VariantStockEditor({
                     </div>
 
                     {hasColors ? (
-                        <div className="flex flex-wrap gap-2">
-                            {colors.map((color) => (
-                                <div
-                                    key={color.name}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg"
-                                >
-                                    <span
-                                        className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
-                                        style={{ backgroundColor: color.hex }}
-                                    />
-                                    <span className="text-sm text-purple-700 dark:text-purple-300">
-                                        {color.name}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+                        <>
+                            <div className="flex flex-wrap gap-2">
+                                {colors.map((color) => (
+                                    <div
+                                        key={color.name}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg"
+                                    >
+                                        <span
+                                            className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500"
+                                            style={{ backgroundColor: color.hex }}
+                                        />
+                                        <span className="text-sm text-purple-700 dark:text-purple-300">
+                                            {color.name}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Colors are automatically derived from your tagged images. To add or remove colors, scroll down to the Images section and use the color picker on each image.
+                            </p>
+                        </>
                     ) : (
                         <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
                             <AlertCircle className="h-4 w-4" />
@@ -206,6 +211,12 @@ export function VariantStockEditor({
                         </button>
                     )}
                 </div>
+
+                {!hasSizes && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Click "+ Add sizes" to add size options. Choose from letter sizes (S, M, L, XL), numeric sizes (36-45 for shoes), or enter custom sizes.
+                    </p>
+                )}
 
                 {/* Selected Sizes */}
                 {hasSizes && (
@@ -360,36 +371,49 @@ export function VariantStockEditor({
                         </span>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Enter the available stock quantity for each color and size combination. The total stock will be calculated automatically and synced with the main stock field.
+                    </p>
+
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr>
-                                    <th className="p-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 sticky left-0 z-10">
+                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750">
+                                    <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-r border-gray-200 dark:border-gray-700 sticky left-0 z-10 bg-gray-50 dark:bg-gray-800">
                                         Color / Size
                                     </th>
                                     {sizes.map((size) => (
                                         <th
                                             key={size}
-                                            className="p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 min-w-[70px]"
+                                            className="p-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 min-w-[75px]"
                                         >
                                             {size}
                                         </th>
                                     ))}
-                                    <th className="p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 min-w-[60px]">
+                                    <th className="p-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border-b border-l border-gray-200 dark:border-gray-700 min-w-[70px]">
                                         Total
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {colors.map((color) => (
-                                    <tr key={color.name}>
-                                        <td className="p-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 sticky left-0 z-10">
-                                            <div className="flex items-center gap-2">
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {colors.map((color, colorIndex) => (
+                                    <tr
+                                        key={color.name}
+                                        className={cn(
+                                            "transition-colors hover:bg-purple-50/50 dark:hover:bg-purple-900/10",
+                                            colorIndex % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/50 dark:bg-gray-800/50"
+                                        )}
+                                    >
+                                        <td className={cn(
+                                            "p-3 border-r border-gray-200 dark:border-gray-700 sticky left-0 z-10",
+                                            colorIndex % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"
+                                        )}>
+                                            <div className="flex items-center gap-2.5">
                                                 <span
-                                                    className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-500 flex-shrink-0"
+                                                    className="w-5 h-5 rounded-full border-2 border-white dark:border-gray-600 shadow-sm flex-shrink-0 ring-1 ring-gray-200 dark:ring-gray-600"
                                                     style={{ backgroundColor: color.hex }}
                                                 />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[80px]">
+                                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate max-w-[80px]">
                                                     {color.name}
                                                 </span>
                                             </div>
@@ -397,7 +421,7 @@ export function VariantStockEditor({
                                         {sizes.map((size) => (
                                             <td
                                                 key={`${color.name}-${size}`}
-                                                className="p-1 border border-gray-200 dark:border-gray-700"
+                                                className="p-1.5 group"
                                             >
                                                 <input
                                                     type="number"
@@ -406,29 +430,54 @@ export function VariantStockEditor({
                                                     onChange={(e) =>
                                                         updateStock(color.name, size, parseInt(e.target.value) || 0)
                                                     }
-                                                    className="w-full h-8 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-2 text-sm text-center text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className={cn(
+                                                        "w-full h-9 rounded-md px-2 text-sm text-center font-medium transition-all duration-150",
+                                                        "bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white",
+                                                        "border border-transparent",
+                                                        "hover:border-purple-300 dark:hover:border-purple-600 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm",
+                                                        "focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white dark:focus:bg-gray-700",
+                                                        "cursor-text",
+                                                        "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    )}
                                                 />
                                             </td>
                                         ))}
-                                        <td className="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700">
-                                            {getColorTotal(color.name)}
+                                        <td className="p-2 text-center border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                            <span className={cn(
+                                                "inline-flex items-center justify-center min-w-[40px] px-2 py-1 rounded-md text-sm font-semibold",
+                                                getColorTotal(color.name) > 0
+                                                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                                    : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                            )}>
+                                                {getColorTotal(color.name)}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
-                                <tr>
-                                    <td className="p-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 sticky left-0 z-10">
+                                {/* Totals Row */}
+                                <tr className="bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-750 border-t-2 border-gray-200 dark:border-gray-600">
+                                    <td className="p-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300 sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
                                         Total
                                     </td>
                                     {sizes.map((size) => (
                                         <td
                                             key={`total-${size}`}
-                                            className="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                                            className="p-2 text-center"
                                         >
-                                            {getSizeTotal(size)}
+                                            <span className={cn(
+                                                "inline-flex items-center justify-center min-w-[40px] px-2 py-1 rounded-md text-sm font-semibold",
+                                                getSizeTotal(size) > 0
+                                                    ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                                                    : "text-gray-400 dark:text-gray-500"
+                                            )}>
+                                                {getSizeTotal(size)}
+                                            </span>
                                         </td>
                                     ))}
-                                    <td className="p-2 text-center text-sm font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border border-gray-200 dark:border-gray-700">
-                                        {getTotalStock()}
+                                    <td className="p-2 text-center border-l border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
+                                        <span className="inline-flex items-center justify-center min-w-[50px] px-3 py-1.5 rounded-lg text-base font-bold bg-green-500 dark:bg-green-600 text-white shadow-sm">
+                                            {getTotalStock()}
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
