@@ -413,6 +413,7 @@ export function VariantStockEditor({
                                                     onChange={(e) =>
                                                         updateStock(color.name, size, parseInt(e.target.value) || 0)
                                                     }
+                                                    onFocus={(e) => e.target.select()}
                                                     className={cn(
                                                         "w-full h-9 rounded-md px-2 text-sm text-center font-medium transition-all duration-150",
                                                         "bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white",
