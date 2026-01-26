@@ -55,13 +55,19 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }
 
 /* Inter font feature settings */
 html {
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    min-height: 100%;
+}
+
+/* Ensure Inertia app root fills available space */
+#app {
+    min-height: 100vh;
 }
 
 /* Tabular numbers for data alignment in tables */
