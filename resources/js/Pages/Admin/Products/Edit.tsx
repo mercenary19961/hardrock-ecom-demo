@@ -1,19 +1,208 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor, Badge, UndoButton } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton, NumberInput } from '@/Components/ui';
+import { ColorOption, VariantStock } from '@/types/models';
 import { Category, Product } from '@/types/models';
 import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, Plus, Pencil
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
+// Preset colors for quick selection
+const PRESET_COLORS: ColorOption[] = [
+    { name: 'Black', hex: '#000000' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Navy', hex: '#1e3a5f' },
+    { name: 'Red', hex: '#dc2626' },
+    { name: 'Grey', hex: '#6b7280' },
+    { name: 'Beige', hex: '#d4b896' },
+    { name: 'Blue', hex: '#3b82f6' },
+    { name: 'Green', hex: '#22c55e' },
+    { name: 'Pink', hex: '#ec4899' },
+    { name: 'Brown', hex: '#78350f' },
+];
+
+// Image Color Info - stores both name and hex
+interface ImageColorInfo {
+    name: string;
+    hex: string;
+}
+
+// Image Color Picker Component
+interface ImageColorPickerProps {
+    imageId: number;
+    colorInfo: ImageColorInfo | null;
+    onColorChange: (imageId: number, color: ImageColorInfo | null) => void;
+}
+
+function ImageColorPicker({ imageId, colorInfo, onColorChange }: ImageColorPickerProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [customName, setCustomName] = useState('');
+    const [customHex, setCustomHex] = useState('#000000');
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const dropdownContentRef = useRef<HTMLDivElement>(null);
+    const colorInputRef = useRef<HTMLInputElement>(null);
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    // Scroll dropdown into view when opened
+    useEffect(() => {
+        if (isOpen && dropdownContentRef.current) {
+            // Small delay to ensure the dropdown is rendered
+            setTimeout(() => {
+                dropdownContentRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            }, 50);
+        }
+    }, [isOpen]);
+
+    const handlePresetSelect = (color: ColorOption) => {
+        onColorChange(imageId, color);
+        setIsOpen(false);
+    };
+
+    const handleCustomAdd = () => {
+        if (customName.trim()) {
+            onColorChange(imageId, { name: customName.trim(), hex: customHex });
+            setCustomName('');
+            setIsOpen(false);
+        }
+    };
+
+    const handleClear = () => {
+        onColorChange(imageId, null);
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-1.5 px-2 py-1 text-xs rounded border transition-colors ${
+                    colorInfo
+                        ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300'
+                        : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-purple-400'
+                }`}
+            >
+                {colorInfo ? (
+                    <>
+                        <span
+                            className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-500"
+                            style={{ backgroundColor: colorInfo.hex }}
+                        />
+                        <span className="max-w-[60px] truncate">{colorInfo.name}</span>
+                    </>
+                ) : (
+                    <>
+                        <Palette className="h-3 w-3" />
+                        <span>Set color</span>
+                    </>
+                )}
+                <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div
+                    ref={dropdownContentRef}
+                    className="absolute z-20 top-full mt-1 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+                >
+                    {/* Preset colors */}
+                    <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick select</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {PRESET_COLORS.map((color) => (
+                                <button
+                                    key={color.name}
+                                    type="button"
+                                    onClick={() => handlePresetSelect(color)}
+                                    className={`w-6 h-6 rounded-full border-2 transition-all ${
+                                        colorInfo?.name === color.name
+                                            ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
+                                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-400'
+                                    }`}
+                                    style={{ backgroundColor: color.hex }}
+                                    title={color.name}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Custom color */}
+                    <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Custom color</p>
+                        <div className="space-y-2">
+                            {/* Name input row */}
+                            <input
+                                type="text"
+                                placeholder="Name"
+                                value={customName}
+                                onChange={(e) => setCustomName(e.target.value)}
+                                className="w-full h-7 px-2 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
+                            />
+                            {/* Color picker + Add button row */}
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <input
+                                        ref={colorInputRef}
+                                        type="color"
+                                        value={customHex}
+                                        onChange={(e) => setCustomHex(e.target.value)}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    <div
+                                        className="w-7 h-7 rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:border-purple-400 transition-colors"
+                                        style={{ backgroundColor: customHex }}
+                                        onClick={() => colorInputRef.current?.click()}
+                                        title="Click to pick color"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCustomAdd}
+                                    disabled={!customName.trim()}
+                                    className="flex-1 h-7 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Clear option */}
+                    <div className="p-2">
+                        <button
+                            type="button"
+                            onClick={handleClear}
+                            className="w-full text-left text-xs text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 px-2 py-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            {colorInfo ? 'Remove color (show for all)' : 'No color (universal image)'}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // Draggable Image Component for reordering
 interface DraggableImageProps {
-    image: { id: number; path: string; is_primary: boolean; sort_order: number };
+    image: { id: number; path: string; is_primary: boolean; sort_order: number; color?: string | null };
     productId: number;
     index: number;
     onDelete: (id: number) => void;
@@ -22,39 +211,57 @@ interface DraggableImageProps {
     onDragEnd: () => void;
     isDragging: boolean;
     dragOverIndex: number | null;
+    imageColorInfo: ImageColorInfo | null;
+    onColorChange: (imageId: number, color: ImageColorInfo | null) => void;
 }
 
-function DraggableImage({ image, productId, index, onDelete, onDragStart, onDragOver, onDragEnd, isDragging, dragOverIndex }: DraggableImageProps) {
+function DraggableImage({ image, productId, index, onDelete, onDragStart, onDragOver, onDragEnd, isDragging, dragOverIndex, imageColorInfo, onColorChange }: DraggableImageProps) {
     return (
-        <div
-            draggable
-            onDragStart={() => onDragStart(index)}
-            onDragOver={(e) => onDragOver(e, index)}
-            onDragEnd={onDragEnd}
-            className={`relative group cursor-move transition-all duration-200 ${
-                isDragging ? 'opacity-50 scale-95' : ''
-            } ${dragOverIndex === index ? 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-800' : ''}`}
-        >
-            <div className="absolute top-1 left-1 z-10 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                <GripVertical className="h-4 w-4 text-white" />
-            </div>
-            <img
-                src={getImageUrl(image.path, productId, image.sort_order)}
-                alt=""
-                className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
-            />
-            <button
-                type="button"
-                onClick={() => onDelete(image.id)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+        <div className="flex flex-col items-center gap-2">
+            <div
+                draggable
+                onDragStart={() => onDragStart(index)}
+                onDragOver={(e) => onDragOver(e, index)}
+                onDragEnd={onDragEnd}
+                className={`relative group cursor-move transition-all duration-200 ${
+                    isDragging ? 'opacity-50 scale-95' : ''
+                } ${dragOverIndex === index ? 'ring-2 ring-purple-500 ring-offset-2 dark:ring-offset-gray-800' : ''}`}
             >
-                <X className="h-3 w-3" />
-            </button>
-            {index === 0 && (
-                <span className="absolute bottom-1 left-1 text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded">
-                    Primary
-                </span>
-            )}
+                <div className="absolute top-1 left-1 z-10 p-1 bg-black/50 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    <GripVertical className="h-4 w-4 text-white" />
+                </div>
+                <img
+                    src={getImageUrl(image.path, productId, image.sort_order)}
+                    alt=""
+                    className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                />
+                <button
+                    type="button"
+                    onClick={() => onDelete(image.id)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                    <X className="h-3 w-3" />
+                </button>
+                {index === 0 && (
+                    <span className="absolute bottom-1 left-1 text-xs bg-purple-600 text-white px-1.5 py-0.5 rounded">
+                        Primary
+                    </span>
+                )}
+                {/* Color indicator badge */}
+                {imageColorInfo && (
+                    <span
+                        className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                        style={{ backgroundColor: imageColorInfo.hex }}
+                        title={imageColorInfo.name}
+                    />
+                )}
+            </div>
+            {/* Color picker */}
+            <ImageColorPicker
+                imageId={image.id}
+                colorInfo={imageColorInfo}
+                onColorChange={onColorChange}
+            />
         </div>
     );
 }
@@ -105,26 +312,52 @@ function NewImagePreview({ file, index, onRemove }: NewImagePreviewProps) {
 interface FieldChange {
     field: string;
     label: string;
-    type: 'text' | 'textarea' | 'boolean' | 'image' | 'select';
+    type: 'text' | 'textarea' | 'boolean' | 'image' | 'select' | 'array' | 'json';
     old: string;
     new: string;
     old_path?: string;
     new_path?: string;
     old_id?: string | number;
     new_id?: string | number;
+    old_count?: number;
+    new_count?: number;
+    old_data?: Record<string, number>;
+    new_data?: Record<string, number>;
 }
 
 interface UndoMeta {
     available: boolean;
     saved_at: string;
     saved_by: number;
+    saved_by_user?: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
     changes?: FieldChange[];
+}
+
+interface ActivityLog {
+    id: number;
+    model_type: string;
+    model_id: number;
+    model_name: string | null;
+    action: 'created' | 'updated' | 'deleted' | 'restored';
+    changes: FieldChange[] | null;
+    user_id: number | null;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
+    created_at: string;
 }
 
 interface Props {
     product: Product;
     categories: Category[];
     undoMeta: UndoMeta | null;
+    activityLogs: ActivityLog[];
 }
 
 // Format date for display
@@ -142,6 +375,7 @@ function formatDate(dateString: string): string {
 interface ValidationErrors {
     name?: string;
     price?: string;
+    compare_price?: string;
     stock?: string;
     sku?: string;
     slug?: string;
@@ -175,7 +409,7 @@ function validateField(field: string, value: string | number): string | undefine
 // Auto-save key for localStorage
 const getAutoSaveKey = (productId: number) => `product_draft_${productId}`;
 
-export default function EditProduct({ product, categories, undoMeta }: Props) {
+export default function EditProduct({ product, categories, undoMeta, activityLogs }: Props) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
     const [showFloatingBar, setShowFloatingBar] = useState(false);
@@ -190,8 +424,15 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [imageOrder, setImageOrder] = useState<number[]>([]);
 
+    // Image colors state - tracks color assignment for each image (now stores full color info)
+    const [imageColors, setImageColors] = useState<Record<number, ImageColorInfo | null>>({});
+
     // Real-time validation state
     const [liveErrors, setLiveErrors] = useState<ValidationErrors>({});
+
+    // Sale percentage dropdown state
+    const [showSaleDropdown, setShowSaleDropdown] = useState(false);
+    const saleDropdownRef = useRef<HTMLDivElement>(null);
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -214,15 +455,19 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         images: [] as File[],
         delete_images: [] as number[],
         image_order: [] as number[],
+        image_colors: {} as Record<number, string | null>,
         // Variant fields
         color: product.color || '',
         color_hex: product.color_hex || '',
+        available_colors: product.available_colors || [] as ColorOption[],
         available_sizes: product.available_sizes || [] as string[],
         size_stock: product.size_stock || {} as Record<string, number>,
+        variant_stock: product.variant_stock || {} as VariantStock,
         product_group: product.product_group || '',
     };
 
-    const { data, setData, post, processing, errors, recentlySuccessful, reset } = useForm(initialValues);
+    const { data, setData, errors, reset } = useForm(initialValues);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset form when product prop changes (e.g., after undo restore)
     useEffect(() => {
@@ -246,10 +491,13 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
             images: [],
             delete_images: [],
             image_order: [],
+            image_colors: {},
             color: product.color || '',
             color_hex: product.color_hex || '',
+            available_colors: product.available_colors || [],
             available_sizes: product.available_sizes || [],
             size_stock: product.size_stock || {},
+            variant_stock: product.variant_stock || {},
             product_group: product.product_group || '',
         });
     }, [product.id, product.updated_at]);
@@ -259,6 +507,26 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         if (product.images && product.images.length > 0) {
             const sortedImages = [...product.images].sort((a, b) => a.sort_order - b.sort_order);
             setImageOrder(sortedImages.map(img => img.id));
+        }
+    }, [product.id, product.images]);
+
+    // Initialize image colors from product images (convert string color names to full color info)
+    useEffect(() => {
+        if (product.images && product.images.length > 0) {
+            const colors: Record<number, ImageColorInfo | null> = {};
+            product.images.forEach(img => {
+                if (img.color) {
+                    // Try to find hex from presets, or use a default
+                    const preset = PRESET_COLORS.find(c => c.name.toLowerCase() === img.color?.toLowerCase());
+                    colors[img.id] = {
+                        name: img.color,
+                        hex: preset?.hex || '#808080', // Default to grey if not found
+                    };
+                } else {
+                    colors[img.id] = null;
+                }
+            });
+            setImageColors(colors);
         }
     }, [product.id, product.images]);
 
@@ -272,6 +540,28 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         if (imageOrder.length !== originalImageOrder.length) return false;
         return imageOrder.some((id, idx) => id !== originalImageOrder[idx]);
     }, [imageOrder, originalImageOrder]);
+
+    // Check if image colors have changed (compare by color name)
+    const originalImageColorNames = useMemo(() => {
+        if (!product.images) return {};
+        const colors: Record<number, string | null> = {};
+        product.images.forEach(img => {
+            colors[img.id] = img.color || null;
+        });
+        return colors;
+    }, [product.images]);
+
+    const imageColorsChanged = useMemo(() => {
+        const currentKeys = Object.keys(imageColors);
+        const originalKeys = Object.keys(originalImageColorNames);
+        if (currentKeys.length !== originalKeys.length) return true;
+        return currentKeys.some(key => {
+            const currentColor = imageColors[Number(key)];
+            const originalColor = originalImageColorNames[Number(key)];
+            // Compare by name (what gets sent to backend)
+            return (currentColor?.name || null) !== originalColor;
+        });
+    }, [imageColors, originalImageColorNames]);
 
     // Check if form has changes
     const hasChanges =
@@ -295,9 +585,11 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         data.product_group !== initialValues.product_group ||
         JSON.stringify(data.available_sizes) !== JSON.stringify(initialValues.available_sizes) ||
         JSON.stringify(data.size_stock) !== JSON.stringify(initialValues.size_stock) ||
+        JSON.stringify(data.variant_stock) !== JSON.stringify(initialValues.variant_stock) ||
         data.images.length > 0 ||
         data.delete_images.length > 0 ||
-        imageOrderChanged;
+        imageOrderChanged ||
+        imageColorsChanged;
 
     // Real-time validation handler
     const handleFieldChange = useCallback((field: string, value: string | number) => {
@@ -331,6 +623,14 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         setDragOverIndex(null);
     }, [dragIndex, dragOverIndex]);
 
+    // Handler for image color changes (now accepts full color info)
+    const handleImageColorChange = useCallback((imageId: number, color: ImageColorInfo | null) => {
+        setImageColors(prev => ({
+            ...prev,
+            [imageId]: color
+        }));
+    }, []);
+
     // Remove a new image from the upload queue
     const handleRemoveNewImage = useCallback((index: number) => {
         setData('images', data.images.filter((_, i) => i !== index));
@@ -345,11 +645,22 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
     const handleRevertChanges = useCallback(() => {
         reset();
         setImageOrder(originalImageOrder);
+        // Reconstruct full color info from original names
+        const restoredColors: Record<number, ImageColorInfo | null> = {};
+        Object.entries(originalImageColorNames).forEach(([id, colorName]) => {
+            if (colorName) {
+                const preset = PRESET_COLORS.find(c => c.name.toLowerCase() === colorName.toLowerCase());
+                restoredColors[Number(id)] = { name: colorName, hex: preset?.hex || '#808080' };
+            } else {
+                restoredColors[Number(id)] = null;
+            }
+        });
+        setImageColors(restoredColors);
         setLiveErrors({});
         clearAutoSaveDraft();
         const fileInput = document.getElementById('edit_images') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
-    }, [reset, originalImageOrder]);
+    }, [reset, originalImageOrder, originalImageColorNames]);
 
     // Auto-save functions
     const saveAutoSaveDraft = useCallback(() => {
@@ -458,7 +769,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
             // Ctrl+S or Cmd+S to save
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                if (hasChanges && !processing) {
+                if (hasChanges && !isSubmitting) {
                     formRef.current?.requestSubmit();
                 }
             }
@@ -475,7 +786,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [hasChanges, processing, handleRevertChanges]);
+    }, [hasChanges, isSubmitting, handleRevertChanges]);
 
     // Track scroll position to show/hide floating action bar
     useEffect(() => {
@@ -491,19 +802,28 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Show success message when form is submitted successfully
+    // Close sale dropdown when clicking outside
     useEffect(() => {
-        if (recentlySuccessful) {
-            setShowSuccess(true);
-            const fileInput = document.getElementById('edit_images') as HTMLInputElement;
-            if (fileInput) fileInput.value = '';
+        const handleClickOutside = (event: MouseEvent) => {
+            if (saleDropdownRef.current && !saleDropdownRef.current.contains(event.target as Node)) {
+                setShowSaleDropdown(false);
+            }
+        };
+        if (showSaleDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showSaleDropdown]);
 
+    // Auto-hide success message after 5 seconds
+    useEffect(() => {
+        if (showSuccess) {
             if (successTimerRef.current) {
                 clearTimeout(successTimerRef.current);
             }
             successTimerRef.current = setTimeout(() => setShowSuccess(false), 5000);
         }
-    }, [recentlySuccessful]);
+    }, [showSuccess]);
 
     // Cleanup timers on unmount
     useEffect(() => {
@@ -523,23 +843,124 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Add image_order to form data before submission
-        setData('image_order', imageOrder);
-        // Use setTimeout to ensure setData completes before post
-        setTimeout(() => {
-            post(`/admin/products/${product.id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    clearAutoSaveDraft();
-                },
-            });
-        }, 0);
+        // Convert ImageColorInfo to just color names for backend
+        const imageColorsForBackend: Record<number, string | null> = {};
+        Object.entries(imageColors).forEach(([id, info]) => {
+            imageColorsForBackend[parseInt(id)] = info?.name || null;
+        });
+
+        // Build FormData with all fields including image_order and image_colors
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('category_id', data.category_id);
+        formData.append('name', data.name);
+        formData.append('name_ar', data.name_ar);
+        formData.append('slug', data.slug);
+        formData.append('description', data.description);
+        formData.append('description_ar', data.description_ar);
+        formData.append('short_description', data.short_description);
+        formData.append('short_description_ar', data.short_description_ar);
+        formData.append('price', data.price);
+        formData.append('compare_price', data.compare_price);
+        formData.append('sku', data.sku);
+        formData.append('stock', data.stock.toString());
+        formData.append('low_stock_threshold', data.low_stock_threshold);
+        formData.append('is_active', data.is_active ? '1' : '0');
+        formData.append('is_featured', data.is_featured ? '1' : '0');
+        formData.append('color', data.color);
+        formData.append('color_hex', data.color_hex);
+        formData.append('product_group', data.product_group);
+
+        // Add sizes
+        data.available_sizes.forEach((size, index) => {
+            formData.append(`available_sizes[${index}]`, size);
+        });
+
+        // Add colors from images
+        colorsFromImages.forEach((color, index) => {
+            formData.append(`available_colors[${index}][name]`, color.name);
+            formData.append(`available_colors[${index}][hex]`, color.hex);
+        });
+
+        // Add variant stock
+        Object.entries(data.variant_stock).forEach(([key, value]) => {
+            formData.append(`variant_stock[${key}]`, value.toString());
+        });
+
+        // Add size stock
+        Object.entries(data.size_stock).forEach(([key, value]) => {
+            formData.append(`size_stock[${key}]`, value.toString());
+        });
+
+        // Add image order
+        imageOrder.forEach((id, index) => {
+            formData.append(`image_order[${index}]`, id.toString());
+        });
+
+        // Add image colors
+        Object.entries(imageColorsForBackend).forEach(([imageId, colorName]) => {
+            formData.append(`image_colors[${imageId}]`, colorName || '');
+        });
+
+        // Add delete_images
+        data.delete_images.forEach((id, index) => {
+            formData.append(`delete_images[${index}]`, id.toString());
+        });
+
+        // Add new images
+        data.images.forEach((file) => {
+            formData.append('images[]', file);
+        });
+
+        setIsSubmitting(true);
+        router.post(`/admin/products/${product.id}`, formData, {
+            preserveScroll: true,
+            forceFormData: true,
+            onStart: () => {
+                setIsSubmitting(true);
+            },
+            onSuccess: () => {
+                clearAutoSaveDraft();
+                setShowSuccess(true);
+                // Clear file input
+                const fileInput = document.getElementById('edit_images') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
+            },
+            onFinish: () => {
+                setIsSubmitting(false);
+            },
+        });
     };
+
+    const MAX_IMAGES_PER_UPLOAD = 10;
+    const MAX_TOTAL_IMAGES = 15;
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
+            const newFiles = Array.from(e.target.files);
+
+            // Check per-upload limit
+            if (newFiles.length > MAX_IMAGES_PER_UPLOAD) {
+                alert(`You can only upload ${MAX_IMAGES_PER_UPLOAD} images at once. Please select fewer images.`);
+                e.target.value = '';
+                return;
+            }
+
+            // Calculate total after this upload
+            const existingCount = existingImages.length;
+            const deletedCount = data.delete_images.length;
+            const alreadyQueuedCount = data.images.length;
+            const totalAfterUpload = existingCount - deletedCount + alreadyQueuedCount + newFiles.length;
+
+            if (totalAfterUpload > MAX_TOTAL_IMAGES) {
+                const canAdd = MAX_TOTAL_IMAGES - (existingCount - deletedCount + alreadyQueuedCount);
+                alert(`A product can have a maximum of ${MAX_TOTAL_IMAGES} images. You can add ${Math.max(0, canAdd)} more image(s).`);
+                e.target.value = '';
+                return;
+            }
+
             // Append to existing new images instead of replacing
-            setData('images', [...data.images, ...Array.from(e.target.files)]);
+            setData('images', [...data.images, ...newFiles]);
         }
     };
 
@@ -547,7 +968,120 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         setData('delete_images', [...data.delete_images, imageId]);
         // Also remove from imageOrder
         setImageOrder(prev => prev.filter(id => id !== imageId));
+
+        // Remove the color assignment for this image
+        const deletedColorInfo = imageColors[imageId];
+        setImageColors(prev => {
+            const updated = { ...prev };
+            delete updated[imageId];
+            return updated;
+        });
+
+        // If this was the only image with this color, clean up variant_stock for that color
+        if (deletedColorInfo?.name) {
+            const colorName = deletedColorInfo.name.toLowerCase();
+            // Check if any other image has this color
+            const otherImagesWithSameColor = Object.entries(imageColors).some(
+                ([id, info]) => parseInt(id) !== imageId && info?.name?.toLowerCase() === colorName
+            );
+
+            if (!otherImagesWithSameColor) {
+                // Remove all variant_stock entries for this color
+                const colorKey = colorName.replace(/\s+/g, '_');
+                const newVariantStock = { ...data.variant_stock };
+                Object.keys(newVariantStock).forEach(key => {
+                    if (key.startsWith(`${colorKey}_`)) {
+                        delete newVariantStock[key];
+                    }
+                });
+                setData('variant_stock', newVariantStock);
+            }
+        }
     };
+
+    // Derive available colors from image color assignments
+    const colorsFromImages = useMemo((): ColorOption[] => {
+        const uniqueColors: ColorOption[] = [];
+        const seenNames = new Set<string>();
+
+        Object.values(imageColors).forEach(info => {
+            if (info && info.name && !seenNames.has(info.name.toLowerCase())) {
+                seenNames.add(info.name.toLowerCase());
+                uniqueColors.push({ name: info.name, hex: info.hex });
+            }
+        });
+
+        return uniqueColors;
+    }, [imageColors]);
+
+    // Track if we've migrated stock for this product session
+    const hasMigratedStockRef = useRef(false);
+
+    // Migrate old size_stock to variant_stock when colors are detected
+    // This handles products that had size-only stock before the color×size system
+    useEffect(() => {
+        // Only migrate once per session
+        if (hasMigratedStockRef.current) return;
+
+        // Only migrate if:
+        // 1. We have colors from images
+        // 2. We have sizes
+        // 3. We have old size_stock data with values
+        // 4. variant_stock is empty or doesn't have keys for current colors
+        if (colorsFromImages.length === 0) return;
+        if (data.available_sizes.length === 0) return;
+
+        const sizeStock = data.size_stock || {};
+        const hasOldSizeStock = Object.keys(sizeStock).length > 0 &&
+            Object.values(sizeStock).some(v => Number(v) > 0);
+
+        if (!hasOldSizeStock) return;
+
+        // Check if variant_stock already has keys for any current color
+        const firstColor = colorsFromImages[0];
+        const expectedKey = `${firstColor.name.toLowerCase().replace(/\s+/g, '_')}_${data.available_sizes[0]}`;
+        const hasNewVariantStock = data.variant_stock && data.variant_stock[expectedKey] !== undefined;
+
+        if (hasNewVariantStock) return;
+
+        // Mark as migrated before setting state
+        hasMigratedStockRef.current = true;
+
+        // Migrate: put all old size_stock under the first color
+        const migratedStock: VariantStock = {};
+        data.available_sizes.forEach(size => {
+            const oldValue = Number(sizeStock[size]) || 0;
+            if (oldValue > 0) {
+                const key = `${firstColor.name.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+                migratedStock[key] = oldValue;
+            }
+        });
+
+        // Initialize zero stock for other colors
+        colorsFromImages.slice(1).forEach(color => {
+            data.available_sizes.forEach(size => {
+                const key = `${color.name.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+                migratedStock[key] = 0;
+            });
+        });
+
+        if (Object.keys(migratedStock).length > 0) {
+            setData('variant_stock', migratedStock);
+        }
+    }, [colorsFromImages, data.available_sizes, data.size_stock, data.variant_stock]);
+
+    // Sync main stock field with variant_stock total when variants exist
+    useEffect(() => {
+        // Only sync if we have both colors and sizes (variant mode)
+        if (colorsFromImages.length === 0 || data.available_sizes.length === 0) return;
+
+        const variantTotal = Object.values(data.variant_stock || {}).reduce((sum, val) => sum + (Number(val) || 0), 0);
+
+        // Only update if different to avoid infinite loops
+        if (data.stock !== variantTotal) {
+            setData('stock', variantTotal);
+        }
+    }, [data.variant_stock, colorsFromImages.length, data.available_sizes.length]);
 
     // Get existing images sorted by the current imageOrder
     const existingImages = useMemo(() => {
@@ -587,12 +1121,12 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                         <Button
                             type="submit"
                             form="product-edit-form"
-                            disabled={processing || !hasChanges}
+                            disabled={isSubmitting || !hasChanges}
                             className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
                             title="Ctrl+S"
                         >
                             <Save className="h-4 w-4 mr-2" />
-                            {processing ? 'Saving...' : 'Update Product'}
+                            {isSubmitting ? 'Saving...' : 'Update Product'}
                         </Button>
                         {hasChanges && (
                             <Button
@@ -643,18 +1177,29 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                     </h2>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <Select
-                                        label="Category"
-                                        id="edit_category_id"
-                                        name="category_id"
-                                        value={data.category_id}
-                                        onChange={(value) => setData('category_id', value)}
-                                        options={categories.map((cat) => ({
-                                            value: cat.id.toString(),
-                                            label: cat.name,
-                                            isChild: !!cat.parent_id,
-                                        }))}
-                                    />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Select
+                                            label="Category"
+                                            id="edit_category_id"
+                                            name="category_id"
+                                            value={data.category_id}
+                                            onChange={(value) => setData('category_id', value)}
+                                            options={categories.map((cat) => ({
+                                                value: cat.id.toString(),
+                                                label: cat.name,
+                                                isChild: !!cat.parent_id,
+                                            }))}
+                                        />
+                                        <Input
+                                            label="Slug"
+                                            value={data.slug}
+                                            onChange={(e) => {
+                                                setData('slug', e.target.value);
+                                                handleFieldChange('slug', e.target.value);
+                                            }}
+                                            error={liveErrors.slug || errors.slug}
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input
@@ -676,16 +1221,6 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             placeholder="الاسم بالعربية"
                                         />
                                     </div>
-
-                                    <Input
-                                        label="Slug"
-                                        value={data.slug}
-                                        onChange={(e) => {
-                                            setData('slug', e.target.value);
-                                            handleFieldChange('slug', e.target.value);
-                                        }}
-                                        error={liveErrors.slug || errors.slug}
-                                    />
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Textarea
@@ -739,28 +1274,202 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Input
-                                            label="Price"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.price}
-                                            onChange={(e) => {
-                                                setData('price', e.target.value);
-                                                handleFieldChange('price', e.target.value);
-                                            }}
-                                            error={liveErrors.price || errors.price}
-                                            required
-                                        />
-                                        <Input
-                                            label="Compare Price"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            value={data.compare_price}
-                                            onChange={(e) => setData('compare_price', e.target.value)}
-                                            error={errors.compare_price}
-                                        />
+                                        {/* Price field with sale percentage dropdown */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Price <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative" ref={saleDropdownRef}>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.price}
+                                                    onChange={(e) => {
+                                                        setData('price', e.target.value);
+                                                        handleFieldChange('price', e.target.value);
+                                                        // Re-validate compare_price when price changes
+                                                        if (data.compare_price) {
+                                                            const price = parseFloat(e.target.value) || 0;
+                                                            const comparePrice = parseFloat(data.compare_price) || 0;
+                                                            if (comparePrice > 0 && comparePrice <= price) {
+                                                                setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                            } else {
+                                                                setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                            }
+                                                        }
+                                                    }}
+                                                    className={`w-full px-3 py-2 pr-24 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                                        liveErrors.price || errors.price
+                                                            ? 'border-red-500 dark:border-red-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
+                                                    }`}
+                                                    required
+                                                />
+                                                {/* Apply Sale button - only show when compare_price is set */}
+                                                {parseFloat(data.compare_price) > 0 && (() => {
+                                                    const price = parseFloat(data.price) || 0;
+                                                    const comparePrice = parseFloat(data.compare_price) || 0;
+                                                    const hasSale = comparePrice > price && price > 0;
+                                                    const currentDiscount = hasSale ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
+
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowSaleDropdown(!showSaleDropdown)}
+                                                            className={`absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium rounded transition-colors flex items-center gap-1 ${
+                                                                hasSale
+                                                                    ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/60'
+                                                                    : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/60'
+                                                            }`}
+                                                        >
+                                                            <Tag className="h-3 w-3" />
+                                                            {hasSale ? `${currentDiscount}% Off` : 'Apply Sale'}
+                                                        </button>
+                                                    );
+                                                })()}
+                                                {/* Sale percentage dropdown */}
+                                                {showSaleDropdown && parseFloat(data.compare_price) > 0 && (() => {
+                                                    const currentPrice = parseFloat(data.price) || 0;
+                                                    const comparePrice = parseFloat(data.compare_price) || 0;
+                                                    const currentDiscountPercent = comparePrice > currentPrice && currentPrice > 0
+                                                        ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100)
+                                                        : 0;
+
+                                                    return (
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1">
+                                                            <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                                                                {currentDiscountPercent > 0 ? 'Change discount %' : 'Select discount %'}
+                                                            </div>
+                                                            {[5, 10, 15, 20, 25, 30, 40, 50, 60, 70].map((percent) => {
+                                                                const newPrice = (comparePrice * (1 - percent / 100)).toFixed(2);
+                                                                const isActive = percent === currentDiscountPercent;
+                                                                return (
+                                                                    <button
+                                                                        key={percent}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setData('price', newPrice);
+                                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                                            setShowSaleDropdown(false);
+                                                                        }}
+                                                                        className={`w-full px-3 py-2 text-left text-sm flex justify-between items-center transition-colors ${
+                                                                            isActive
+                                                                                ? 'bg-green-50 dark:bg-green-900/20'
+                                                                                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                                        }`}
+                                                                    >
+                                                                        <span className={`font-medium ${isActive ? 'text-green-700 dark:text-green-300' : 'text-gray-900 dark:text-white'}`}>
+                                                                            {percent}% off {isActive && <Check className="h-3 w-3 inline ml-1" />}
+                                                                        </span>
+                                                                        <span className={isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}>{newPrice} JOD</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                            {(liveErrors.price || errors.price) && (
+                                                <p className="mt-1 text-sm text-red-500">{liveErrors.price || errors.price}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Compare Price field with copy button */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Compare Price
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={data.compare_price}
+                                                    onChange={(e) => {
+                                                        setData('compare_price', e.target.value);
+                                                        const comparePrice = parseFloat(e.target.value) || 0;
+                                                        const price = parseFloat(data.price) || 0;
+                                                        if (comparePrice > 0 && comparePrice <= price) {
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: 'Must be higher than the selling price' }));
+                                                        } else {
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }
+                                                    }}
+                                                    placeholder="Original price before discount"
+                                                    className={`w-full px-3 py-2 pr-28 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                                        liveErrors.compare_price || errors.compare_price
+                                                            ? 'border-red-500 dark:border-red-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
+                                                    }`}
+                                                />
+                                                {/* Copy price button - show when price exists and compare_price is empty */}
+                                                {parseFloat(data.price) > 0 && !data.compare_price && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData('compare_price', data.price);
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <Copy className="h-3 w-3" />
+                                                        Copy Price
+                                                    </button>
+                                                )}
+                                                {/* Clear button - show when compare_price is set */}
+                                                {data.compare_price && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setData('compare_price', '');
+                                                            setLiveErrors(prev => ({ ...prev, compare_price: undefined }));
+                                                        }}
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {(liveErrors.compare_price || errors.compare_price) && (
+                                                <p className="mt-1 text-sm text-red-500">{liveErrors.compare_price || errors.compare_price}</p>
+                                            )}
+                                            {/* Helper indicator */}
+                                            {(() => {
+                                                const price = parseFloat(data.price) || 0;
+                                                const comparePrice = parseFloat(data.compare_price) || 0;
+
+                                                if (!data.compare_price || comparePrice === 0) {
+                                                    return (
+                                                        <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                                            Click "Copy Price" to start setting up a sale.
+                                                        </p>
+                                                    );
+                                                }
+
+                                                if (comparePrice > price && price > 0) {
+                                                    const discountPercent = Math.round(((comparePrice - price) / comparePrice) * 100);
+                                                    const savings = (comparePrice - price).toFixed(2);
+                                                    return (
+                                                        <p className="mt-1.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                                            <Check className="h-3 w-3" />
+                                                            {discountPercent}% off (saves {savings} JOD)
+                                                        </p>
+                                                    );
+                                                }
+
+                                                if (comparePrice > 0 && comparePrice === price) {
+                                                    return (
+                                                        <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                                                            Now use "Apply Sale" on the Price field or manually reduce it.
+                                                        </p>
+                                                    );
+                                                }
+
+                                                return null;
+                                            })()}
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -773,27 +1482,34 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             }}
                                             error={liveErrors.sku || errors.sku}
                                         />
-                                        <Input
-                                            label="Stock"
-                                            type="number"
-                                            min="0"
-                                            value={data.stock}
-                                            onChange={(e) => {
-                                                const value = parseInt(e.target.value) || 0;
-                                                setData('stock', value);
-                                                handleFieldChange('stock', value);
-                                            }}
-                                            error={liveErrors.stock || errors.stock}
-                                            required
-                                        />
+                                        <div>
+                                            <NumberInput
+                                                label="Stock"
+                                                min={0}
+                                                value={data.stock}
+                                                onChange={(e) => {
+                                                    const value = parseInt(e.target.value) || 0;
+                                                    setData('stock', value);
+                                                    handleFieldChange('stock', value);
+                                                }}
+                                                error={liveErrors.stock || errors.stock}
+                                                required
+                                                disabled={colorsFromImages.length > 0 && data.available_sizes.length > 0}
+                                            />
+                                            {colorsFromImages.length > 0 && data.available_sizes.length > 0 && (
+                                                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    Auto-calculated from variant stock below
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <Input
+                                        <NumberInput
                                             label="Low Stock Threshold (optional)"
-                                            type="number"
-                                            min="1"
-                                            max="1000"
+                                            min={1}
+                                            max={1000}
                                             value={data.low_stock_threshold}
                                             onChange={(e) => setData('low_stock_threshold', e.target.value)}
                                             error={errors.low_stock_threshold}
@@ -814,40 +1530,20 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                         Variant Options
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Optional: Add color and size variants for this product
+                                        Optional: Add color and size variants with stock tracking per combination
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <ColorPicker
-                                        label="Color"
-                                        colorName={data.color}
-                                        colorHex={data.color_hex}
-                                        onColorNameChange={(value) => setData('color', value)}
-                                        onColorHexChange={(value) => setData('color_hex', value)}
-                                        error={errors.color || errors.color_hex}
-                                    />
-
-                                    <SizeStockEditor
-                                        label="Sizes & Stock"
+                                    <VariantStockEditor
+                                        colors={colorsFromImages}
                                         sizes={data.available_sizes}
-                                        sizeStock={data.size_stock}
+                                        variantStock={data.variant_stock}
+                                        onColorsChange={() => {}} // Colors are derived from images, not editable here
                                         onSizesChange={(sizes) => setData('available_sizes', sizes)}
-                                        onSizeStockChange={(stock) => setData('size_stock', stock)}
-                                        error={errors.available_sizes || errors.size_stock}
+                                        onVariantStockChange={(stock) => setData('variant_stock', stock)}
+                                        error={errors.available_colors || errors.available_sizes || errors.variant_stock}
+                                        colorsFromImages={true}
                                     />
-
-                                    <div>
-                                        <Input
-                                            label="Product Group (optional)"
-                                            value={data.product_group}
-                                            onChange={(e) => setData('product_group', e.target.value)}
-                                            error={errors.product_group}
-                                            placeholder="Group related color variants together"
-                                        />
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Use the same group name for products that are color variants of each other.
-                                        </p>
-                                    </div>
                                 </CardContent>
                             </Card>
 
@@ -879,6 +1575,8 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                     onDragOver={handleDragOver}
                                                     onDragEnd={handleDragEnd}
                                                     isDragging={dragIndex === index}
+                                                    imageColorInfo={imageColors[image.id] ?? null}
+                                                    onColorChange={handleImageColorChange}
                                                     dragOverIndex={dragOverIndex}
                                                 />
                                             ))}
@@ -924,7 +1622,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                 file:cursor-pointer file:transition-colors"
                                         />
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Add more images (max 5 total, currently {existingImages.length + data.images.length})
+                                            Add more images (max {MAX_IMAGES_PER_UPLOAD} per upload, {MAX_TOTAL_IMAGES} total limit) — Currently: {existingImages.length - data.delete_images.length + data.images.length} / {MAX_TOTAL_IMAGES}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -1003,7 +1701,47 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                         Quick Actions
                                     </h2>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="space-y-4">
+                                    {/* Status Toggles */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('is_active', !data.is_active)}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                data.is_active
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400'
+                                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        >
+                                            {data.is_active ? (
+                                                <Check className="h-4 w-4" />
+                                            ) : (
+                                                <div className="h-4 w-4 rounded-full border-2 border-current" />
+                                            )}
+                                            Active
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('is_featured', !data.is_featured)}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                data.is_featured
+                                                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-700 dark:text-amber-400'
+                                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        >
+                                            {data.is_featured ? (
+                                                <Star className="h-4 w-4 fill-current" />
+                                            ) : (
+                                                <Star className="h-4 w-4" />
+                                            )}
+                                            Featured
+                                        </button>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200 dark:border-gray-700" />
+
+                                    {/* Action Links */}
                                     <div className="space-y-2">
                                         <a
                                             href={`/product/${product.slug}`}
@@ -1122,27 +1860,129 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             </p>
                                         </div>
                                     </div>
-                                    {/* SEO Tips */}
-                                    <div className="mt-3 space-y-2">
-                                        {!data.short_description && (
-                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>Add a short description for better SEO</span>
+                                    {/* SEO Analysis */}
+                                    {(() => {
+                                        const titleLength = data.name?.length || 0;
+                                        const shortDescLength = data.short_description?.length || 0;
+                                        const descLength = data.description?.length || 0;
+                                        const hasArabicName = !!data.name_ar;
+                                        const hasArabicDesc = !!data.short_description_ar;
+
+                                        const checks = {
+                                            titleExists: titleLength > 0,
+                                            titleGoodLength: titleLength >= 20 && titleLength <= 60,
+                                            titleNotTooLong: titleLength <= 60,
+                                            shortDescExists: shortDescLength > 0,
+                                            shortDescGoodLength: shortDescLength >= 50 && shortDescLength <= 160,
+                                            shortDescNotTooLong: shortDescLength <= 160,
+                                            descExists: descLength > 0,
+                                        };
+
+                                        const passedChecks = Object.values(checks).filter(Boolean).length;
+                                        const totalChecks = Object.keys(checks).length;
+                                        const score = Math.round((passedChecks / totalChecks) * 100);
+
+                                        return (
+                                            <div className="mt-3 space-y-3">
+                                                {/* SEO Score */}
+                                                <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">SEO Score</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full transition-all ${
+                                                                    score >= 80 ? 'bg-green-500' :
+                                                                    score >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                                                                }`}
+                                                                style={{ width: `${score}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className={`text-xs font-bold ${
+                                                            score >= 80 ? 'text-green-600 dark:text-green-400' :
+                                                            score >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+                                                        }`}>
+                                                            {score}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Detailed Checks */}
+                                                <div className="space-y-1.5">
+                                                    {/* Title Checks */}
+                                                    {!checks.titleExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title missing:</strong> Add a product name for search engines to index</span>
+                                                        </div>
+                                                    ) : titleLength < 20 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title too short ({titleLength}/20+ chars):</strong> Add more descriptive keywords to improve searchability</span>
+                                                        </div>
+                                                    ) : titleLength > 60 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title too long ({titleLength}/60 chars):</strong> May be truncated in search results. Keep under 60 characters</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Title length good</strong> ({titleLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Short Description Checks */}
+                                                    {!checks.shortDescExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description missing:</strong> Add a short description (50-160 chars) for search result snippets</span>
+                                                        </div>
+                                                    ) : shortDescLength < 50 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description short ({shortDescLength}/50+ chars):</strong> Expand to 50-160 characters for better click-through rates</span>
+                                                        </div>
+                                                    ) : shortDescLength > 160 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description long ({shortDescLength}/160 chars):</strong> Will be truncated in search results</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Meta description good</strong> ({shortDescLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Full Description Check */}
+                                                    {!checks.descExists ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Full description missing:</strong> Detailed content helps with search rankings</span>
+                                                        </div>
+                                                    ) : descLength < 100 ? (
+                                                        <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Description brief ({descLength} chars):</strong> Consider adding more product details</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
+                                                            <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Full description good</strong> ({descLength} chars)</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Arabic Localization */}
+                                                    {(!hasArabicName || !hasArabicDesc) && (
+                                                        <div className="flex items-start gap-2 text-xs text-blue-600 dark:text-blue-400">
+                                                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                                                            <span><strong>Arabic SEO:</strong> Add {!hasArabicName && 'Arabic name'}{!hasArabicName && !hasArabicDesc && ' and '}{!hasArabicDesc && 'Arabic description'} to reach Arabic-speaking customers</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                        {data.name && data.name.length < 20 && (
-                                            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                                                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>Consider a longer, more descriptive title</span>
-                                            </div>
-                                        )}
-                                        {data.name && data.name.length >= 20 && data.short_description && (
-                                            <div className="flex items-start gap-2 text-xs text-green-600 dark:text-green-400">
-                                                <Check className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                                                <span>SEO looks good!</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                        );
+                                    })()}
                                 </CardContent>
                             </Card>
 
@@ -1155,94 +1995,112 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                     </h2>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="space-y-3">
-                                        {/* Last Update Info */}
-                                        {undoMeta?.available && undoMeta.changes && undoMeta.changes.length > 0 ? (
+                                    <div className={`space-y-3 ${activityLogs && activityLogs.length > 2 ? 'max-h-[280px] overflow-y-auto pr-2 custom-scrollbar' : ''}`}>
+                                        {activityLogs && activityLogs.length > 0 ? (
+                                            activityLogs.map((activity, index) => {
+                                                const getActionStyle = (action: string) => {
+                                                    switch (action) {
+                                                        case 'created':
+                                                            return { icon: Plus, bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' };
+                                                        case 'updated':
+                                                            return { icon: Pencil, bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' };
+                                                        case 'deleted':
+                                                            return { icon: Trash2, bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' };
+                                                        case 'restored':
+                                                            return { icon: RotateCcw, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' };
+                                                        default:
+                                                            return { icon: FileText, bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400' };
+                                                    }
+                                                };
+
+                                                const style = getActionStyle(activity.action);
+                                                const ActionIcon = style.icon;
+                                                const actionLabels: Record<string, string> = {
+                                                    created: 'Product created',
+                                                    updated: 'Product updated',
+                                                    deleted: 'Product deleted',
+                                                    restored: 'Changes restored',
+                                                };
+
+                                                return (
+                                                    <div
+                                                        key={activity.id}
+                                                        className={`${index !== activityLogs.length - 1 ? 'pb-3 border-b border-gray-100 dark:border-gray-700' : ''}`}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`p-1.5 ${style.bg} rounded-lg`}>
+                                                                    <ActionIcon className={`h-3.5 w-3.5 ${style.text}`} />
+                                                                </div>
+                                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {actionLabels[activity.action] || activity.action}
+                                                                </span>
+                                                            </div>
+                                                            {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                                    {activity.changes.length} change{activity.changes.length !== 1 ? 's' : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                            <span>{formatDate(activity.created_at)}</span>
+                                                            {activity.user && (
+                                                                <>
+                                                                    <span className="text-gray-300 dark:text-gray-600">•</span>
+                                                                    <span className="text-gray-600 dark:text-gray-300 font-medium" title={activity.user.email}>
+                                                                        {activity.user.name}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                {activity.changes.slice(0, 4).map((change, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
+                                                                        <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px]">
+                                                                            {change.label}
+                                                                        </span>
+                                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                                                            change.type === 'boolean' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                                                                            change.type === 'array' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                                                                            change.type === 'json' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                                                                            'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                                                                        }`}>
+                                                                            {change.type === 'boolean' ? 'Toggle' :
+                                                                             change.type === 'array' ? 'List' :
+                                                                             change.type === 'json' ? 'Data' :
+                                                                             'Text'}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                                {activity.changes.length > 4 && (
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                                                        +{activity.changes.length - 4} more
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
                                             <>
-                                                <div className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700">
-                                                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                                                        <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                {/* Fallback: Show creation info from product */}
+                                                <div className="flex items-start gap-3">
+                                                    <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                                        <Plus className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm text-gray-900 dark:text-white">
-                                                            Product updated
+                                                            Product created
                                                         </p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                            {formatDate(undoMeta.saved_at)}
+                                                            {formatDate(product.created_at)}
                                                         </p>
-                                                        <div className="mt-2 space-y-1">
-                                                            {undoMeta.changes.slice(0, 3).map((change, idx) => (
-                                                                <p key={idx} className="text-xs text-gray-600 dark:text-gray-400">
-                                                                    • {change.label} changed
-                                                                </p>
-                                                            ))}
-                                                            {undoMeta.changes.length > 3 && (
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    +{undoMeta.changes.length - 3} more changes
-                                                                </p>
-                                                            )}
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </>
-                                        ) : null}
-
-                                        {/* Creation Info */}
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
-                                                <Package className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm text-gray-900 dark:text-white">
-                                                    Product created
-                                                </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                    {formatDate(product.created_at)}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {!undoMeta?.available && (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-2">
-                                                No recent changes recorded
-                                            </p>
                                         )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Status */}
-                            <Card className="dark:bg-gray-800 dark:border-gray-700">
-                                <CardHeader>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Settings className="h-5 w-5 text-purple-600" />
-                                        Status
-                                    </h2>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_active"
-                                                name="is_active"
-                                                type="checkbox"
-                                                checked={data.is_active}
-                                                onChange={(e) => setData('is_active', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
-                                        </label>
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_featured"
-                                                name="is_featured"
-                                                type="checkbox"
-                                                checked={data.is_featured}
-                                                onChange={(e) => setData('is_featured', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
-                                        </label>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -1276,10 +2134,10 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                             type="submit"
                             form="product-edit-form"
                             size="sm"
-                            disabled={processing}
+                            disabled={isSubmitting}
                         >
                             <Save className="h-4 w-4 mr-1" />
-                            {processing ? 'Saving...' : 'Save'}
+                            {isSubmitting ? 'Saving...' : 'Save'}
                         </Button>
                     </div>
                 </div>

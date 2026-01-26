@@ -55,13 +55,19 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }
 
 /* Inter font feature settings */
 html {
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    min-height: 100%;
+}
+
+/* Ensure Inertia app root fills available space */
+#app {
+    min-height: 100vh;
 }
 
 /* Tabular numbers for data alignment in tables */
@@ -258,4 +264,401 @@ select:focus {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
+}
+
+/* ================================================
+   Admin Panel Purple Scrollbar Styles
+   ================================================ */
+
+/* When admin-scrollbar is present, style the html/body scrollbar */
+html:has(.admin-scrollbar),
+body:has(.admin-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar,
+body:has(.admin-scrollbar)::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-track,
+body:has(.admin-scrollbar)::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-thumb,
+body:has(.admin-scrollbar)::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 6px;
+    border: 3px solid #f3e8ff;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-thumb:hover,
+body:has(.admin-scrollbar)::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #6d28d9 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-corner,
+body:has(.admin-scrollbar)::-webkit-scrollbar-corner {
+    background: #f3e8ff;
+}
+
+/* Dark mode for body/html scrollbar */
+html:has(.dark .admin-scrollbar),
+body:has(.dark .admin-scrollbar),
+html.dark:has(.admin-scrollbar),
+body.dark:has(.admin-scrollbar) {
+    scrollbar-color: #a855f7 #1f2937;
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-track,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-track,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-track,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-thumb,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-thumb,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-thumb,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-thumb {
+    border-color: #1f2937;
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-corner,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-corner,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-corner,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-corner {
+    background: #1f2937;
+}
+
+/* Admin nested scrollable elements */
+.admin-scrollbar,
+.admin-scrollbar * {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+.admin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+    background: #f3e8ff;
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #6d28d9 100%);
+}
+
+.admin-scrollbar::-webkit-scrollbar-corner {
+    background: #f3e8ff;
+}
+
+/* Dark mode admin scrollbar */
+.dark .admin-scrollbar,
+.dark .admin-scrollbar * {
+    scrollbar-color: #a855f7 #1f2937;
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border: 2px solid #1f2937;
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-corner {
+    background: #1f2937;
+}
+
+/* Admin textarea and input scrollbar */
+.admin-scrollbar textarea,
+.admin-scrollbar input[type="text"],
+.admin-scrollbar select,
+.admin-scrollbar .overflow-auto,
+.admin-scrollbar .overflow-y-auto,
+.admin-scrollbar .overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-track {
+    background: #f3e8ff;
+    border-radius: 3px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7, #7c3aed);
+    border-radius: 3px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea, #6d28d9);
+}
+
+/* Dark mode for admin textareas */
+.dark .admin-scrollbar textarea,
+.dark .admin-scrollbar .overflow-auto,
+.dark .admin-scrollbar .overflow-y-auto,
+.dark .admin-scrollbar .overflow-x-auto {
+    scrollbar-color: #a855f7 #374151;
+}
+
+.dark .admin-scrollbar textarea::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-auto::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-y-auto::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-x-auto::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+/* ================================================
+   Admin Scrollbar Arrow Buttons (Up/Down)
+   ================================================ */
+
+/* Main page scrollbar buttons */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    border-radius: 6px;
+    height: 14px;
+    width: 14px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:hover,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:active,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:active {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+/* Vertical scrollbar arrows */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:decrement,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:increment,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+/* Horizontal scrollbar arrows */
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:decrement,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:increment,
+body:has(.admin-scrollbar)::-webkit-scrollbar-button:horizontal:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 8px;
+}
+
+/* Dark mode scrollbar buttons */
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-button,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-button,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-button,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-button:hover,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-button:hover,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-button:hover,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+/* Nested element scrollbar buttons */
+.admin-scrollbar::-webkit-scrollbar-button,
+.admin-scrollbar *::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    border-radius: 4px;
+    height: 10px;
+    width: 10px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-button:hover,
+.admin-scrollbar *::-webkit-scrollbar-button:hover {
+    background: linear-gradient(180deg, #a855f7 0%, #9333ea 100%);
+}
+
+/* Nested vertical arrows */
+.admin-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+.admin-scrollbar *::-webkit-scrollbar-button:vertical:decrement {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-button:vertical:increment,
+.admin-scrollbar *::-webkit-scrollbar-button:vertical:increment {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 6px;
+}
+
+/* Dark mode nested buttons */
+.dark .admin-scrollbar::-webkit-scrollbar-button,
+.dark .admin-scrollbar *::-webkit-scrollbar-button {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+}
+
+/* ================================================
+   Admin Number Input Spinners (Up/Down Buttons)
+   ================================================ */
+
+/* Custom number input spinners for admin panel */
+.admin-scrollbar input[type="number"] {
+    -moz-appearance: textfield; /* Firefox: hide default spinners */
+}
+
+/* Show spinners on webkit browsers */
+.admin-scrollbar input[type="number"]::-webkit-outer-spin-button,
+.admin-scrollbar input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Custom spinner wrapper - we'll use a custom component approach */
+/* Since native spinners are limited, add styles for custom spinner buttons */
+.admin-number-spinner {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.admin-number-spinner input[type="number"] {
+    -moz-appearance: textfield;
+    padding-right: 2.5rem;
+}
+
+.admin-number-spinner input[type="number"]::-webkit-outer-spin-button,
+.admin-number-spinner input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.admin-spinner-buttons {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    display: flex;
+    flex-direction: column;
+    width: 1.75rem;
+    border-left: 1px solid #e5e7eb;
+    border-radius: 0 0.375rem 0.375rem 0;
+    overflow: hidden;
+}
+
+.dark .admin-spinner-buttons {
+    border-left-color: #4b5563;
+}
+
+.admin-spinner-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #f3e8ff 0%, #ede9fe 100%);
+    color: #7c3aed;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    padding: 0;
+}
+
+.admin-spinner-btn:hover {
+    background: linear-gradient(180deg, #c084fc 0%, #a855f7 100%);
+    color: white;
+}
+
+.admin-spinner-btn:active {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+}
+
+.admin-spinner-btn:first-child {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .admin-spinner-btn {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+    color: #a855f7;
+}
+
+.dark .admin-spinner-btn:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+}
+
+.dark .admin-spinner-btn:first-child {
+    border-bottom-color: #4b5563;
+}
+
+.admin-spinner-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.5;
+}
+
+.admin-spinner-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-spinner-btn:disabled:hover {
+    background: linear-gradient(180deg, #f3e8ff 0%, #ede9fe 100%);
+    color: #7c3aed;
+}
+
+.dark .admin-spinner-btn:disabled:hover {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+    color: #a855f7;
 }

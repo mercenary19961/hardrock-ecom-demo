@@ -135,7 +135,7 @@ export default function Home({
             </Deferred>
 
             {/* Demo Banner - Brand Purple Theme */}
-            <section className="relative py-16 overflow-hidden">
+            <section className="relative pt-16 pb-8 overflow-hidden">
                 {/* Gradient background */}
                 <div className="absolute inset-0 bg-brand-slate" />
                 {/* Decorative circles */}

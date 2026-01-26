@@ -3,6 +3,17 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GooeyLoader } from './GooeyLoader';
 
+// URLs that should not show the loading animation (optimistic updates)
+const SILENT_URL_PATTERNS = [
+    /^\/cart\/\d+$/,  // Cart item updates (PATCH /cart/123)
+    /^\/cart\/add$/,  // Add to cart (POST /cart/add) - optional, remove if you want loading on add
+];
+
+// Check if a URL should be silent (no loading animation)
+function isSilentRequest(url: string): boolean {
+    return SILENT_URL_PATTERNS.some(pattern => pattern.test(url));
+}
+
 export function InertiaProgress() {
     const [loading, setLoading] = useState(false);
 
@@ -13,6 +24,10 @@ export function InertiaProgress() {
             if (visit.showProgress === false) {
                 return;
             }
+            // Don't show loading for cart operations (optimistic updates)
+            if (isSilentRequest(visit.url.pathname)) {
+                return;
+            }
             setLoading(true);
         });
 
@@ -20,6 +35,10 @@ export function InertiaProgress() {
             // Only hide if we were showing (handles silent requests)
             const visit = event.detail.visit;
             if (visit.showProgress === false) {
+                return;
+            }
+            // Skip for cart operations
+            if (isSilentRequest(visit.url.pathname)) {
                 return;
             }
             setTimeout(() => {

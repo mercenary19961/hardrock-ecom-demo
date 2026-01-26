@@ -34,8 +34,8 @@ class ProfileController extends Controller
 
         // Get available coupons
         $coupons = Coupon::valid()
-            ->select(['id', 'code', 'name', 'name_ar', 'description', 'description_ar', 'type', 'value', 'min_order_amount', 'max_discount', 'ends_at'])
-            ->orderBy('ends_at', 'asc')
+            ->select(['id', 'code', 'name', 'name_ar', 'description', 'description_ar', 'type', 'value', 'min_order_amount', 'max_discount', 'expires_at'])
+            ->orderBy('expires_at', 'asc')
             ->get();
 
         // Get stats for overview

@@ -95,7 +95,10 @@
     "apply": "Apply",
     "selectSize": "Select Size",
     "pleaseSelectSize": "Please select a size",
+    "selectColor": "Select Color",
+    "pleaseSelectColor": "Please select a color",
     "inStockCount": "{{count}} in stock",
+    "variantOutOfStock": "{{color}} in size {{size}} is out of stock. Please select a different combination.",
     "size": "Size",
     "color": "Color",
     "reviewsSection": {

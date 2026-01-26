@@ -34,8 +34,10 @@ class Product extends Model
         'view_count',
         'color',
         'color_hex',
+        'available_colors',
         'available_sizes',
         'size_stock',
+        'variant_stock',
         'product_group',
     ];
 
@@ -47,8 +49,10 @@ class Product extends Model
             'average_rating' => 'decimal:1',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'available_colors' => 'array',
             'available_sizes' => 'array',
             'size_stock' => 'array',
+            'variant_stock' => 'array',
         ];
     }
 
@@ -257,6 +261,89 @@ class Product extends Model
     public function isSizeInStock(?string $size): bool
     {
         return $this->getStockForSize($size) > 0;
+    }
+
+    /**
+     * Check if this product uses the variant stock system (colors + sizes)
+     */
+    public function hasVariantStock(): bool
+    {
+        return !empty($this->available_colors) && !empty($this->available_sizes);
+    }
+
+    /**
+     * Check if this product has multiple color options
+     */
+    public function hasColors(): bool
+    {
+        return !empty($this->available_colors);
+    }
+
+    /**
+     * Get available colors array
+     * @return array<array{name: string, hex: string}>
+     */
+    public function getAvailableColors(): array
+    {
+        return $this->available_colors ?? [];
+    }
+
+    /**
+     * Get stock for a specific color+size variant
+     */
+    public function getVariantStock(?string $color, ?string $size): int
+    {
+        // If not using variant stock, fall back to size_stock or main stock
+        if (!$this->variant_stock) {
+            if ($size && $this->size_stock) {
+                return $this->size_stock[$size] ?? 0;
+            }
+            return $this->stock;
+        }
+
+        if (!$color || !$size) {
+            return 0;
+        }
+
+        // Create the variant key (lowercase color + underscore + size)
+        $key = strtolower(str_replace(' ', '_', $color)) . '_' . $size;
+
+        return $this->variant_stock[$key] ?? 0;
+    }
+
+    /**
+     * Get total stock across all color+size variants
+     */
+    public function getTotalVariantStock(): int
+    {
+        if ($this->variant_stock) {
+            return array_sum($this->variant_stock);
+        }
+
+        if ($this->size_stock) {
+            return array_sum($this->size_stock);
+        }
+
+        return $this->stock;
+    }
+
+    /**
+     * Check if a specific color+size variant is in stock
+     */
+    public function isVariantInStock(?string $color, ?string $size): bool
+    {
+        return $this->getVariantStock($color, $size) > 0;
+    }
+
+    /**
+     * Set stock for a specific color+size variant
+     */
+    public function setVariantStock(string $color, string $size, int $stock): void
+    {
+        $variantStock = $this->variant_stock ?? [];
+        $key = strtolower(str_replace(' ', '_', $color)) . '_' . $size;
+        $variantStock[$key] = $stock;
+        $this->variant_stock = $variantStock;
     }
 
     /**

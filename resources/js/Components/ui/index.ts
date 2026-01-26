@@ -1,9 +1,11 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { NumberInput } from './NumberInput';
 export { Textarea } from './Textarea';
 export { Badge } from './Badge';
 export { ColorPicker } from './ColorPicker';
 export { SizeStockEditor } from './SizeStockEditor';
+export { VariantStockEditor } from './VariantStockEditor';
 export { Card, CardHeader, CardContent, CardFooter } from './Card';
 export { Select } from './Select';
 export type { SelectOption, SelectProps } from './Select';

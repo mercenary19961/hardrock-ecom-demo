@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Head, Link, Deferred } from "@inertiajs/react";
 import { useTranslation } from "react-i18next";
 import ShopLayout from "@/Layouts/ShopLayout";
@@ -134,18 +134,60 @@ function ProductContent({
     const [selectedImage, setSelectedImage] = useState(0);
     const [added, setAdded] = useState(false);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-    // Check if product has sizes
+    // Check if product has sizes and colors
     const hasSizes =
         product.available_sizes && product.available_sizes.length > 0;
+    const hasColors =
+        product.available_colors && product.available_colors.length > 0;
+    const hasVariantStock =
+        hasColors && hasSizes && product.variant_stock && Object.keys(product.variant_stock).length > 0;
     const sizeStock = product.size_stock || {};
+    const variantStock = product.variant_stock || {};
 
-    // Get stock for selected size (or total stock if no sizes)
+    // Helper to create variant key
+    const createVariantKey = (colorName: string, size: string): string => {
+        return `${colorName.toLowerCase().replace(/\s+/g, '_')}_${size}`;
+    };
+
+    // Get stock for selected variant (color+size), or size only, or total stock
     const getAvailableStock = () => {
-        if (!hasSizes || !selectedSize) {
-            return product.stock;
+        // If using variant stock system (colors + sizes)
+        if (hasVariantStock && selectedColor && selectedSize) {
+            const key = createVariantKey(selectedColor, selectedSize);
+            return variantStock[key] || 0;
         }
-        return sizeStock[selectedSize] || 0;
+        // If only sizes (no colors or color not selected)
+        if (hasSizes && selectedSize) {
+            // Check variant stock first if color is selected
+            if (hasVariantStock && selectedColor) {
+                const key = createVariantKey(selectedColor, selectedSize);
+                return variantStock[key] || 0;
+            }
+            return sizeStock[selectedSize] || 0;
+        }
+        return product.stock;
+    };
+
+    // Check if a specific size is in stock (considering selected color if variant system)
+    const isSizeInStock = (size: string): boolean => {
+        if (hasVariantStock && selectedColor) {
+            const key = createVariantKey(selectedColor, size);
+            return (variantStock[key] || 0) > 0;
+        }
+        return (sizeStock[size] || 0) > 0;
+    };
+
+    // Check if a specific color has any stock (across all sizes)
+    const isColorInStock = (colorName: string): boolean => {
+        if (hasVariantStock && hasSizes) {
+            return product.available_sizes!.some(size => {
+                const key = createVariantKey(colorName, size);
+                return (variantStock[key] || 0) > 0;
+            });
+        }
+        return true; // If no variant stock, assume in stock
     };
 
     // Get localized content
@@ -170,13 +212,55 @@ function ProductContent({
         localStorage.setItem(storageKey, "true");
     };
 
+    // Show all images regardless of color selection
     const images = product.images || [];
+
+    // When color changes, auto-select the image that matches the color (if any)
+    // Also reset size if it's no longer in stock for the new color
+    useEffect(() => {
+        if (selectedColor) {
+            // Find the first image that matches the selected color (case-insensitive)
+            const colorImageIndex = images.findIndex(img =>
+                img.color?.toLowerCase() === selectedColor.toLowerCase()
+            );
+            if (colorImageIndex !== -1) {
+                setSelectedImage(colorImageIndex);
+            }
+
+            // Reset size if it's not in stock for the new color
+            // Access product.variant_stock directly to avoid stale closure issues
+            if (selectedSize && product.variant_stock && Object.keys(product.variant_stock).length > 0) {
+                const key = `${selectedColor.toLowerCase().replace(/\s+/g, '_')}_${selectedSize}`;
+                const stockValue = product.variant_stock[key];
+                if (stockValue === undefined || stockValue === null || stockValue === 0) {
+                    setSelectedSize(null);
+                }
+            }
+        }
+    // Note: We intentionally exclude selectedSize from deps to prevent loops
+    // The effect should only run when color changes, using the current selectedSize value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedColor, product.variant_stock]);
+
     const hasDiscount =
         product.compare_price && product.compare_price > product.price;
 
     const handleAddToCart = async () => {
         try {
-            await addToCart(product.id, quantity);
+            // Get the color hex if a color is selected
+            const selectedColorInfo = selectedColor
+                ? product.available_colors?.find(c => c.name === selectedColor)
+                : null;
+
+            // Get the selected image ID (either by color match or current selection)
+            const selectedImageId = images[selectedImage]?.id || null;
+
+            await addToCart(product.id, quantity, {
+                color: selectedColor,
+                colorHex: selectedColorInfo?.hex || null,
+                size: selectedSize,
+                selectedImageId,
+            });
             setAdded(true);
             setTimeout(() => setAdded(false), 2000);
         } catch (error) {
@@ -188,7 +272,7 @@ function ProductContent({
         <>
             <Head title={productName} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
                 {/* Breadcrumbs */}
                 <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6 overflow-hidden">
                     <Link
@@ -235,7 +319,7 @@ function ProductContent({
                                         images[selectedImage].sort_order
                                     )}
                                     alt={productName}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain"
                                     loading="eager"
                                     decoding="async"
                                     fetchPriority="high"
@@ -249,29 +333,47 @@ function ProductContent({
                             )}
                         </div>
                         {images.length > 0 && (
-                            <div className="flex gap-3 overflow-x-auto pb-2">
-                                {images.map((image, index) => (
-                                    <button
-                                        key={image.id}
-                                        onClick={() => setSelectedImage(index)}
-                                        className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                                            selectedImage === index
-                                                ? "border-brand-purple"
-                                                : "border-gray-200 hover:border-gray-400"
-                                        }`}
-                                    >
-                                        <LazyImage
-                                            src={getImageUrl(
-                                                image.path,
-                                                product.id,
-                                                image.sort_order
-                                            )}
-                                            alt={image.alt_text || productName}
-                                            className="w-full h-full"
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    </button>
-                                ))}
+                            <div className="relative">
+                                {/* Image count indicator */}
+                                {images.length > 6 && (
+                                    <div className="absolute -top-6 right-0 text-xs text-gray-500">
+                                        {selectedImage + 1} / {images.length}
+                                    </div>
+                                )}
+                                {/* Thumbnails - grid on desktop, scroll on mobile */}
+                                <div className={`
+                                    ${images.length <= 6
+                                        ? "flex gap-3"
+                                        : "grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2"
+                                    }
+                                    ${images.length <= 6 ? "overflow-x-auto pb-2" : ""}
+                                `}>
+                                    {images.map((image, index) => (
+                                        <button
+                                            key={image.id}
+                                            onClick={() => setSelectedImage(index)}
+                                            className={`
+                                                ${images.length <= 6 ? "flex-shrink-0 w-24 h-24" : "aspect-square w-full"}
+                                                rounded-lg overflow-hidden border-2 transition-all
+                                                ${selectedImage === index
+                                                    ? "border-brand-purple ring-2 ring-brand-purple/30"
+                                                    : "border-gray-200 hover:border-gray-400"
+                                                }
+                                            `}
+                                        >
+                                            <LazyImage
+                                                src={getImageUrl(
+                                                    image.path,
+                                                    product.id,
+                                                    image.sort_order
+                                                )}
+                                                alt={image.alt_text || productName}
+                                                className="w-full h-full"
+                                                style={{ objectFit: 'contain' }}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -345,6 +447,62 @@ function ProductContent({
                             </p>
                         )}
 
+                        {/* Color Selector */}
+                        {hasColors && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-sm font-medium text-gray-900">
+                                        {t("shop:selectColor")}
+                                    </h3>
+                                    {selectedColor && (
+                                        <span className="text-sm text-gray-500">
+                                            {selectedColor}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {product.available_colors!.map((color) => {
+                                        const colorInStock = isColorInStock(color.name);
+                                        const isSelected = selectedColor === color.name;
+
+                                        return (
+                                            <button
+                                                key={color.name}
+                                                onClick={() =>
+                                                    colorInStock &&
+                                                    setSelectedColor(color.name)
+                                                }
+                                                disabled={!colorInStock}
+                                                title={color.name}
+                                                className={`
+                                                    w-10 h-10 rounded-full border-2 transition-all relative
+                                                    ${
+                                                        isSelected
+                                                            ? "border-brand-purple ring-2 ring-brand-purple ring-offset-2"
+                                                            : !colorInStock
+                                                            ? "border-gray-200 opacity-40 cursor-not-allowed"
+                                                            : "border-gray-300 hover:border-brand-purple"
+                                                    }
+                                                `}
+                                                style={{ backgroundColor: color.hex }}
+                                            >
+                                                {!colorInStock && (
+                                                    <span className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="w-full h-0.5 bg-gray-400 rotate-45 absolute" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {!selectedColor && (
+                                    <p className="mt-2 text-sm text-amber-600">
+                                        {t("shop:pleaseSelectColor")}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         {/* Size Selector */}
                         {hasSizes && (
                             <div className="mb-6">
@@ -355,35 +513,30 @@ function ProductContent({
                                     {selectedSize && (
                                         <span className="text-sm text-gray-500">
                                             {t("shop:inStockCount", {
-                                                count:
-                                                    sizeStock[selectedSize] ||
-                                                    0,
+                                                count: getAvailableStock(),
                                             })}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {product.available_sizes!.map((size) => {
-                                        const stockForSize =
-                                            sizeStock[size] || 0;
-                                        const isOutOfStock = stockForSize === 0;
-                                        const isSelected =
-                                            selectedSize === size;
+                                        const inStock = isSizeInStock(size);
+                                        const isSelected = selectedSize === size;
 
                                         return (
                                             <button
                                                 key={size}
                                                 onClick={() =>
-                                                    !isOutOfStock &&
+                                                    inStock &&
                                                     setSelectedSize(size)
                                                 }
-                                                disabled={isOutOfStock}
+                                                disabled={!inStock}
                                                 className={`
                                                     min-w-[3rem] px-3 py-2 text-sm font-medium rounded-lg border-2 transition-all
                                                     ${
                                                         isSelected
                                                             ? "border-brand-purple bg-brand-purple text-white"
-                                                            : isOutOfStock
+                                                            : !inStock
                                                             ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through"
                                                             : "border-gray-300 bg-white text-gray-700 hover:border-brand-purple"
                                                     }
@@ -404,35 +557,44 @@ function ProductContent({
 
                         {/* Add to Cart or Notify Me */}
                         {product.stock > 0 ? (
-                            <div className="flex items-center gap-4 mb-8">
-                                <QuantitySelector
-                                    quantity={quantity}
-                                    onChange={setQuantity}
-                                    max={getAvailableStock()}
-                                />
-                                <Button
-                                    onClick={handleAddToCart}
-                                    disabled={
-                                        loading ||
-                                        added ||
-                                        (hasSizes === true &&
-                                            selectedSize === null)
-                                    }
-                                    size="lg"
-                                    className="flex-1"
-                                >
-                                    {added ? (
-                                        <>
-                                            <Check className="me-2 h-5 w-5" />
-                                            {t("common:addedToCart")}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ShoppingCart className="me-2 h-5 w-5" />
-                                            {t("common:addToCart")}
-                                        </>
-                                    )}
-                                </Button>
+                            <div className="space-y-3 mb-8">
+                                {/* Out of stock warning for selected variant */}
+                                {selectedColor && selectedSize && getAvailableStock() === 0 && (
+                                    <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                                        {t("shop:variantOutOfStock", { color: selectedColor, size: selectedSize })}
+                                    </p>
+                                )}
+                                <div className="flex items-center gap-4">
+                                    <QuantitySelector
+                                        quantity={quantity}
+                                        onChange={setQuantity}
+                                        max={getAvailableStock()}
+                                    />
+                                    <Button
+                                        onClick={handleAddToCart}
+                                        disabled={
+                                            loading ||
+                                            added ||
+                                            (hasSizes === true && selectedSize === null) ||
+                                            (hasColors === true && selectedColor === null) ||
+                                            getAvailableStock() === 0
+                                        }
+                                        size="lg"
+                                        className="flex-1"
+                                    >
+                                        {added ? (
+                                            <>
+                                                <Check className="me-2 h-5 w-5" />
+                                                {t("common:addedToCart")}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingCart className="me-2 h-5 w-5" />
+                                                {t("common:addToCart")}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div className="mb-8">

@@ -14,7 +14,18 @@ class OrderSeeder extends Seeder
     {
         // Use customer account for demo orders
         $customer = User::where('email', 'customer@hardrock-demo.com')->first();
-        $products = Product::take(10)->get();
+
+        // Get a diverse set of products including specific ones like the hoodie
+        $hoodie = Product::where('slug', 'zip-hoodie-men-fleece-lined')->first();
+        $randomProducts = Product::where('is_active', true)
+            ->inRandomOrder()
+            ->take(15)
+            ->get();
+
+        // Merge hoodie with random products (if it exists)
+        $products = $hoodie
+            ? $randomProducts->push($hoodie)->unique('id')
+            : $randomProducts;
 
         if (!$customer || $products->isEmpty()) {
             return;
@@ -99,6 +110,12 @@ class OrderSeeder extends Seeder
 
             foreach ($items as $item) {
                 OrderItem::create(array_merge($item, ['order_id' => $order->id]));
+
+                // Update times_purchased on the product (only for completed/delivered orders)
+                if (in_array($orderStatus, ['delivered', 'processing'])) {
+                    Product::where('id', $item['product_id'])
+                        ->increment('times_purchased', $item['quantity']);
+                }
             }
         }
     }

@@ -25,7 +25,7 @@ function CartContent() {
         <>
             <Head title="Shopping Cart" />
 
-            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
                     <Link
@@ -91,6 +91,24 @@ function CartContent() {
                                                         >
                                                             {item.product.name}
                                                         </Link>
+                                                        {/* Variant info (color + size) */}
+                                                        {(item.color || item.size) && (
+                                                            <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                                                {item.color && (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <span
+                                                                            className="w-3 h-3 rounded-full border border-gray-300"
+                                                                            style={{ backgroundColor: item.color_hex || '#ccc' }}
+                                                                        />
+                                                                        {item.color}
+                                                                    </span>
+                                                                )}
+                                                                {item.color && item.size && <span>•</span>}
+                                                                {item.size && (
+                                                                    <span>Size: {item.size}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                         <p className="text-sm text-gray-500 mt-1">
                                                             {formatPrice(item.product.price, language)} each
                                                         </p>

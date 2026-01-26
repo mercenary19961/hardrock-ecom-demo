@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
@@ -122,15 +123,20 @@ class ReviewSeeder extends Seeder
             foreach ($hoodieReviews as $index => $reviewData) {
                 // Last one is English, others are Arabic
                 $isLast = $index === count($hoodieReviews) - 1;
+                $user = $customers[$index % $customers->count()];
+
+                // Check if user has actually purchased this product
+                $hasPurchased = $this->userHasPurchasedProduct($user->id, $hoodie->id);
+
                 Review::create([
                     'product_id' => $hoodie->id,
-                    'user_id' => $customers[$index % $customers->count()]->id,
+                    'user_id' => $user->id,
                     'rating' => $reviewData['rating'],
                     'title' => $reviewData['title'],
                     'title_ar' => $reviewData['title_ar'],
                     'comment' => $reviewData['comment'],
                     'comment_ar' => $reviewData['comment_ar'],
-                    'is_verified_purchase' => true,
+                    'is_verified_purchase' => $hasPurchased,
                     'helpful_count' => rand(5, 50),
                     'language' => $isLast ? 'en' : 'ar',
                     'created_at' => now()->subDays(rand(1, 30)),
@@ -157,6 +163,9 @@ class ReviewSeeder extends Seeder
 
                 $template = $reviewTemplates[array_rand($reviewTemplates)];
 
+                // Check if user has actually purchased this product
+                $hasPurchased = $this->userHasPurchasedProduct($user->id, $product->id);
+
                 Review::create([
                     'product_id' => $product->id,
                     'user_id' => $user->id,
@@ -165,7 +174,7 @@ class ReviewSeeder extends Seeder
                     'title_ar' => $template['title_ar'],
                     'comment' => $template['comment'],
                     'comment_ar' => $template['comment_ar'],
-                    'is_verified_purchase' => rand(0, 1) === 1,
+                    'is_verified_purchase' => $hasPurchased,
                     'helpful_count' => rand(0, 25),
                     'language' => 'ar',
                     'created_at' => now()->subDays(rand(1, 90)),
@@ -174,5 +183,18 @@ class ReviewSeeder extends Seeder
 
             $product->updateRatingStats();
         }
+    }
+
+    /**
+     * Check if a user has purchased a specific product (via completed orders).
+     */
+    private function userHasPurchasedProduct(int $userId, int $productId): bool
+    {
+        return Order::where('user_id', $userId)
+            ->whereIn('status', ['delivered', 'processing'])
+            ->whereHas('items', function ($query) use ($productId) {
+                $query->where('product_id', $productId);
+            })
+            ->exists();
     }
 }

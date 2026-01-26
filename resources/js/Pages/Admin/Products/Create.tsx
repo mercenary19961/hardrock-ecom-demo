@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor, Badge } from '@/Components/ui';
+import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, ColorPicker, SizeStockEditor, Badge, NumberInput } from '@/Components/ui';
 import { Category } from '@/types/models';
 import { ArrowLeft, Copy } from 'lucide-react';
 
@@ -199,21 +199,19 @@ export default function CreateProduct({ categories, duplicateProduct }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input
+                                <NumberInput
                                     label="Price"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
+                                    step={0.01}
+                                    min={0}
                                     value={data.price}
                                     onChange={(e) => setData('price', e.target.value)}
                                     error={errors.price}
                                     required
                                 />
-                                <Input
+                                <NumberInput
                                     label="Compare Price (optional)"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
+                                    step={0.01}
+                                    min={0}
                                     value={data.compare_price}
                                     onChange={(e) => setData('compare_price', e.target.value)}
                                     error={errors.compare_price}
@@ -228,10 +226,9 @@ export default function CreateProduct({ categories, duplicateProduct }: Props) {
                                     error={errors.sku}
                                     placeholder="Auto-generated if empty"
                                 />
-                                <Input
+                                <NumberInput
                                     label="Stock"
-                                    type="number"
-                                    min="0"
+                                    min={0}
                                     value={data.stock}
                                     onChange={(e) => setData('stock', parseInt(e.target.value) || 0)}
                                     error={errors.stock}
@@ -240,11 +237,10 @@ export default function CreateProduct({ categories, duplicateProduct }: Props) {
                             </div>
 
                             <div>
-                                <Input
+                                <NumberInput
                                     label="Low Stock Threshold (optional)"
-                                    type="number"
-                                    min="1"
-                                    max="1000"
+                                    min={1}
+                                    max={1000}
                                     value={data.low_stock_threshold}
                                     onChange={(e) => setData('low_stock_threshold', e.target.value)}
                                     error={errors.low_stock_threshold}

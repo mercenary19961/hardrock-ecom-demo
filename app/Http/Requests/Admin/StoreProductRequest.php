@@ -29,7 +29,7 @@ class StoreProductRequest extends FormRequest
             'low_stock_threshold' => 'nullable|integer|min:1|max:1000',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
-            'images' => 'nullable|array|max:5',
+            'images' => 'nullable|array|max:10',
             'images.*' => 'image|max:2048',
             // Variant fields
             'color' => 'nullable|string|max:100',
@@ -46,7 +46,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'compare_price.gt' => 'The compare price must be greater than the regular price.',
-            'images.max' => 'You can upload a maximum of 5 images.',
+            'images.max' => 'You can upload a maximum of 10 images at once.',
         ];
     }
 }

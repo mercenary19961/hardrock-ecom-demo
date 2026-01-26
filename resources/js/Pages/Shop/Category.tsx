@@ -969,7 +969,7 @@ export default function Category({
                 </div>
             )}
 
-            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
                 <div className="flex gap-8">
                     {/* Desktop Sidebar */}
                     <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -1339,7 +1339,7 @@ export default function Category({
                 </div>
 
                 {/* Bottom CTA */}
-                <div className="mt-16 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white text-center">
+                <div className="mt-16 mb-8 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white text-center">
                     <h2 className="text-2xl sm:text-3xl font-bold mb-3">
                         {t("shop:cta.needHelp")}
                     </h2>

@@ -105,6 +105,33 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Global keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger when typing in inputs
+            const activeElement = document.activeElement;
+            const isInInput = activeElement?.tagName === 'INPUT' ||
+                              activeElement?.tagName === 'TEXTAREA' ||
+                              activeElement?.tagName === 'SELECT';
+
+            if (isInInput) return;
+
+            // Alt + Left Arrow = Go back
+            if (e.altKey && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                window.history.back();
+            }
+
+            // Alt + Right Arrow = Go forward
+            if (e.altKey && e.key === 'ArrowRight') {
+                e.preventDefault();
+                window.history.forward();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     // Debounced search
     const performSearch = useCallback(async (query: string) => {
         if (query.length < 2) {
@@ -198,7 +225,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300 admin-scrollbar">
             {/* Mobile menu button */}
             <div className="lg:hidden fixed top-4 left-4 z-50">
                 <button

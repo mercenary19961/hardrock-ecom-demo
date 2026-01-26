@@ -45,6 +45,10 @@ class CartController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'integer|min:1|max:99',
+            'color' => 'nullable|string|max:100',
+            'color_hex' => 'nullable|string|max:10',
+            'size' => 'nullable|string|max:20',
+            'selected_image_id' => 'nullable|integer',
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
@@ -58,7 +62,16 @@ class CartController extends Controller
 
         $cart = $this->cartService->getCart($this->currentUser());
         $quantity = (int) ($validated['quantity'] ?? 1);
-        $this->cartService->addItem($cart, $product, $quantity);
+
+        $this->cartService->addItem(
+            $cart,
+            $product,
+            $quantity,
+            $validated['color'] ?? null,
+            $validated['color_hex'] ?? null,
+            $validated['size'] ?? null,
+            isset($validated['selected_image_id']) ? (int) $validated['selected_image_id'] : null
+        );
 
         if ($request->wantsJson()) {
             return response()->json([

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ActivityLogService;
 use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ use Inertia\Response;
 class ProductController extends Controller
 {
     public function __construct(
-        protected UndoService $undoService
+        protected UndoService $undoService,
+        protected ActivityLogService $activityLogService
     ) {}
     public function index(Request $request): Response
     {
@@ -159,6 +161,9 @@ class ProductController extends Controller
             }
         }
 
+        // Log the create activity
+        $this->undoService->logActivity($product, 'created');
+
         return redirect()
             ->route('admin.products.index')
             ->with('success', 'Product created successfully.');
@@ -172,22 +177,35 @@ class ProductController extends Controller
         // Get undo metadata for this product
         $undoMeta = $this->undoService->getUndoMeta('product', $product->id, $product);
 
+        // Get activity history for this product
+        $activityLogs = $this->activityLogService->getModelActivities('Product', $product->id, 10);
+
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'undoMeta' => $undoMeta,
+            'activityLogs' => $activityLogs,
         ]);
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
-        unset($data['images'], $data['delete_images'], $data['image_order']);
+        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors']);
+
+        // Store old data for change tracking
+        $oldData = $product->toArray();
 
         // Save undo state before updating (only if there are actual changes)
-        $this->undoService->saveState($product, null, $data);
+        $hasChanges = $this->undoService->saveState($product, null, $data);
 
         $product->update($data);
+
+        // Log the update activity if there were changes
+        if ($hasChanges) {
+            $changes = $this->undoService->getChanges($product, $oldData);
+            $this->undoService->logActivity($product, 'updated', $changes);
+        }
 
         // Handle image deletions
         if ($request->has('delete_images')) {
@@ -208,6 +226,17 @@ class ProductController extends Controller
                     ->update([
                         'sort_order' => $index,
                         'is_primary' => $index === 0, // First image is primary
+                    ]);
+            }
+        }
+
+        // Handle image color assignments
+        if ($request->has('image_colors') && is_array($request->image_colors)) {
+            foreach ($request->image_colors as $imageId => $color) {
+                ProductImage::where('id', $imageId)
+                    ->where('product_id', $product->id)
+                    ->update([
+                        'color' => $color ?: null, // Convert empty string to null
                     ]);
             }
         }
@@ -255,6 +284,9 @@ class ProductController extends Controller
             return back()->withErrors(['product' => 'Cannot delete product that is in customer carts. Remove from carts first or wait for checkout.']);
         }
 
+        // Log the delete activity before deleting
+        $this->undoService->logActivity($product, 'deleted');
+
         // Delete all product images
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->path);
@@ -272,6 +304,13 @@ class ProductController extends Controller
         $product->update(['is_featured' => !$product->is_featured]);
 
         return back()->with('success', $product->is_featured ? 'Product marked as featured.' : 'Product removed from featured.');
+    }
+
+    public function toggleActive(Product $product): RedirectResponse
+    {
+        $product->update(['is_active' => !$product->is_active]);
+
+        return back()->with('success', $product->is_active ? 'Product activated.' : 'Product deactivated.');
     }
 
     public function bulkAction(Request $request): RedirectResponse

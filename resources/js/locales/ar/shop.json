@@ -95,7 +95,10 @@
     "apply": "تطبيق",
     "selectSize": "اختر المقاس",
     "pleaseSelectSize": "يرجى اختيار المقاس",
+    "selectColor": "اختر اللون",
+    "pleaseSelectColor": "يرجى اختيار اللون",
     "inStockCount": "{{count}} متوفر",
+    "variantOutOfStock": "اللون {{color}} بمقاس {{size}} غير متوفر. يرجى اختيار تركيبة أخرى.",
     "size": "المقاس",
     "color": "اللون",
     "reviewsSection": {

@@ -9,10 +9,186 @@ import {
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
     Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
     Clock, History, TrendingUp, TrendingDown, Flame, CircleCheck, CircleX,
-    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff
+    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling } from '@/hooks';
+
+// Product Card Image component with navigation for multiple images
+function ProductCardImage({
+    product,
+    onProductClick,
+    isSelected,
+    onToggleSelect,
+    onToggleFeatured,
+    onDelete,
+    onDropdownOpen,
+}: {
+    product: Product;
+    onProductClick: () => void;
+    isSelected: boolean;
+    onToggleSelect: () => void;
+    onToggleFeatured: (e: React.MouseEvent) => void;
+    onDelete: () => void;
+    onDropdownOpen?: () => void;
+}) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const images = product.images && product.images.length > 0 ? product.images : [];
+    const hasMultipleImages = images.length > 1;
+    const currentImage = images[currentImageIndex]?.url || product.primary_image?.url;
+
+    const handlePrevImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    };
+
+    return (
+        <div
+            className="aspect-square bg-gray-100 dark:bg-gray-700 relative cursor-pointer"
+            onClick={onProductClick}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {currentImage ? (
+                <img
+                    src={currentImage}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="h-12 w-12 text-gray-300 dark:text-gray-500" />
+                </div>
+            )}
+
+            {/* Image Navigation Arrows */}
+            {hasMultipleImages && isHovered && (
+                <>
+                    <button
+                        onClick={handlePrevImage}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all z-10"
+                        aria-label="Previous image"
+                    >
+                        <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                    </button>
+                    <button
+                        onClick={handleNextImage}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all z-10"
+                        aria-label="Next image"
+                    >
+                        <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                    </button>
+
+                    {/* Image Dots Indicator */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 z-10">
+                        {images.map((_, index) => (
+                            <span
+                                key={index}
+                                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                    index === currentImageIndex
+                                        ? 'bg-gray-900 dark:bg-white'
+                                        : 'bg-gray-400 dark:bg-gray-500'
+                                }`}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* Selection Checkbox */}
+            <button
+                onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+                className="absolute top-2 left-2 p-1 bg-white dark:bg-gray-800 rounded shadow"
+            >
+                {isSelected ? (
+                    <CheckSquare className="h-5 w-5 text-purple-600" />
+                ) : (
+                    <Square className="h-5 w-5 text-gray-400" />
+                )}
+            </button>
+
+            {/* Dropdown Menu */}
+            <div className="absolute top-2 right-2">
+                <div className="relative">
+                    <button
+                        data-dropdown-trigger
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // Close context menu if open
+                            onDropdownOpen?.();
+                            // Close other dropdown menus first
+                            document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+                                if (menu !== e.currentTarget.nextElementSibling) {
+                                    menu.classList.add('hidden');
+                                }
+                            });
+                            const menu = e.currentTarget.nextElementSibling;
+                            menu?.classList.toggle('hidden');
+                        }}
+                        className="p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    </button>
+                    <div className="product-dropdown-menu hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-20">
+                        <button
+                            onClick={onToggleFeatured}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
+                        >
+                            <Sparkles className="h-4 w-4" />
+                            {product.is_featured ? 'Unfeature' : 'Feature'}
+                        </button>
+                        <Link
+                            href={`/admin/products/${product.id}/edit`}
+                            preserveScroll
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            <Edit className="h-4 w-4" />
+                            Edit
+                        </Link>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Badges */}
+            <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
+                {product.is_featured && (
+                    <Badge variant="warning" className="text-xs">
+                        <Sparkles className="h-3 w-3" />
+                    </Badge>
+                )}
+                {isNewProduct(product.created_at) && (
+                    <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
+                        New
+                    </Badge>
+                )}
+                <Badge variant={product.is_active ? 'success' : 'default'} className="text-xs">
+                    {product.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+            </div>
+
+            {/* Image count indicator (when not hovered) */}
+            {hasMultipleImages && !isHovered && (
+                <div className="absolute top-2 right-12 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                    {images.length} <ImageIcon className="h-3 w-3 inline-block" />
+                </div>
+            )}
+        </div>
+    );
+}
 
 // Helper to check if product is new (created within last 30 days)
 function isNewProduct(createdAt: string): boolean {
@@ -431,6 +607,8 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [bulkActionLoading, setBulkActionLoading] = useState(false);
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; product: Product } | null>(null);
+    const contextMenuRef = useRef<HTMLDivElement>(null);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds, but pause when items are selected
@@ -443,6 +621,77 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     useEffect(() => {
         localStorage.setItem('productsViewMode', viewMode);
     }, [viewMode]);
+
+    // Context menu handlers
+    const handleContextMenu = useCallback((e: React.MouseEvent, product: Product) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Close any open dropdown menus (MoreVertical menus)
+        document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+
+        // Calculate position, ensuring menu stays within viewport
+        const x = Math.min(e.clientX, window.innerWidth - 160); // 160px menu width
+        const y = Math.min(e.clientY, window.innerHeight - 120); // ~120px menu height
+
+        setContextMenu({ x, y, product });
+    }, []);
+
+    const closeContextMenu = useCallback(() => {
+        setContextMenu(null);
+    }, []);
+
+    // Close context menu on click outside or escape key
+    useEffect(() => {
+        if (!contextMenu) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+                closeContextMenu();
+            }
+        };
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                closeContextMenu();
+            }
+        };
+
+        const handleScroll = () => {
+            closeContextMenu();
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        window.addEventListener('scroll', handleScroll, true);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [contextMenu, closeContextMenu]);
+
+    // Close dropdown menus when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // Check if click is outside any dropdown menu and its trigger button
+            const isInsideDropdown = target.closest('.product-dropdown-menu');
+            const isDropdownTrigger = target.closest('[data-dropdown-trigger]');
+
+            if (!isInsideDropdown && !isDropdownTrigger) {
+                document.querySelectorAll('.product-dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Preserve valid selections when products change (remove selections for products no longer in view)
     useEffect(() => {
@@ -523,9 +772,16 @@ export default function ProductsIndex({ products: productsProp, categories, filt
         }
     };
 
-    const handleToggleFeatured = (product: Product, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleToggleFeatured = (product: Product, e?: React.MouseEvent) => {
+        e?.stopPropagation();
         router.patch(`/admin/products/${product.id}/toggle-featured`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleToggleActive = (product: Product) => {
+        router.patch(`/admin/products/${product.id}/toggle-active`, {}, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -638,6 +894,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 {/* Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-4 space-y-3">
+                        {/* Search and Filter Row */}
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                             <div className="relative flex-1">
                                 <label htmlFor="products-search" className="sr-only">Search products</label>
@@ -668,21 +925,30 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 options={statusOptions}
                             />
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-                            <div className="flex items-center gap-2">
-                                <ArrowUpDown className="h-4 w-4 text-gray-400" />
+
+                        {/* Sort and Clear Filters Row */}
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+                            {/* Sort Section - slightly different styling */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <ArrowUpDown className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sort</span>
                                 <Select
                                     value={sortValue}
                                     onChange={handleSortChange}
-                                    className="w-full sm:w-44"
+                                    className="w-full sm:w-48"
                                     options={sortOptions}
                                 />
                             </div>
+
+                            {/* Clear Filters - distinct action styling */}
                             {hasActiveFilters && (
-                                <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear Filters
-                                </Button>
+                                <button
+                                    onClick={handleClearFilters}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                >
+                                    <X className="h-4 w-4" />
+                                    Clear All Filters
+                                </button>
                             )}
                         </div>
                     </div>
@@ -751,87 +1017,21 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 <div className={`${viewMode === 'grid' ? 'block' : 'block sm:hidden'}`}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {productsData.map((product) => (
-                            <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
-                                {/* Product Image */}
-                                <div className="aspect-square bg-gray-100 dark:bg-gray-700 relative cursor-pointer" onClick={() => setSelectedProduct(product)}>
-                                    {product.primary_image?.url ? (
-                                        <img
-                                            src={product.primary_image.url}
-                                            alt={product.name}
-                                            className="w-full h-full object-contain"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <ImageIcon className="h-12 w-12 text-gray-300 dark:text-gray-500" />
-                                        </div>
-                                    )}
-                                    {/* Selection Checkbox */}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}
-                                        className="absolute top-2 left-2 p-1 bg-white dark:bg-gray-800 rounded shadow"
-                                    >
-                                        {selectedIds.has(product.id) ? (
-                                            <CheckSquare className="h-5 w-5 text-purple-600" />
-                                        ) : (
-                                            <Square className="h-5 w-5 text-gray-400" />
-                                        )}
-                                    </button>
-                                    {/* Dropdown Menu */}
-                                    <div className="absolute top-2 right-2">
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const menu = e.currentTarget.nextElementSibling;
-                                                    menu?.classList.toggle('hidden');
-                                                }}
-                                                className="p-1.5 bg-white dark:bg-gray-800 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                            >
-                                                <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                                            </button>
-                                            <div className="hidden absolute right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10">
-                                                <button
-                                                    onClick={(e) => handleToggleFeatured(product, e)}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 w-full"
-                                                >
-                                                    <Sparkles className="h-4 w-4" />
-                                                    {product.is_featured ? 'Unfeature' : 'Feature'}
-                                                </button>
-                                                <Link
-                                                    href={`/admin/products/${product.id}/edit`}
-                                                    preserveScroll
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                    Edit
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(product)}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 w-full"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Badges */}
-                                    <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
-                                        {product.is_featured && (
-                                            <Badge variant="warning" className="text-xs">
-                                                <Sparkles className="h-3 w-3" />
-                                            </Badge>
-                                        )}
-                                        {isNewProduct(product.created_at) && (
-                                            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100 text-xs">
-                                                New
-                                            </Badge>
-                                        )}
-                                        <Badge variant={product.is_active ? 'success' : 'default'} className="text-xs">
-                                            {product.is_active ? 'Active' : 'Inactive'}
-                                        </Badge>
-                                    </div>
-                                </div>
+                            <Card
+                                key={product.id}
+                                className="overflow-hidden group hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700"
+                                onContextMenu={(e) => handleContextMenu(e, product)}
+                            >
+                                {/* Product Image with Navigation */}
+                                <ProductCardImage
+                                    product={product}
+                                    onProductClick={() => setSelectedProduct(product)}
+                                    isSelected={selectedIds.has(product.id)}
+                                    onToggleSelect={() => toggleSelect(product.id)}
+                                    onToggleFeatured={(e) => handleToggleFeatured(product, e)}
+                                    onDelete={() => handleDelete(product)}
+                                    onDropdownOpen={closeContextMenu}
+                                />
 
                                 {/* Product Info */}
                                 <div className="p-3">
@@ -928,14 +1128,18 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th className="text-right pr-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {productsData.map((product) => (
-                                    <tr key={product.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}>
+                                    <tr
+                                        key={product.id}
+                                        className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
+                                        onContextMenu={(e) => handleContextMenu(e, product)}
+                                    >
                                         <td className="px-4 py-4">
                                             <button onClick={() => toggleSelect(product.id)} className="p-1">
                                                 {selectedIds.has(product.id) ? (
@@ -1219,6 +1423,108 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                 onClose={() => setSelectedProduct(null)}
                 language={language}
             />
+
+            {/* Context Menu */}
+            {contextMenu && (
+                <div
+                    ref={contextMenuRef}
+                    className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                >
+                    {/* View Details */}
+                    <button
+                        onClick={() => {
+                            setSelectedProduct(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        View Details
+                    </button>
+
+                    {/* Edit */}
+                    <Link
+                        href={`/admin/products/${contextMenu.product.id}/edit`}
+                        preserveScroll
+                        onClick={closeContextMenu}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Edit className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        Edit
+                    </Link>
+
+                    {/* View on Store */}
+                    <a
+                        href={`/product/${contextMenu.product.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={closeContextMenu}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <ExternalLink className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        View on Store
+                    </a>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                    {/* Feature/Unfeature */}
+                    <button
+                        onClick={() => {
+                            handleToggleFeatured(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        {contextMenu.product.is_featured ? (
+                            <>
+                                <StarOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                Unfeature
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="h-4 w-4 text-yellow-500" />
+                                Feature
+                            </>
+                        )}
+                    </button>
+
+                    {/* Activate/Deactivate */}
+                    <button
+                        onClick={() => {
+                            handleToggleActive(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        {contextMenu.product.is_active ? (
+                            <>
+                                <PowerOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                Deactivate
+                            </>
+                        ) : (
+                            <>
+                                <Power className="h-4 w-4 text-green-500" />
+                                Activate
+                            </>
+                        )}
+                    </button>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                    {/* Delete */}
+                    <button
+                        onClick={() => {
+                            handleDelete(contextMenu.product);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                    </button>
+                </div>
+            )}
         </AdminLayout>
     );
 }

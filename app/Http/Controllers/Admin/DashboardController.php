@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        protected ActivityLogService $activityLogService
+    ) {}
+
     public function index(): Response
     {
         $stats = [
@@ -40,11 +46,15 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Get recent activities
+        $recentActivities = $this->activityLogService->getRecentActivities(10);
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'ordersByStatus' => $ordersByStatus,
             'lowStockProducts' => $lowStockProducts,
+            'recentActivities' => $recentActivities,
         ]);
     }
 }

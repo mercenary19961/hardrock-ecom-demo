@@ -64,7 +64,12 @@ class CartService
     protected function mergeCarts(Cart $source, Cart $target): void
     {
         foreach ($source->items as $item) {
-            $existingItem = $target->items()->where('product_id', $item->product_id)->first();
+            // Find existing item with same product AND variant (color + size)
+            $existingItem = $target->items()
+                ->where('product_id', $item->product_id)
+                ->where('color', $item->color)
+                ->where('size', $item->size)
+                ->first();
 
             if ($existingItem) {
                 $existingItem->update([
@@ -74,18 +79,36 @@ class CartService
                 $target->items()->create([
                     'product_id' => $item->product_id,
                     'quantity' => $item->quantity,
+                    'color' => $item->color,
+                    'color_hex' => $item->color_hex,
+                    'size' => $item->size,
+                    'selected_image_id' => $item->selected_image_id,
                 ]);
             }
         }
     }
 
-    public function addItem(Cart $cart, Product $product, int $quantity = 1): CartItem
-    {
-        $existingItem = $cart->items()->where('product_id', $product->id)->first();
+    public function addItem(
+        Cart $cart,
+        Product $product,
+        int $quantity = 1,
+        ?string $color = null,
+        ?string $colorHex = null,
+        ?string $size = null,
+        ?int $selectedImageId = null
+    ): CartItem {
+        // Find existing item with same product AND variant (color + size)
+        $existingItem = $cart->items()
+            ->where('product_id', $product->id)
+            ->where('color', $color)
+            ->where('size', $size)
+            ->first();
 
         if ($existingItem) {
             $existingItem->update([
                 'quantity' => $existingItem->quantity + $quantity,
+                // Update image if provided (user might select a different image)
+                'selected_image_id' => $selectedImageId ?? $existingItem->selected_image_id,
             ]);
             return $existingItem->fresh();
         }
@@ -93,6 +116,10 @@ class CartService
         return $cart->items()->create([
             'product_id' => $product->id,
             'quantity' => $quantity,
+            'color' => $color,
+            'color_hex' => $colorHex,
+            'size' => $size,
+            'selected_image_id' => $selectedImageId,
         ]);
     }
 
@@ -123,10 +150,22 @@ class CartService
         $cart->load(['items.product.images']);
 
         $items = $cart->items->map(function ($item) {
+            // Get the appropriate image - selected image or primary
+            $image = $item->product->getPrimaryImageUrl();
+            if ($item->selected_image_id) {
+                $selectedImage = $item->product->images->firstWhere('id', $item->selected_image_id);
+                if ($selectedImage) {
+                    $image = $selectedImage->url;
+                }
+            }
+
             return [
                 'id' => $item->id,
                 'quantity' => $item->quantity,
                 'subtotal' => $item->subtotal,
+                'color' => $item->color,
+                'color_hex' => $item->color_hex,
+                'size' => $item->size,
                 'product' => [
                     'id' => $item->product->id,
                     'name' => $item->product->name,
@@ -135,7 +174,7 @@ class CartService
                     'price' => $item->product->price,
                     'compare_price' => $item->product->compare_price,
                     'stock' => $item->product->stock,
-                    'image' => $item->product->getPrimaryImageUrl(),
+                    'image' => $image,
                 ],
             ];
         });
