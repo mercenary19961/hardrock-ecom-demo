@@ -437,6 +437,9 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
     // Preview image navigation state
     const [previewImageIndex, setPreviewImageIndex] = useState(0);
 
+    // Activity restore state
+    const [restoringActivityId, setRestoringActivityId] = useState<number | null>(null);
+
     // Store initial values for reset functionality
     const initialValues = {
         _method: 'PUT' as const,
@@ -664,6 +667,22 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         const fileInput = document.getElementById('edit_images') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
     }, [reset, originalImageOrder, originalImageColorNames]);
+
+    // Restore from activity log
+    const handleRestoreFromActivity = useCallback((activityId: number) => {
+        if (restoringActivityId) return; // Prevent double-click
+
+        setRestoringActivityId(activityId);
+        router.post(`/admin/products/${product.id}/restore-activity/${activityId}`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setRestoringActivityId(null);
+            },
+            onError: () => {
+                setRestoringActivityId(null);
+            },
+        });
+    }, [product.id, restoringActivityId]);
 
     // Auto-save functions
     const saveAutoSaveDraft = useCallback(() => {
@@ -2119,6 +2138,16 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                         +{activity.changes.length - 4} more
                                                                     </p>
                                                                 )}
+                                                                {/* Restore Button */}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRestoreFromActivity(activity.id)}
+                                                                    disabled={restoringActivityId === activity.id}
+                                                                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    <RotateCcw className={`h-3 w-3 ${restoringActivityId === activity.id ? 'animate-spin' : ''}`} />
+                                                                    {restoringActivityId === activity.id ? 'Restoring...' : 'Restore to this state'}
+                                                                </button>
                                                             </div>
                                                         )}
                                                     </div>
