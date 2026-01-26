@@ -212,25 +212,55 @@ function ProductContent({
         localStorage.setItem(storageKey, "true");
     };
 
-    // Filter images based on selected color
-    // If no color selected, show all images
-    // If color selected, show images tagged with that color OR images with no color tag (universal images)
-    const allImages = product.images || [];
-    const images = selectedColor
-        ? allImages.filter(img => img.color === selectedColor || img.color === null)
-        : allImages;
+    // Show all images regardless of color selection
+    const images = product.images || [];
 
-    // Reset selected image when color changes (to avoid showing invalid index)
+    // When color changes, auto-select the image that matches the color (if any)
+    // Also reset size if it's no longer in stock for the new color
     useEffect(() => {
-        setSelectedImage(0);
-    }, [selectedColor]);
+        if (selectedColor) {
+            // Find the first image that matches the selected color (case-insensitive)
+            const colorImageIndex = images.findIndex(img =>
+                img.color?.toLowerCase() === selectedColor.toLowerCase()
+            );
+            if (colorImageIndex !== -1) {
+                setSelectedImage(colorImageIndex);
+            }
+
+            // Reset size if it's not in stock for the new color
+            // Access product.variant_stock directly to avoid stale closure issues
+            if (selectedSize && product.variant_stock && Object.keys(product.variant_stock).length > 0) {
+                const key = `${selectedColor.toLowerCase().replace(/\s+/g, '_')}_${selectedSize}`;
+                const stockValue = product.variant_stock[key];
+                if (stockValue === undefined || stockValue === null || stockValue === 0) {
+                    setSelectedSize(null);
+                }
+            }
+        }
+    // Note: We intentionally exclude selectedSize from deps to prevent loops
+    // The effect should only run when color changes, using the current selectedSize value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedColor, product.variant_stock]);
 
     const hasDiscount =
         product.compare_price && product.compare_price > product.price;
 
     const handleAddToCart = async () => {
         try {
-            await addToCart(product.id, quantity);
+            // Get the color hex if a color is selected
+            const selectedColorInfo = selectedColor
+                ? product.available_colors?.find(c => c.name === selectedColor)
+                : null;
+
+            // Get the selected image ID (either by color match or current selection)
+            const selectedImageId = images[selectedImage]?.id || null;
+
+            await addToCart(product.id, quantity, {
+                color: selectedColor,
+                colorHex: selectedColorInfo?.hex || null,
+                size: selectedSize,
+                selectedImageId,
+            });
             setAdded(true);
             setTimeout(() => setAdded(false), 2000);
         } catch (error) {
@@ -303,29 +333,47 @@ function ProductContent({
                             )}
                         </div>
                         {images.length > 0 && (
-                            <div className="flex gap-3 overflow-x-auto pb-2">
-                                {images.map((image, index) => (
-                                    <button
-                                        key={image.id}
-                                        onClick={() => setSelectedImage(index)}
-                                        className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all ${
-                                            selectedImage === index
-                                                ? "border-brand-purple"
-                                                : "border-gray-200 hover:border-gray-400"
-                                        }`}
-                                    >
-                                        <LazyImage
-                                            src={getImageUrl(
-                                                image.path,
-                                                product.id,
-                                                image.sort_order
-                                            )}
-                                            alt={image.alt_text || productName}
-                                            className="w-full h-full"
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    </button>
-                                ))}
+                            <div className="relative">
+                                {/* Image count indicator */}
+                                {images.length > 6 && (
+                                    <div className="absolute -top-6 right-0 text-xs text-gray-500">
+                                        {selectedImage + 1} / {images.length}
+                                    </div>
+                                )}
+                                {/* Thumbnails - grid on desktop, scroll on mobile */}
+                                <div className={`
+                                    ${images.length <= 6
+                                        ? "flex gap-3"
+                                        : "grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2"
+                                    }
+                                    ${images.length <= 6 ? "overflow-x-auto pb-2" : ""}
+                                `}>
+                                    {images.map((image, index) => (
+                                        <button
+                                            key={image.id}
+                                            onClick={() => setSelectedImage(index)}
+                                            className={`
+                                                ${images.length <= 6 ? "flex-shrink-0 w-24 h-24" : "aspect-square w-full"}
+                                                rounded-lg overflow-hidden border-2 transition-all
+                                                ${selectedImage === index
+                                                    ? "border-brand-purple ring-2 ring-brand-purple/30"
+                                                    : "border-gray-200 hover:border-gray-400"
+                                                }
+                                            `}
+                                        >
+                                            <LazyImage
+                                                src={getImageUrl(
+                                                    image.path,
+                                                    product.id,
+                                                    image.sort_order
+                                                )}
+                                                alt={image.alt_text || productName}
+                                                className="w-full h-full"
+                                                style={{ objectFit: 'cover' }}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -509,35 +557,44 @@ function ProductContent({
 
                         {/* Add to Cart or Notify Me */}
                         {product.stock > 0 ? (
-                            <div className="flex items-center gap-4 mb-8">
-                                <QuantitySelector
-                                    quantity={quantity}
-                                    onChange={setQuantity}
-                                    max={getAvailableStock()}
-                                />
-                                <Button
-                                    onClick={handleAddToCart}
-                                    disabled={
-                                        loading ||
-                                        added ||
-                                        (hasSizes === true && selectedSize === null) ||
-                                        (hasColors === true && selectedColor === null)
-                                    }
-                                    size="lg"
-                                    className="flex-1"
-                                >
-                                    {added ? (
-                                        <>
-                                            <Check className="me-2 h-5 w-5" />
-                                            {t("common:addedToCart")}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <ShoppingCart className="me-2 h-5 w-5" />
-                                            {t("common:addToCart")}
-                                        </>
-                                    )}
-                                </Button>
+                            <div className="space-y-3 mb-8">
+                                {/* Out of stock warning for selected variant */}
+                                {selectedColor && selectedSize && getAvailableStock() === 0 && (
+                                    <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                                        {t("shop:variantOutOfStock", { color: selectedColor, size: selectedSize })}
+                                    </p>
+                                )}
+                                <div className="flex items-center gap-4">
+                                    <QuantitySelector
+                                        quantity={quantity}
+                                        onChange={setQuantity}
+                                        max={getAvailableStock()}
+                                    />
+                                    <Button
+                                        onClick={handleAddToCart}
+                                        disabled={
+                                            loading ||
+                                            added ||
+                                            (hasSizes === true && selectedSize === null) ||
+                                            (hasColors === true && selectedColor === null) ||
+                                            getAvailableStock() === 0
+                                        }
+                                        size="lg"
+                                        className="flex-1"
+                                    >
+                                        {added ? (
+                                            <>
+                                                <Check className="me-2 h-5 w-5" />
+                                                {t("common:addedToCart")}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ShoppingCart className="me-2 h-5 w-5" />
+                                                {t("common:addToCart")}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div className="mb-8">

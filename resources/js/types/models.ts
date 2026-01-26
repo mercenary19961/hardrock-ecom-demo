@@ -97,6 +97,9 @@ export interface CartItem {
     id: number;
     quantity: number;
     subtotal: number;
+    color?: string | null;
+    color_hex?: string | null;
+    size?: string | null;
     product: {
         id: number;
         name: string;

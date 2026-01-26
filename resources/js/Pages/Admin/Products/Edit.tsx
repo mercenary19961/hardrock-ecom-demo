@@ -906,10 +906,35 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
         });
     };
 
+    const MAX_IMAGES_PER_UPLOAD = 10;
+    const MAX_TOTAL_IMAGES = 15;
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
+            const newFiles = Array.from(e.target.files);
+
+            // Check per-upload limit
+            if (newFiles.length > MAX_IMAGES_PER_UPLOAD) {
+                alert(`You can only upload ${MAX_IMAGES_PER_UPLOAD} images at once. Please select fewer images.`);
+                e.target.value = '';
+                return;
+            }
+
+            // Calculate total after this upload
+            const existingCount = existingImages.length;
+            const deletedCount = data.delete_images.length;
+            const alreadyQueuedCount = data.images.length;
+            const totalAfterUpload = existingCount - deletedCount + alreadyQueuedCount + newFiles.length;
+
+            if (totalAfterUpload > MAX_TOTAL_IMAGES) {
+                const canAdd = MAX_TOTAL_IMAGES - (existingCount - deletedCount + alreadyQueuedCount);
+                alert(`A product can have a maximum of ${MAX_TOTAL_IMAGES} images. You can add ${Math.max(0, canAdd)} more image(s).`);
+                e.target.value = '';
+                return;
+            }
+
             // Append to existing new images instead of replacing
-            setData('images', [...data.images, ...Array.from(e.target.files)]);
+            setData('images', [...data.images, ...newFiles]);
         }
     };
 
@@ -1563,7 +1588,7 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                 file:cursor-pointer file:transition-colors"
                                         />
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Add more images (max 5 total, currently {existingImages.length + data.images.length})
+                                            Add more images (max {MAX_IMAGES_PER_UPLOAD} per upload, {MAX_TOTAL_IMAGES} total limit) — Currently: {existingImages.length - data.delete_images.length + data.images.length} / {MAX_TOTAL_IMAGES}
                                         </p>
                                     </div>
                                 </CardContent>
