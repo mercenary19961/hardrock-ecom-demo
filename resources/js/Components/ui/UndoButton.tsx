@@ -1,6 +1,31 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { History, Clock, AlertTriangle, Info, ArrowRight } from 'lucide-react';
+import {
+    History,
+    Clock,
+    AlertTriangle,
+    Info,
+    ArrowRight,
+    Type,
+    FileText,
+    ToggleLeft,
+    Image,
+    List,
+    FolderTree,
+    Database,
+    Tag,
+    DollarSign,
+    Package,
+    Hash,
+    Star,
+    Power,
+    Palette,
+    Ruler,
+    Layers,
+    Globe,
+    Languages,
+    LucideIcon,
+} from 'lucide-react';
 import { Button } from './Button';
 
 interface FieldChange {
@@ -84,28 +109,85 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
         return badges[type];
     };
 
+    // Get icon for field based on field name
+    const getFieldIcon = (field: string, type: string): LucideIcon => {
+        const fieldIcons: Record<string, LucideIcon> = {
+            // Product fields
+            'name': Type,
+            'name_ar': Languages,
+            'slug': Tag,
+            'description': FileText,
+            'description_ar': FileText,
+            'short_description': FileText,
+            'short_description_ar': FileText,
+            'price': DollarSign,
+            'compare_price': DollarSign,
+            'sku': Hash,
+            'stock': Package,
+            'low_stock_threshold': Package,
+            'category_id': FolderTree,
+            'is_active': Power,
+            'is_featured': Star,
+            'available_sizes': Ruler,
+            'available_colors': Palette,
+            'variant_stock': Layers,
+            'image': Image,
+            // Category fields
+            'parent_id': FolderTree,
+            'sort_order': List,
+            // Order fields
+            'status': Power,
+            'shipping_address': Globe,
+            'notes': FileText,
+        };
+
+        // Return specific field icon or fallback based on type
+        if (fieldIcons[field]) {
+            return fieldIcons[field];
+        }
+
+        // Fallback by type
+        const typeIcons: Record<string, LucideIcon> = {
+            'text': Type,
+            'textarea': FileText,
+            'boolean': ToggleLeft,
+            'image': Image,
+            'select': List,
+            'array': Layers,
+            'json': Database,
+        };
+
+        return typeIcons[type] || Type;
+    };
+
     // Render a single change item
     const renderChangeItem = (change: FieldChange, index: number) => {
         const badge = getChangeTypeBadge(change.type);
+        const FieldIcon = getFieldIcon(change.field, change.type);
 
         return (
-            <div key={index} className="py-1.5 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-medium text-gray-700 dark:text-gray-300 text-xs">
-                        {change.label}
-                    </span>
+            <div key={index} className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                        <div className="p-1 rounded bg-gray-100 dark:bg-gray-700">
+                            <FieldIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                        </div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300 text-xs">
+                            {change.label}
+                        </span>
+                    </div>
                     {badge && (
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.bg} ${badge.text}`}>
                             {badge.label}
                         </span>
                     )}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs">
-                    <span className="px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 line-through max-w-[120px] truncate" title={change.old}>
+                <div className="flex items-center gap-1.5 text-xs ml-6">
+                    <span className="px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 line-through max-w-[130px] truncate" title={change.old}>
                         {change.old}
                     </span>
                     <ArrowRight className="h-3 w-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                    <span className="px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 max-w-[120px] truncate" title={change.new}>
+                    <span className="px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 max-w-[130px] truncate" title={change.new}>
                         {change.new}
                     </span>
                 </div>
@@ -176,20 +258,20 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
                     {/* Header */}
                     <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-2">
-                            <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                                <History className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                             </div>
                             <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 Changes made in last update
                             </span>
                         </div>
-                        <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
+                        <span className="px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-xs font-medium text-purple-600 dark:text-purple-300">
                             {changes.length} field{changes.length !== 1 ? 's' : ''}
                         </span>
                     </div>
 
-                    {/* Changes list */}
-                    <div className="space-y-1 max-h-64 overflow-y-auto pr-1 -mr-1">
+                    {/* Changes list - uses admin-scrollbar styles from global CSS */}
+                    <div className="space-y-0 max-h-60 overflow-y-auto pr-2">
                         {changes.map((change, index) => renderChangeItem(change, index))}
                     </div>
 
@@ -198,8 +280,9 @@ export function UndoButton({ modelType, modelId, undoMeta, className = '' }: Und
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                             Click to restore previous values
                         </span>
-                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                            Undo →
+                        <span className="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
+                            <History className="h-3 w-3" />
+                            Restore
                         </span>
                     </div>
                 </div>

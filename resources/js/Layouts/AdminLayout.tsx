@@ -225,7 +225,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300 admin-scrollbar">
             {/* Mobile menu button */}
             <div className="lg:hidden fixed top-4 left-4 z-50">
                 <button

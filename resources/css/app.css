@@ -265,3 +265,177 @@ select:focus {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
+
+/* ================================================
+   Admin Panel Purple Scrollbar Styles
+   ================================================ */
+
+/* When admin-scrollbar is present, style the html/body scrollbar */
+html:has(.admin-scrollbar),
+body:has(.admin-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar,
+body:has(.admin-scrollbar)::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-track,
+body:has(.admin-scrollbar)::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-thumb,
+body:has(.admin-scrollbar)::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 6px;
+    border: 3px solid #f3e8ff;
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-thumb:hover,
+body:has(.admin-scrollbar)::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #6d28d9 100%);
+}
+
+html:has(.admin-scrollbar)::-webkit-scrollbar-corner,
+body:has(.admin-scrollbar)::-webkit-scrollbar-corner {
+    background: #f3e8ff;
+}
+
+/* Dark mode for body/html scrollbar */
+html:has(.dark .admin-scrollbar),
+body:has(.dark .admin-scrollbar),
+html.dark:has(.admin-scrollbar),
+body.dark:has(.admin-scrollbar) {
+    scrollbar-color: #a855f7 #1f2937;
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-track,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-track,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-track,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-thumb,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-thumb,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-thumb,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-thumb {
+    border-color: #1f2937;
+}
+
+html:has(.dark .admin-scrollbar)::-webkit-scrollbar-corner,
+body:has(.dark .admin-scrollbar)::-webkit-scrollbar-corner,
+html.dark:has(.admin-scrollbar)::-webkit-scrollbar-corner,
+body.dark:has(.admin-scrollbar)::-webkit-scrollbar-corner {
+    background: #1f2937;
+}
+
+/* Admin nested scrollable elements */
+.admin-scrollbar,
+.admin-scrollbar * {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+.admin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+    background: #f3e8ff;
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea 0%, #6d28d9 100%);
+}
+
+.admin-scrollbar::-webkit-scrollbar-corner {
+    background: #f3e8ff;
+}
+
+/* Dark mode admin scrollbar */
+.dark .admin-scrollbar,
+.dark .admin-scrollbar * {
+    scrollbar-color: #a855f7 #1f2937;
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+    border: 2px solid #1f2937;
+}
+
+.dark .admin-scrollbar::-webkit-scrollbar-corner {
+    background: #1f2937;
+}
+
+/* Admin textarea and input scrollbar */
+.admin-scrollbar textarea,
+.admin-scrollbar input[type="text"],
+.admin-scrollbar select,
+.admin-scrollbar .overflow-auto,
+.admin-scrollbar .overflow-y-auto,
+.admin-scrollbar .overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #a855f7 #f3e8ff;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-track,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-track {
+    background: #f3e8ff;
+    border-radius: 3px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-thumb,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7, #7c3aed);
+    border-radius: 3px;
+}
+
+.admin-scrollbar textarea::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-auto::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.admin-scrollbar .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #9333ea, #6d28d9);
+}
+
+/* Dark mode for admin textareas */
+.dark .admin-scrollbar textarea,
+.dark .admin-scrollbar .overflow-auto,
+.dark .admin-scrollbar .overflow-y-auto,
+.dark .admin-scrollbar .overflow-x-auto {
+    scrollbar-color: #a855f7 #374151;
+}
+
+.dark .admin-scrollbar textarea::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-auto::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-y-auto::-webkit-scrollbar-track,
+.dark .admin-scrollbar .overflow-x-auto::-webkit-scrollbar-track {
+    background: #374151;
+}
