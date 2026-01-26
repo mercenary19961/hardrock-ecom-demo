@@ -178,8 +178,14 @@ class UndoService
             $oldValue = $oldData[$field] ?? null;
             $newValue = $currentData[$field] ?? null;
 
-            // Skip if values are the same
-            if ($oldValue === $newValue) {
+            // Skip if values are the same (handle arrays/JSON specially)
+            if ($config['type'] === 'array' || $config['type'] === 'json') {
+                $oldNorm = is_array($oldValue) ? $oldValue : [];
+                $newNorm = is_array($newValue) ? $newValue : [];
+                if (json_encode($oldNorm) === json_encode($newNorm)) {
+                    continue;
+                }
+            } elseif ($oldValue === $newValue) {
                 continue;
             }
 
@@ -209,6 +215,35 @@ class UndoService
                     $change['new'] = $newValue ?: ($config['empty_label'] ?? 'None');
                     $change['old_id'] = $oldValue;
                     $change['new_id'] = $newValue;
+                    break;
+
+                case 'array':
+                    // Handle array fields (like sizes, colors)
+                    $oldArr = is_array($oldValue) ? $oldValue : [];
+                    $newArr = is_array($newValue) ? $newValue : [];
+
+                    // For colors array, extract just the names
+                    if ($field === 'available_colors') {
+                        $oldArr = array_map(fn($c) => is_array($c) ? ($c['name'] ?? '') : $c, $oldArr);
+                        $newArr = array_map(fn($c) => is_array($c) ? ($c['name'] ?? '') : $c, $newArr);
+                    }
+
+                    $change['old'] = empty($oldArr) ? '(none)' : implode(', ', $oldArr);
+                    $change['new'] = empty($newArr) ? '(none)' : implode(', ', $newArr);
+                    $change['old_count'] = count($oldArr);
+                    $change['new_count'] = count($newArr);
+                    break;
+
+                case 'json':
+                    // Handle JSON/object fields (like variant_stock)
+                    $oldObj = is_array($oldValue) ? $oldValue : [];
+                    $newObj = is_array($newValue) ? $newValue : [];
+                    $oldTotal = array_sum(array_map('intval', $oldObj));
+                    $newTotal = array_sum(array_map('intval', $newObj));
+                    $change['old'] = empty($oldObj) ? '(none)' : count($oldObj) . ' variants, ' . $oldTotal . ' total';
+                    $change['new'] = empty($newObj) ? '(none)' : count($newObj) . ' variants, ' . $newTotal . ' total';
+                    $change['old_data'] = $oldObj;
+                    $change['new_data'] = $newObj;
                     break;
 
                 case 'text':
@@ -250,15 +285,21 @@ class UndoService
                 'name' => ['label' => 'Name (English)', 'type' => 'text'],
                 'name_ar' => ['label' => 'Name (Arabic)', 'type' => 'text'],
                 'slug' => ['label' => 'Slug', 'type' => 'text'],
-                'description' => ['label' => 'Description', 'type' => 'textarea'],
-                'short_description' => ['label' => 'Short Description', 'type' => 'textarea'],
+                'description' => ['label' => 'Description (EN)', 'type' => 'textarea'],
+                'description_ar' => ['label' => 'Description (AR)', 'type' => 'textarea'],
+                'short_description' => ['label' => 'Short Desc (EN)', 'type' => 'textarea'],
+                'short_description_ar' => ['label' => 'Short Desc (AR)', 'type' => 'textarea'],
                 'price' => ['label' => 'Price', 'type' => 'text'],
                 'compare_price' => ['label' => 'Compare Price', 'type' => 'text'],
                 'sku' => ['label' => 'SKU', 'type' => 'text'],
                 'stock' => ['label' => 'Stock', 'type' => 'text'],
+                'low_stock_threshold' => ['label' => 'Low Stock Threshold', 'type' => 'text'],
                 'category_id' => ['label' => 'Category', 'type' => 'select'],
                 'is_active' => ['label' => 'Status', 'type' => 'boolean', 'true_label' => 'Active', 'false_label' => 'Inactive'],
                 'is_featured' => ['label' => 'Featured', 'type' => 'boolean', 'true_label' => 'Yes', 'false_label' => 'No'],
+                'available_sizes' => ['label' => 'Sizes', 'type' => 'array'],
+                'available_colors' => ['label' => 'Colors', 'type' => 'array'],
+                'variant_stock' => ['label' => 'Variant Stock', 'type' => 'json'],
             ],
             'order' => [
                 'status' => ['label' => 'Status', 'type' => 'text'],

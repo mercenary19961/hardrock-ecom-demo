@@ -312,13 +312,17 @@ function NewImagePreview({ file, index, onRemove }: NewImagePreviewProps) {
 interface FieldChange {
     field: string;
     label: string;
-    type: 'text' | 'textarea' | 'boolean' | 'image' | 'select';
+    type: 'text' | 'textarea' | 'boolean' | 'image' | 'select' | 'array' | 'json';
     old: string;
     new: string;
     old_path?: string;
     new_path?: string;
     old_id?: string | number;
     new_id?: string | number;
+    old_count?: number;
+    new_count?: number;
+    old_data?: Record<string, number>;
+    new_data?: Record<string, number>;
 }
 
 interface UndoMeta {
@@ -1151,18 +1155,29 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                     </h2>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <Select
-                                        label="Category"
-                                        id="edit_category_id"
-                                        name="category_id"
-                                        value={data.category_id}
-                                        onChange={(value) => setData('category_id', value)}
-                                        options={categories.map((cat) => ({
-                                            value: cat.id.toString(),
-                                            label: cat.name,
-                                            isChild: !!cat.parent_id,
-                                        }))}
-                                    />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Select
+                                            label="Category"
+                                            id="edit_category_id"
+                                            name="category_id"
+                                            value={data.category_id}
+                                            onChange={(value) => setData('category_id', value)}
+                                            options={categories.map((cat) => ({
+                                                value: cat.id.toString(),
+                                                label: cat.name,
+                                                isChild: !!cat.parent_id,
+                                            }))}
+                                        />
+                                        <Input
+                                            label="Slug"
+                                            value={data.slug}
+                                            onChange={(e) => {
+                                                setData('slug', e.target.value);
+                                                handleFieldChange('slug', e.target.value);
+                                            }}
+                                            error={liveErrors.slug || errors.slug}
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Input
@@ -1184,16 +1199,6 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             placeholder="الاسم بالعربية"
                                         />
                                     </div>
-
-                                    <Input
-                                        label="Slug"
-                                        value={data.slug}
-                                        onChange={(e) => {
-                                            setData('slug', e.target.value);
-                                            handleFieldChange('slug', e.target.value);
-                                        }}
-                                        error={liveErrors.slug || errors.slug}
-                                    />
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Textarea
@@ -1455,19 +1460,28 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                             }}
                                             error={liveErrors.sku || errors.sku}
                                         />
-                                        <Input
-                                            label="Stock"
-                                            type="number"
-                                            min="0"
-                                            value={data.stock}
-                                            onChange={(e) => {
-                                                const value = parseInt(e.target.value) || 0;
-                                                setData('stock', value);
-                                                handleFieldChange('stock', value);
-                                            }}
-                                            error={liveErrors.stock || errors.stock}
-                                            required
-                                        />
+                                        <div>
+                                            <Input
+                                                label="Stock"
+                                                type="number"
+                                                min="0"
+                                                value={data.stock}
+                                                onChange={(e) => {
+                                                    const value = parseInt(e.target.value) || 0;
+                                                    setData('stock', value);
+                                                    handleFieldChange('stock', value);
+                                                }}
+                                                error={liveErrors.stock || errors.stock}
+                                                required
+                                                disabled={colorsFromImages.length > 0 && data.available_sizes.length > 0}
+                                            />
+                                            {colorsFromImages.length > 0 && data.available_sizes.length > 0 && (
+                                                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                                    <AlertCircle className="h-3 w-3" />
+                                                    Auto-calculated from variant stock below
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div>
@@ -1667,7 +1681,47 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                         Quick Actions
                                     </h2>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="space-y-4">
+                                    {/* Status Toggles */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('is_active', !data.is_active)}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                data.is_active
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-400'
+                                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        >
+                                            {data.is_active ? (
+                                                <Check className="h-4 w-4" />
+                                            ) : (
+                                                <div className="h-4 w-4 rounded-full border-2 border-current" />
+                                            )}
+                                            Active
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('is_featured', !data.is_featured)}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all ${
+                                                data.is_featured
+                                                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-700 dark:text-amber-400'
+                                                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        >
+                                            {data.is_featured ? (
+                                                <Star className="h-4 w-4 fill-current" />
+                                            ) : (
+                                                <Star className="h-4 w-4" />
+                                            )}
+                                            Featured
+                                        </button>
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200 dark:border-gray-700" />
+
+                                    {/* Action Links */}
                                     <div className="space-y-2">
                                         <a
                                             href={`/product/${product.slug}`}
@@ -1925,29 +1979,47 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                         {/* Last Update Info */}
                                         {undoMeta?.available && undoMeta.changes && undoMeta.changes.length > 0 ? (
                                             <>
-                                                <div className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700">
-                                                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                                                        <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm text-gray-900 dark:text-white">
-                                                            Product updated
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                            {formatDate(undoMeta.saved_at)}
-                                                        </p>
-                                                        <div className="mt-2 space-y-1">
-                                                            {undoMeta.changes.slice(0, 3).map((change, idx) => (
-                                                                <p key={idx} className="text-xs text-gray-600 dark:text-gray-400">
-                                                                    • {change.label} changed
-                                                                </p>
-                                                            ))}
-                                                            {undoMeta.changes.length > 3 && (
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    +{undoMeta.changes.length - 3} more changes
-                                                                </p>
-                                                            )}
+                                                <div className="pb-3 border-b border-gray-100 dark:border-gray-700">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                                                <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                                            </div>
+                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                Last Update
+                                                            </span>
                                                         </div>
+                                                        <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                            {undoMeta.changes.length} change{undoMeta.changes.length !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                        {formatDate(undoMeta.saved_at)}
+                                                    </p>
+                                                    <div className="space-y-1.5">
+                                                        {undoMeta.changes.slice(0, 4).map((change, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
+                                                                <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px]">
+                                                                    {change.label}
+                                                                </span>
+                                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                                                    change.type === 'boolean' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                                                                    change.type === 'array' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                                                                    change.type === 'json' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                                                                    'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                                                                }`}>
+                                                                    {change.type === 'boolean' ? 'Toggle' :
+                                                                     change.type === 'array' ? 'List' :
+                                                                     change.type === 'json' ? 'Data' :
+                                                                     'Text'}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                        {undoMeta.changes.length > 4 && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                                                +{undoMeta.changes.length - 4} more
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </>
@@ -1973,42 +2045,6 @@ export default function EditProduct({ product, categories, undoMeta }: Props) {
                                                 No recent changes recorded
                                             </p>
                                         )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Status */}
-                            <Card className="dark:bg-gray-800 dark:border-gray-700">
-                                <CardHeader>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Settings className="h-5 w-5 text-purple-600" />
-                                        Status
-                                    </h2>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_active"
-                                                name="is_active"
-                                                type="checkbox"
-                                                checked={data.is_active}
-                                                onChange={(e) => setData('is_active', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
-                                        </label>
-                                        <label className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                id="edit_is_featured"
-                                                name="is_featured"
-                                                type="checkbox"
-                                                checked={data.is_featured}
-                                                onChange={(e) => setData('is_featured', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured</span>
-                                        </label>
                                     </div>
                                 </CardContent>
                             </Card>
