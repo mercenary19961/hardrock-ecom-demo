@@ -136,12 +136,6 @@ export function VariantStockEditor({
         onVariantStockChange(newStock);
     };
 
-    // Clear all sizes and stock
-    const clearSizes = () => {
-        onSizesChange([]);
-        onVariantStockChange({});
-    };
-
     const hasColors = colors.length > 0;
     const hasSizes = sizes.length > 0;
     const hasVariants = hasColors && hasSizes;
@@ -194,22 +188,11 @@ export function VariantStockEditor({
 
             {/* Sizes Section */}
             <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Ruler className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Sizes
-                        </span>
-                    </div>
-                    {hasSizes && (
-                        <button
-                            type="button"
-                            onClick={clearSizes}
-                            className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                        >
-                            Clear All
-                        </button>
-                    )}
+                <div className="flex items-center gap-2">
+                    <Ruler className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Sizes
+                    </span>
                 </div>
 
                 {!hasSizes && (
