@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton, NumberInput } from '@/Components/ui';
@@ -8,7 +8,7 @@ import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, ChevronLeft, ChevronRight, Plus, Pencil
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, ChevronLeft, ChevronRight, Plus, Pencil, RefreshCw
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -473,6 +473,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
     };
 
     const { data, setData, errors, reset } = useForm(initialValues);
+    const pageErrors = usePage().props.errors as Record<string, string>;
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset form when product prop changes (e.g., after undo restore)
@@ -892,6 +893,11 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         formData.append('color', data.color);
         formData.append('color_hex', data.color_hex);
         formData.append('product_group', data.product_group);
+
+        // Optimistic locking: send the timestamp from when the page was loaded
+        if (product.updated_at) {
+            formData.append('loaded_at', product.updated_at);
+        }
 
         // Add sizes
         data.available_sizes.forEach((size, index) => {
@@ -2291,6 +2297,29 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                     >
                         <X className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </button>
+                </div>
+            )}
+
+            {/* Conflict Error Toast - Bottom Right */}
+            {pageErrors.conflict && (
+                <div className="fixed bottom-6 right-6 z-50 max-w-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 pl-4 pr-3 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="font-medium text-sm">Product was modified externally</p>
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                                {pageErrors.conflict}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-100 dark:bg-amber-800/40 hover:bg-amber-200 dark:hover:bg-amber-800/60 text-amber-800 dark:text-amber-200 rounded-md transition-colors"
+                            >
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                Refresh page
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </AdminLayout>

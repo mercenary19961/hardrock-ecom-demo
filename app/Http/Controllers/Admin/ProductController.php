@@ -191,8 +191,20 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        // Optimistic locking: check if product was modified since the admin loaded the page
+        if ($request->filled('loaded_at')) {
+            $loadedAt = $request->input('loaded_at');
+            $currentUpdatedAt = $product->fresh()->updated_at->toISOString();
+
+            if ($loadedAt !== $currentUpdatedAt) {
+                return back()->withErrors([
+                    'conflict' => 'This product was modified while you were editing it. Please refresh the page to see the latest data before making changes.',
+                ]);
+            }
+        }
+
         $data = $request->validated();
-        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors']);
+        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors'], $data['loaded_at']);
 
         // Store old data for change tracking
         $oldData = $product->toArray();
