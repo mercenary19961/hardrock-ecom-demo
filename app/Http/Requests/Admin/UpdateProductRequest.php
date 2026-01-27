@@ -65,6 +65,8 @@ class UpdateProductRequest extends FormRequest
             'variant_stock' => 'nullable|array',
             'variant_stock.*' => 'integer|min:0',
             'product_group' => 'nullable|string|max:100',
+            // Optimistic locking
+            'loaded_at' => 'nullable|string',
         ];
     }
 

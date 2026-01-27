@@ -17,8 +17,12 @@ class ProductController extends Controller
             abort(404);
         }
 
-        // Increment view count
-        $product->increment('view_count');
+        // Increment view count (once per session, prevents deferred prop requests from inflating)
+        $sessionKey = 'viewed_product_' . $product->id;
+        if (!session()->has($sessionKey)) {
+            $product->increment('view_count');
+            session()->put($sessionKey, true);
+        }
 
         // Load essential product data immediately
         $product->load(['category', 'images']);

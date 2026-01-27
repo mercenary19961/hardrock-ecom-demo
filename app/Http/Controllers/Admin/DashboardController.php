@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -28,6 +27,7 @@ class DashboardController extends Controller
             'total_customers' => User::where('role', 'customer')->count(),
             'revenue' => Order::where('status', '!=', 'cancelled')->sum('total'),
             'pending_orders' => Order::where('status', 'pending')->count(),
+            'out_of_stock' => Product::where('is_active', true)->where('stock', 0)->count(),
         ];
 
         $recentOrders = Order::with('user')
@@ -46,14 +46,21 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Get recent activities
-        $recentActivities = $this->activityLogService->getRecentActivities(10);
+        $topSellingProducts = Product::where('is_active', true)
+            ->where('times_purchased', '>', 0)
+            ->orderBy('times_purchased', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get recent activities (25 for drawer, display 5 in widget)
+        $recentActivities = $this->activityLogService->getRecentActivities(25);
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'ordersByStatus' => $ordersByStatus,
             'lowStockProducts' => $lowStockProducts,
+            'topSellingProducts' => $topSellingProducts,
             'recentActivities' => $recentActivities,
         ]);
     }

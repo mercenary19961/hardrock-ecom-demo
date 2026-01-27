@@ -27,7 +27,9 @@
 19. [CSRF & Session Configuration](#csrf--session-configuration)
 20. [Coupon System](#coupon-system)
 21. [Layout & Spacing](#layout--spacing)
-22. [Deployment (Railway)](#deployment-railway)
+22. [Admin Activity Log & Undo System](#admin-activity-log--undo-system)
+23. [Optimistic Locking](#optimistic-locking)
+24. [Deployment (Railway)](#deployment-railway)
 
 ---
 
@@ -962,6 +964,27 @@ Product images use native lazy loading:
 | `Components/ui/DualRangeSlider.tsx` | Price range filter |
 | `Components/ui/Badge.tsx` | Status badges |
 
+### Admin Components
+| File | Description |
+|------|-------------|
+| `Components/admin/UndoButton.tsx` | Floating undo button with confirmation dialog |
+| `Components/admin/NumberInput.tsx` | Custom number input with purple spinner buttons |
+
+### Admin Pages
+| File | Description |
+|------|-------------|
+| `Pages/Admin/Products/Edit.tsx` | Product edit page (stock matrix, activity log, undo, optimistic locking) |
+| `Pages/Admin/Dashboard.tsx` | Admin dashboard |
+
+### Backend Services
+| File | Description |
+|------|-------------|
+| `app/Services/ActivityLogService.php` | Persists activity log entries to database |
+| `app/Services/UndoService.php` | Session-based undo state + change diff computation |
+| `app/Http/Controllers/Admin/UndoController.php` | Handles undo POST requests |
+| `app/Http/Controllers/Admin/ProductController.php` | Product CRUD with activity logging + optimistic locking |
+| `app/Http/Requests/Admin/UpdateProductRequest.php` | Product update validation (includes `loaded_at`) |
+
 ### Contexts
 | File | Description |
 |------|-------------|
@@ -1194,6 +1217,43 @@ If you see `SQLSTATE[3D000]: Invalid catalog name: 1046 No database selected`:
 2. Run `php artisan config:clear` after changes
 3. Restart the dev server
 
+### Activity Log Restore: Display Strings vs Actual Data
+When restoring from activity log entries, JSON and array fields store **display strings** in `old`/`new` (e.g., `"28 variants, 477 total"`) but actual data in `old_data`/`new_data`. Always use `old_data`/`new_data` for programmatic restoration:
+```php
+// WRONG: tries to json_decode a display string like "28 variants, 477 total"
+$restoreData[$field] = json_decode($change['old'], true);  // Returns null!
+
+// CORRECT: use the actual data structure
+if (($type === 'json' || $type === 'array') && array_key_exists('old_data', $change)) {
+    $restoreData[$field] = is_array($change['old_data']) ? $change['old_data'] : [];
+}
+```
+
+### Inertia `useForm.reset()` Stale Closure
+`useForm(initialValues)` captures initial values at call time. After a redirect updates the component's props, `reset()` still reverts to the **original** prop values, not the current ones. Use `setData()` with current prop values instead:
+```typescript
+// WRONG: reset() uses stale initial values after prop updates
+const handleRevert = () => reset();
+
+// CORRECT: explicitly set from current props
+const handleRevert = () => setData({ name: product.name, ... });
+```
+
+### Inertia Non-Form-Field Errors
+Custom error keys (like `conflict` from optimistic locking) are not part of `useForm`'s typed errors. Use `usePage().props.errors` instead:
+```typescript
+// WRONG: TypeScript error - 'conflict' doesn't exist on form errors
+const { errors } = useForm(...);
+errors.conflict;  // TS2339
+
+// CORRECT: access page-level errors
+const pageErrors = usePage().props.errors as Record<string, string>;
+pageErrors.conflict;  // Works
+```
+
+### View Count Inflation from Deferred Props
+Inertia deferred prop groups each fire a separate request to the same controller. If `$product->increment('view_count')` runs unconditionally, each page visit inflates the count by ~4x. Use session-based deduplication (see Activity Log section).
+
 ---
 
 ## CSRF & Session Configuration
@@ -1345,6 +1405,162 @@ The site uses a wider container (`max-w-[1700px]`) for a more filled view on lar
 
 ---
 
+## Admin Activity Log & Undo System
+
+### Overview
+
+The admin panel tracks all product and category edits with a persistent activity log stored in the database. Each edit records which fields changed, old/new values, and who made the change. An undo system (session-based) allows reverting the most recent change, while activity log entries allow restoring to any previous state.
+
+### Database Table (`activity_logs`)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | bigint | Primary key |
+| `model_type` | string | Model class (e.g., `product`, `category`) |
+| `model_id` | bigint | ID of the model |
+| `action` | string | `updated`, `restored`, `created` |
+| `changes` | JSON | Array of field changes with old/new values |
+| `user_id` | bigint | Admin who made the change |
+| `created_at` | timestamp | When the change occurred |
+
+### Key Services
+
+| Service | File | Description |
+|---------|------|-------------|
+| `ActivityLogService` | `app/Services/ActivityLogService.php` | Persists activity entries to database |
+| `UndoService` | `app/Services/UndoService.php` | Session-based undo state + change computation |
+| `UndoController` | `app/Http/Controllers/Admin/UndoController.php` | Handles undo POST requests |
+
+### Change Data Structure
+
+Changes are computed by `UndoService::computeChanges()` with field-type-specific formatting:
+
+| Type | `old`/`new` | Extra Fields |
+|------|-------------|--------------|
+| `text`, `textarea` | Truncated display string or `"(empty)"` | — |
+| `boolean` | `"Active"/"Inactive"` etc. | — |
+| `select` | Raw value or `"None"` | `old_id`, `new_id` |
+| `image` | `"Custom image"/"No image"` | `old_path`, `new_path` |
+| `array` | Comma-separated names or `"(none)"` | `old_data`, `new_data`, `old_count`, `new_count` |
+| `json` | Summary string (e.g., `"28 variants, 477 total"`) | `old_data`, `new_data` |
+
+**Important:** For `json` and `array` types, the `old`/`new` fields contain **display strings**, not actual data. Always use `old_data`/`new_data` when restoring values programmatically.
+
+### Undo Flow
+
+1. Before saving an edit, `UndoService::saveState()` stores the current model state in the session
+2. The undo button (top of edit page) sends `POST /admin/undo/product/{id}`
+3. `UndoController::restore()` reads session state, updates the model, logs a `'restored'` activity, then redirects to the edit page
+
+### Restore from Activity Log Flow
+
+1. User clicks "Restore to this state" on any `'updated'` activity entry
+2. `ProductController::restoreFromActivity()` reads the `changes` array from that activity
+3. For each changed field, it restores the `old` value (or `old_data` for json/array types)
+4. Before restoring, it saves an undo state so the restore itself can be undone
+5. A new `'restored'` activity entry is logged
+
+### Frontend Components
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| `UndoButton` | `Components/admin/UndoButton.tsx` | Floating undo button with confirmation |
+| Recent Activity section | `Pages/Admin/Products/Edit.tsx` | Expandable activity entries with change details |
+
+### Activity Display in Edit Page
+
+- `'updated'` entries: Blue badge, shows field changes, has "Restore to this state" button
+- `'restored'` entries: Amber badge, shows field changes, no restore button (prevents restore loops)
+- Activities > 2: Scrollable container with max height
+
+### Revert Button Behavior
+
+The "Revert Changes" button in the edit page bottom bar resets form data to the **current product prop values** using `setData()` — not Inertia's `reset()`. This ensures correct behavior after undo/restore operations update the product prop via redirect.
+
+```typescript
+// Correct: reads from current product prop
+const handleRevertChanges = useCallback(() => {
+    setData({
+        _method: 'PUT',
+        name: product.name,
+        variant_stock: product.variant_stock || {},
+        // ... all fields from current product prop
+    });
+}, [setData, product, ...]);
+```
+
+**Why not `reset()`:** Inertia's `useForm.reset()` reverts to the values passed at `useForm()` initialization time, which become stale after the product prop is updated by an undo/restore redirect.
+
+### View Count Deduplication
+
+Product view counts use session-based deduplication to prevent Inertia deferred prop requests from inflating the count:
+
+```php
+// Shop/ProductController.php
+$sessionKey = 'viewed_product_' . $product->id;
+if (!session()->has($sessionKey)) {
+    $product->increment('view_count');
+    session()->put($sessionKey, true);
+}
+```
+
+Without this, each page visit would increment view_count ~4 times due to the initial request plus ~3 deferred prop group requests all hitting the same controller method.
+
+---
+
+## Optimistic Locking
+
+### Overview
+
+The product edit page uses optimistic locking to prevent race conditions where concurrent edits (e.g., admin editing stock while a customer purchase decrements it) could overwrite each other's changes.
+
+### How It Works
+
+1. When the edit page loads, `product.updated_at` is captured
+2. On form submit, this timestamp is sent as `loaded_at` in the FormData
+3. The backend compares `loaded_at` against the product's current `updated_at`
+4. If they differ, the product was modified externally and the update is rejected
+
+### Backend (`ProductController::update`)
+
+```php
+if ($request->filled('loaded_at')) {
+    $loadedAt = $request->input('loaded_at');
+    $currentUpdatedAt = $product->fresh()->updated_at->toISOString();
+
+    if ($loadedAt !== $currentUpdatedAt) {
+        return back()->withErrors([
+            'conflict' => 'This product was modified while you were editing it. Please refresh the page to see the latest data before making changes.',
+        ]);
+    }
+}
+```
+
+### Frontend (`Edit.tsx`)
+
+**Sending the timestamp:**
+```typescript
+if (product.updated_at) {
+    formData.append('loaded_at', product.updated_at);
+}
+```
+
+**Conflict error display:** A toast notification appears at the bottom-right with an amber alert and a "Refresh page" button. Uses `usePage().props.errors` (cast as `Record<string, string>`) to access the `conflict` error, since it's not a form field error.
+
+```typescript
+const pageErrors = usePage().props.errors as Record<string, string>;
+// Access: pageErrors.conflict
+```
+
+### Validation Rule
+
+```php
+// UpdateProductRequest.php
+'loaded_at' => 'nullable|string',
+```
+
+---
+
 ## Deployment (Railway)
 
 ### Configuration
@@ -1391,3 +1607,52 @@ Railway Project
 └── Laravel App (hardrock-ecom-demo)
     └── Connected to MySQL & Redis
 ```
+
+---
+
+## Admin Dashboard Enhancement Plan (Phase 2 - Future)
+
+### Overview
+
+Phase 1 (completed) added: orders by status breakdown, top selling products, out-of-stock stat card, quick actions bar, and low stock severity coloring. Phase 2 covers higher-effort features that require caching, deferred loading, or new dependencies.
+
+### Planned Enhancements
+
+#### 1. Revenue & Orders Over Time Chart
+- Add a line/bar chart showing daily revenue and order count for the last 7/30 days
+- **Backend:** `GROUP BY DATE(created_at)` query on orders table
+- **Frontend:** Use a chart library (e.g., `recharts`) with `React.lazy()` dynamic import to avoid bloating the global bundle
+- **SPA concern:** Use `Inertia::defer()` to load chart data asynchronously; wrap in `<Deferred>` with a skeleton fallback
+- **Performance:** Cache the aggregated data in Redis for 10 minutes
+
+#### 2. Stat Card Trend Indicators
+- Show percentage change vs. previous period (e.g., "+12% from last week") with up/down arrows on each stat card
+- **Backend:** Compute current vs. previous period counts for each stat (doubles the stat queries)
+- **Performance:** Cache all stat comparisons together in a single Redis key (TTL 10 min)
+- **SPA concern:** Can be included in the existing stats prop or deferred separately
+
+#### 3. Revenue Breakdown by Payment Status
+- Show revenue split across order statuses (completed vs. pending vs. processing)
+- **Backend:** `SUM(total) GROUP BY status` query — lightweight
+- **Frontend:** Render as a simple table or mini bar chart alongside the order pipeline
+- **SPA concern:** Can be grouped with `ordersByStatus` prop
+
+#### 4. Recent Reviews / Average Rating
+- Surface 5 most recent product reviews on the dashboard (star rating, snippet, product name)
+- **Backend:** `Review::with('product', 'user')->latest()->take(5)->get()`
+- **Frontend:** Card with star ratings, review text truncated to 1 line, link to product
+- **SPA concern:** Use `Inertia::defer()` in a `'reviews'` group
+
+#### 5. Date Range Selector
+- Toggle between "Today", "This Week", "This Month", "All Time" for stats and charts
+- **Backend:** All stat/chart queries become date-range-aware via query parameters
+- **Frontend:** Use `router.get()` with `only: [...]` to avoid full page reload when switching ranges; store selected range as a query parameter so it survives polling
+- **SPA concern:** This is the most complex SPA feature — must ensure polling preserves the selected range and that `usePolling` passes the current query params
+- **Performance:** Each range variant needs its own cache key; consider longer TTL for "All Time"
+
+### Implementation Notes
+
+- All Phase 2 data should use `Inertia::defer()` to avoid slowing down the initial dashboard load
+- With 30-second polling, ensure deferred groups are scoped so polling doesn't re-fetch everything
+- Chart library must be lazy-loaded (`React.lazy`) to avoid adding ~150KB to the global bundle
+- Consider increasing polling interval to 60 seconds once Phase 2 is implemented to reduce server load

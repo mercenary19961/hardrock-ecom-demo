@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Input, Textarea, Card, CardHeader, CardContent, Select, VariantStockEditor, Badge, UndoButton, NumberInput } from '@/Components/ui';
@@ -8,7 +8,7 @@ import {
     ArrowLeft, X, Package, DollarSign, Image as ImageIcon, Settings, Palette,
     BarChart3, Eye, ShoppingCart, Star, Calendar, Clock, FileText, Save,
     RotateCcw, Check, ArrowUp, ExternalLink, Copy, Trash2, Search, Globe,
-    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, ChevronLeft, ChevronRight, Plus, Pencil
+    History, AlertCircle, GripVertical, Upload, Tag, ChevronDown, ChevronLeft, ChevronRight, Plus, Pencil, RefreshCw
 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 
@@ -472,7 +472,8 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         product_group: product.product_group || '',
     };
 
-    const { data, setData, errors, reset } = useForm(initialValues);
+    const { data, setData, errors } = useForm(initialValues);
+    const pageErrors = usePage().props.errors as Record<string, string>;
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset form when product prop changes (e.g., after undo restore)
@@ -647,9 +648,37 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         }
     }, [data.images, setData]);
 
-    // Revert all changes to initial values
+    // Revert all changes to current product prop values (not stale initial values)
     const handleRevertChanges = useCallback(() => {
-        reset();
+        setData({
+            _method: 'PUT',
+            category_id: product.category_id.toString(),
+            name: product.name,
+            name_ar: product.name_ar || '',
+            slug: product.slug,
+            description: product.description || '',
+            description_ar: product.description_ar || '',
+            short_description: product.short_description || '',
+            short_description_ar: product.short_description_ar || '',
+            price: product.price.toString(),
+            compare_price: product.compare_price?.toString() || '',
+            sku: product.sku,
+            stock: product.stock,
+            low_stock_threshold: product.low_stock_threshold?.toString() || '',
+            is_active: product.is_active,
+            is_featured: product.is_featured,
+            images: [],
+            delete_images: [],
+            image_order: [],
+            image_colors: {},
+            color: product.color || '',
+            color_hex: product.color_hex || '',
+            available_colors: product.available_colors || [],
+            available_sizes: product.available_sizes || [],
+            size_stock: product.size_stock || {},
+            variant_stock: product.variant_stock || {},
+            product_group: product.product_group || '',
+        });
         setImageOrder(originalImageOrder);
         // Reconstruct full color info from original names
         const restoredColors: Record<number, ImageColorInfo | null> = {};
@@ -666,7 +695,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         clearAutoSaveDraft();
         const fileInput = document.getElementById('edit_images') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
-    }, [reset, originalImageOrder, originalImageColorNames]);
+    }, [setData, product, originalImageOrder, originalImageColorNames]);
 
     // Restore from activity log
     const handleRestoreFromActivity = useCallback((activityId: number) => {
@@ -892,6 +921,11 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         formData.append('color', data.color);
         formData.append('color_hex', data.color_hex);
         formData.append('product_group', data.product_group);
+
+        // Optimistic locking: send the timestamp from when the page was loaded
+        if (product.updated_at) {
+            formData.append('loaded_at', product.updated_at);
+        }
 
         // Add sizes
         data.available_sizes.forEach((size, index) => {
@@ -2096,8 +2130,12 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                     {actionLabels[activity.action] || activity.action}
                                                                 </span>
                                                             </div>
-                                                            {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
-                                                                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                            {(activity.action === 'updated' || activity.action === 'restored') && activity.changes && activity.changes.length > 0 && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                    activity.action === 'restored'
+                                                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                                                }`}>
                                                                     {activity.changes.length} change{activity.changes.length !== 1 ? 's' : ''}
                                                                 </span>
                                                             )}
@@ -2113,7 +2151,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                 </>
                                                             )}
                                                         </div>
-                                                        {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                        {(activity.action === 'updated' || activity.action === 'restored') && activity.changes && activity.changes.length > 0 && (
                                                             <div className="space-y-1.5">
                                                                 {activity.changes.slice(0, 4).map((change, idx) => (
                                                                     <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
@@ -2138,16 +2176,18 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                         +{activity.changes.length - 4} more
                                                                     </p>
                                                                 )}
-                                                                {/* Restore Button */}
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleRestoreFromActivity(activity.id)}
-                                                                    disabled={restoringActivityId === activity.id}
-                                                                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                >
-                                                                    <RotateCcw className={`h-3 w-3 ${restoringActivityId === activity.id ? 'animate-spin' : ''}`} />
-                                                                    {restoringActivityId === activity.id ? 'Restoring...' : 'Restore to this state'}
-                                                                </button>
+                                                                {/* Restore Button - only for 'updated' entries */}
+                                                                {activity.action === 'updated' && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRestoreFromActivity(activity.id)}
+                                                                        disabled={restoringActivityId === activity.id}
+                                                                        className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        <RotateCcw className={`h-3 w-3 ${restoringActivityId === activity.id ? 'animate-spin' : ''}`} />
+                                                                        {restoringActivityId === activity.id ? 'Restoring...' : 'Restore to this state'}
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -2285,6 +2325,29 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                     >
                         <X className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </button>
+                </div>
+            )}
+
+            {/* Conflict Error Toast - Bottom Right */}
+            {pageErrors.conflict && (
+                <div className="fixed bottom-6 right-6 z-50 max-w-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 pl-4 pr-3 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="font-medium text-sm">Product was modified externally</p>
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                                {pageErrors.conflict}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-100 dark:bg-amber-800/40 hover:bg-amber-200 dark:hover:bg-amber-800/60 text-amber-800 dark:text-amber-200 rounded-md transition-colors"
+                            >
+                                <RefreshCw className="h-3.5 w-3.5" />
+                                Refresh page
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </AdminLayout>

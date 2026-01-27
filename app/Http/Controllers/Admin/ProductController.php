@@ -191,8 +191,20 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        // Optimistic locking: check if product was modified since the admin loaded the page
+        if ($request->filled('loaded_at')) {
+            $loadedAt = $request->input('loaded_at');
+            $currentUpdatedAt = $product->fresh()->updated_at->toISOString();
+
+            if ($loadedAt !== $currentUpdatedAt) {
+                return back()->withErrors([
+                    'conflict' => 'This product was modified while you were editing it. Please refresh the page to see the latest data before making changes.',
+                ]);
+            }
+        }
+
         $data = $request->validated();
-        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors']);
+        unset($data['images'], $data['delete_images'], $data['image_order'], $data['image_colors'], $data['loaded_at']);
 
         // Store old data for change tracking
         $oldData = $product->toArray();
@@ -412,24 +424,29 @@ class ProductController extends Controller
         $restoreData = [];
         foreach ($changes as $change) {
             $field = $change['field'];
-            $oldValue = $change['old'] ?? null;
             $type = $change['type'] ?? 'text';
+
+            // For json/array fields, use old_data (the actual data structure)
+            // instead of old (which is a display string like "28 variants, 477 total")
+            if (($type === 'json' || $type === 'array') && array_key_exists('old_data', $change)) {
+                $restoreData[$field] = is_array($change['old_data']) ? $change['old_data'] : [];
+                continue;
+            }
+
+            $oldValue = $change['old'] ?? null;
+
+            // Treat "(empty)" placeholder as null
+            if ($oldValue === '(empty)' || $oldValue === '') {
+                $oldValue = null;
+            }
 
             // Convert values back to appropriate types
             if ($type === 'boolean') {
-                $restoreData[$field] = filter_var($oldValue, FILTER_VALIDATE_BOOLEAN);
-            } elseif ($type === 'json' || $type === 'array') {
-                // For JSON/array fields, decode if it's a string
-                if (is_string($oldValue)) {
-                    $decoded = json_decode($oldValue, true);
-                    $restoreData[$field] = $decoded !== null ? $decoded : $oldValue;
-                } else {
-                    $restoreData[$field] = $oldValue;
-                }
+                $restoreData[$field] = $oldValue !== null ? filter_var($oldValue, FILTER_VALIDATE_BOOLEAN) : false;
             } elseif (in_array($field, ['price', 'compare_price'])) {
-                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (float) $oldValue : null;
-            } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count'])) {
-                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (int) $oldValue : 0;
+                $restoreData[$field] = $oldValue !== null ? (float) $oldValue : null;
+            } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count', 'low_stock_threshold'])) {
+                $restoreData[$field] = $oldValue !== null ? (int) $oldValue : null;
             } else {
                 $restoreData[$field] = $oldValue;
             }

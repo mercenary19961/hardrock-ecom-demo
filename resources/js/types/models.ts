@@ -239,6 +239,7 @@ export interface DashboardStats {
     total_customers: number;
     revenue: number;
     pending_orders: number;
+    out_of_stock: number;
 }
 
 export interface Coupon {
