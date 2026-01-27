@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -53,8 +52,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Get recent activities
-        $recentActivities = $this->activityLogService->getRecentActivities(10);
+        // Get recent activities (25 for drawer, display 5 in widget)
+        $recentActivities = $this->activityLogService->getRecentActivities(25);
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
