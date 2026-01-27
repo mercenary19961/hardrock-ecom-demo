@@ -283,7 +283,11 @@ class UndoService
                     $oldArr = is_array($oldValue) ? $oldValue : [];
                     $newArr = is_array($newValue) ? $newValue : [];
 
-                    // For colors array, extract just the names
+                    // Store raw data for restoration before extracting display names
+                    $change['old_data'] = $oldArr;
+                    $change['new_data'] = $newArr;
+
+                    // For colors array, extract just the names for display
                     if ($field === 'available_colors') {
                         $oldArr = array_map(fn($c) => is_array($c) ? ($c['name'] ?? '') : $c, $oldArr);
                         $newArr = array_map(fn($c) => is_array($c) ? ($c['name'] ?? '') : $c, $newArr);

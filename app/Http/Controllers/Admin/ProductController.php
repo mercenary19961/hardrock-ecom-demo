@@ -424,8 +424,16 @@ class ProductController extends Controller
         $restoreData = [];
         foreach ($changes as $change) {
             $field = $change['field'];
-            $oldValue = $change['old'] ?? null;
             $type = $change['type'] ?? 'text';
+
+            // For json/array fields, use old_data (the actual data structure)
+            // instead of old (which is a display string like "28 variants, 477 total")
+            if (($type === 'json' || $type === 'array') && array_key_exists('old_data', $change)) {
+                $restoreData[$field] = is_array($change['old_data']) ? $change['old_data'] : [];
+                continue;
+            }
+
+            $oldValue = $change['old'] ?? null;
 
             // Treat "(empty)" placeholder as null
             if ($oldValue === '(empty)' || $oldValue === '') {
@@ -435,13 +443,6 @@ class ProductController extends Controller
             // Convert values back to appropriate types
             if ($type === 'boolean') {
                 $restoreData[$field] = $oldValue !== null ? filter_var($oldValue, FILTER_VALIDATE_BOOLEAN) : false;
-            } elseif ($type === 'json' || $type === 'array') {
-                if (is_string($oldValue)) {
-                    $decoded = json_decode($oldValue, true);
-                    $restoreData[$field] = $decoded !== null ? $decoded : $oldValue;
-                } else {
-                    $restoreData[$field] = $oldValue;
-                }
             } elseif (in_array($field, ['price', 'compare_price'])) {
                 $restoreData[$field] = $oldValue !== null ? (float) $oldValue : null;
             } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count', 'low_stock_threshold'])) {

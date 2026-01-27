@@ -472,7 +472,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         product_group: product.product_group || '',
     };
 
-    const { data, setData, errors, reset } = useForm(initialValues);
+    const { data, setData, errors } = useForm(initialValues);
     const pageErrors = usePage().props.errors as Record<string, string>;
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -648,9 +648,37 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         }
     }, [data.images, setData]);
 
-    // Revert all changes to initial values
+    // Revert all changes to current product prop values (not stale initial values)
     const handleRevertChanges = useCallback(() => {
-        reset();
+        setData({
+            _method: 'PUT',
+            category_id: product.category_id.toString(),
+            name: product.name,
+            name_ar: product.name_ar || '',
+            slug: product.slug,
+            description: product.description || '',
+            description_ar: product.description_ar || '',
+            short_description: product.short_description || '',
+            short_description_ar: product.short_description_ar || '',
+            price: product.price.toString(),
+            compare_price: product.compare_price?.toString() || '',
+            sku: product.sku,
+            stock: product.stock,
+            low_stock_threshold: product.low_stock_threshold?.toString() || '',
+            is_active: product.is_active,
+            is_featured: product.is_featured,
+            images: [],
+            delete_images: [],
+            image_order: [],
+            image_colors: {},
+            color: product.color || '',
+            color_hex: product.color_hex || '',
+            available_colors: product.available_colors || [],
+            available_sizes: product.available_sizes || [],
+            size_stock: product.size_stock || {},
+            variant_stock: product.variant_stock || {},
+            product_group: product.product_group || '',
+        });
         setImageOrder(originalImageOrder);
         // Reconstruct full color info from original names
         const restoredColors: Record<number, ImageColorInfo | null> = {};
@@ -667,7 +695,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
         clearAutoSaveDraft();
         const fileInput = document.getElementById('edit_images') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
-    }, [reset, originalImageOrder, originalImageColorNames]);
+    }, [setData, product, originalImageOrder, originalImageColorNames]);
 
     // Restore from activity log
     const handleRestoreFromActivity = useCallback((activityId: number) => {
