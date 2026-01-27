@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, Deferred } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, Badge } from '@/Components/ui';
 import { ActivityDrawer } from '@/Components/admin/ActivityDrawer';
 import { DashboardSettings } from '@/Components/admin/DashboardSettings';
+import { DateRangeSelector, DateRange } from '@/Components/admin/DateRangeSelector';
+import { RevenueChart, ChartDataPoint } from '@/Components/admin/RevenueChart';
+import { RecentReviews, ReviewItem } from '@/Components/admin/RecentReviews';
+import { ChartSkeleton } from '@/Components/admin/ChartSkeleton';
+import { ReviewsSkeleton } from '@/Components/admin/ReviewsSkeleton';
 import { useDashboardPreferences, DashboardSectionId } from '@/hooks/useDashboardPreferences';
-import { DashboardStats, Order, Product } from '@/types/models';
+import { Order, Product } from '@/types/models';
 import { formatPrice, getStatusColor } from '@/lib/utils';
 import {
     Package,
@@ -24,10 +29,28 @@ import {
     User,
     PackageX,
     TrendingUp,
+    TrendingDown,
     ExternalLink,
     Settings,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
+
+// Stat with trend indicator
+interface StatWithTrend {
+    value: number;
+    trend: 'up' | 'down' | 'neutral' | null;
+    percentage: number | null;
+}
+
+interface DashboardStats {
+    total_products: StatWithTrend;
+    total_categories: StatWithTrend;
+    total_orders: StatWithTrend;
+    total_customers: StatWithTrend;
+    revenue: StatWithTrend;
+    pending_orders: StatWithTrend;
+    out_of_stock: StatWithTrend;
+}
 
 interface ActivityLog {
     id: number;
@@ -52,12 +75,17 @@ interface ActivityLog {
 }
 
 interface Props {
+    selectedRange: DateRange;
     stats: DashboardStats;
     recentOrders: Order[];
     ordersByStatus: Record<string, number>;
+    revenueByStatus: Record<string, number>;
     lowStockProducts: Product[];
     topSellingProducts: Product[];
     recentActivities: ActivityLog[];
+    // Deferred props
+    chartData?: ChartDataPoint[];
+    recentReviews?: ReviewItem[];
 }
 
 const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
@@ -68,13 +96,29 @@ const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
     cancelled: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
 };
 
-export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStockProducts, topSellingProducts, recentActivities }: Props) {
+export default function Dashboard({
+    selectedRange,
+    stats,
+    recentOrders,
+    ordersByStatus,
+    revenueByStatus,
+    lowStockProducts,
+    topSellingProducts,
+    recentActivities,
+    chartData = [],
+    recentReviews = [],
+}: Props) {
     const { i18n } = useTranslation();
     const language = i18n.language;
 
     // Drawer states
     const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+
+    // Handle date range change
+    const handleRangeChange = (range: DateRange) => {
+        router.get('/admin/dashboard', { range }, { preserveState: true, preserveScroll: true });
+    };
 
     // Dashboard customization
     const {
@@ -133,13 +177,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
     const totalOrders = Object.values(ordersByStatus).reduce((sum, count) => sum + count, 0);
 
     const statCards = [
-        { name: 'Total Products', value: stats.total_products, icon: Package, color: 'text-blue-600 bg-blue-100' },
-        { name: 'Categories', value: stats.total_categories, icon: FolderTree, color: 'text-purple-600 bg-purple-100' },
-        { name: 'Total Orders', value: stats.total_orders, icon: ShoppingCart, color: 'text-green-600 bg-green-100' },
-        { name: 'Customers', value: stats.total_customers, icon: Users, color: 'text-orange-600 bg-orange-100' },
-        { name: 'Revenue', value: formatPrice(stats.revenue, language), icon: DollarSign, color: 'text-emerald-600 bg-emerald-100' },
-        { name: 'Pending Orders', value: stats.pending_orders, icon: Clock, color: 'text-yellow-600 bg-yellow-100' },
-        { name: 'Out of Stock', value: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock > 0 ? 'text-red-600 bg-red-100' : 'text-gray-600 bg-gray-100' },
+        { name: 'Total Products', stat: stats.total_products, icon: Package, color: 'text-blue-600 bg-blue-100', isRevenue: false },
+        { name: 'Categories', stat: stats.total_categories, icon: FolderTree, color: 'text-purple-600 bg-purple-100', isRevenue: false },
+        { name: 'Total Orders', stat: stats.total_orders, icon: ShoppingCart, color: 'text-green-600 bg-green-100', isRevenue: false },
+        { name: 'Customers', stat: stats.total_customers, icon: Users, color: 'text-orange-600 bg-orange-100', isRevenue: false },
+        { name: 'Revenue', stat: stats.revenue, icon: DollarSign, color: 'text-emerald-600 bg-emerald-100', isRevenue: true },
+        { name: 'Pending Orders', stat: stats.pending_orders, icon: Clock, color: 'text-yellow-600 bg-yellow-100', isRevenue: false },
+        { name: 'Out of Stock', stat: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock.value > 0 ? 'text-red-600 bg-red-100' : 'text-gray-600 bg-gray-100', isRevenue: false },
     ];
 
     // Low stock severity helper
@@ -159,17 +203,33 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
             case 'stats':
                 return (
                     <div key="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {statCards.map((stat) => {
-                            const Icon = stat.icon;
+                        {statCards.map((card) => {
+                            const Icon = card.icon;
+                            const displayValue = card.isRevenue
+                                ? formatPrice(card.stat.value, language)
+                                : card.stat.value;
                             return (
-                                <Card key={stat.name} className="dark:bg-gray-800 dark:border-gray-700">
+                                <Card key={card.name} className="dark:bg-gray-800 dark:border-gray-700">
                                     <CardContent className="p-6">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{stat.name}</p>
-                                                <p className="text-2xl font-bold mt-1 dark:text-white">{stat.value}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{card.name}</p>
+                                                <p className="text-2xl font-bold mt-1 dark:text-white">{displayValue}</p>
+                                                {/* Trend indicator */}
+                                                {card.stat.trend && card.stat.percentage !== null && (
+                                                    <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${
+                                                        card.stat.trend === 'up' ? 'text-green-600' : card.stat.trend === 'down' ? 'text-red-600' : 'text-gray-500'
+                                                    }`}>
+                                                        {card.stat.trend === 'up' ? (
+                                                            <TrendingUp className="h-3 w-3" />
+                                                        ) : card.stat.trend === 'down' ? (
+                                                            <TrendingDown className="h-3 w-3" />
+                                                        ) : null}
+                                                        <span>{card.stat.percentage}% vs last period</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className={`p-3 rounded-lg ${stat.color}`}>
+                                            <div className={`p-3 rounded-lg ${card.color}`}>
                                                 <Icon className="h-6 w-6" />
                                             </div>
                                         </div>
@@ -213,8 +273,34 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     );
                                 })}
                             </div>
+                            {/* Revenue by status */}
+                            {Object.keys(revenueByStatus).length > 0 && (
+                                <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Revenue by Status</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                        {Object.entries(revenueByStatus).map(([status, revenue]) => {
+                                            const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                            return (
+                                                <div key={status} className={`rounded-lg p-3 ${style.bg}`}>
+                                                    <p className={`text-xs font-medium capitalize ${style.color}`}>{status}</p>
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                                                        {formatPrice(revenue, language)}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
+                );
+
+            case 'revenueChart':
+                return (
+                    <Deferred key="revenueChart" data="chartData" fallback={<ChartSkeleton />}>
+                        <RevenueChart data={chartData} />
+                    </Deferred>
                 );
 
             case 'recentOrders':
@@ -397,6 +483,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                     </Card>
                 );
 
+            case 'recentReviews':
+                return (
+                    <Deferred key="recentReviews" data="recentReviews" fallback={<ReviewsSkeleton />}>
+                        <RecentReviews reviews={recentReviews} />
+                    </Deferred>
+                );
+
             default:
                 return null;
         }
@@ -405,10 +498,11 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
     // Group sections by layout position
     const orderedSections = sections.filter(s => isSectionVisible(s.id));
 
-    // Sections that should be in a 2-column grid: recentOrders + lowStock, topSelling + recentActivity
+    // Sections that should be in a 2-column grid
     const gridPairs: [DashboardSectionId, DashboardSectionId][] = [
         ['recentOrders', 'lowStock'],
         ['topSelling', 'recentActivity'],
+        ['recentReviews', 'revenueChart'],
     ];
 
     // Render sections in order, grouping grid pairs
@@ -453,10 +547,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
             <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
-                {/* Header with Quick Actions */}
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-                    <div className="flex items-center gap-3">
+                {/* Header with Date Range and Quick Actions */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                        <DateRangeSelector selected={selectedRange} onChange={handleRangeChange} />
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
                         <button
                             onClick={() => setSettingsOpen(true)}
                             className="inline-flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
