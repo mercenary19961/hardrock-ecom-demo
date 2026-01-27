@@ -415,11 +415,15 @@ class ProductController extends Controller
             $oldValue = $change['old'] ?? null;
             $type = $change['type'] ?? 'text';
 
+            // Treat "(empty)" placeholder as null
+            if ($oldValue === '(empty)' || $oldValue === '') {
+                $oldValue = null;
+            }
+
             // Convert values back to appropriate types
             if ($type === 'boolean') {
-                $restoreData[$field] = filter_var($oldValue, FILTER_VALIDATE_BOOLEAN);
+                $restoreData[$field] = $oldValue !== null ? filter_var($oldValue, FILTER_VALIDATE_BOOLEAN) : false;
             } elseif ($type === 'json' || $type === 'array') {
-                // For JSON/array fields, decode if it's a string
                 if (is_string($oldValue)) {
                     $decoded = json_decode($oldValue, true);
                     $restoreData[$field] = $decoded !== null ? $decoded : $oldValue;
@@ -427,9 +431,9 @@ class ProductController extends Controller
                     $restoreData[$field] = $oldValue;
                 }
             } elseif (in_array($field, ['price', 'compare_price'])) {
-                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (float) $oldValue : null;
-            } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count'])) {
-                $restoreData[$field] = $oldValue !== null && $oldValue !== '' ? (int) $oldValue : 0;
+                $restoreData[$field] = $oldValue !== null ? (float) $oldValue : null;
+            } elseif (in_array($field, ['stock', 'category_id', 'view_count', 'times_purchased', 'rating_count', 'low_stock_threshold'])) {
+                $restoreData[$field] = $oldValue !== null ? (int) $oldValue : null;
             } else {
                 $restoreData[$field] = $oldValue;
             }

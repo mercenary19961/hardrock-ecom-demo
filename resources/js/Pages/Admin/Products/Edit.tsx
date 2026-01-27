@@ -2096,8 +2096,12 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                     {actionLabels[activity.action] || activity.action}
                                                                 </span>
                                                             </div>
-                                                            {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
-                                                                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                            {(activity.action === 'updated' || activity.action === 'restored') && activity.changes && activity.changes.length > 0 && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                    activity.action === 'restored'
+                                                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                                                }`}>
                                                                     {activity.changes.length} change{activity.changes.length !== 1 ? 's' : ''}
                                                                 </span>
                                                             )}
@@ -2113,7 +2117,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                 </>
                                                             )}
                                                         </div>
-                                                        {activity.action === 'updated' && activity.changes && activity.changes.length > 0 && (
+                                                        {(activity.action === 'updated' || activity.action === 'restored') && activity.changes && activity.changes.length > 0 && (
                                                             <div className="space-y-1.5">
                                                                 {activity.changes.slice(0, 4).map((change, idx) => (
                                                                     <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
@@ -2138,16 +2142,18 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                         +{activity.changes.length - 4} more
                                                                     </p>
                                                                 )}
-                                                                {/* Restore Button */}
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleRestoreFromActivity(activity.id)}
-                                                                    disabled={restoringActivityId === activity.id}
-                                                                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                >
-                                                                    <RotateCcw className={`h-3 w-3 ${restoringActivityId === activity.id ? 'animate-spin' : ''}`} />
-                                                                    {restoringActivityId === activity.id ? 'Restoring...' : 'Restore to this state'}
-                                                                </button>
+                                                                {/* Restore Button - only for 'updated' entries */}
+                                                                {activity.action === 'updated' && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRestoreFromActivity(activity.id)}
+                                                                        disabled={restoringActivityId === activity.id}
+                                                                        className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        <RotateCcw className={`h-3 w-3 ${restoringActivityId === activity.id ? 'animate-spin' : ''}`} />
+                                                                        {restoringActivityId === activity.id ? 'Restoring...' : 'Restore to this state'}
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
