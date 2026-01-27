@@ -16,7 +16,7 @@ const ranges: { id: DateRange; label: string; icon: typeof Calendar }[] = [
 
 export function DateRangeSelector({ selected, onChange }: DateRangeSelectorProps) {
     return (
-        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm">
+        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 shadow-sm">
             {ranges.map((range) => {
                 const Icon = range.icon;
                 const isSelected = selected === range.id;
@@ -29,7 +29,7 @@ export function DateRangeSelector({ selected, onChange }: DateRangeSelectorProps
                             flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all
                             ${isSelected
                                 ? 'bg-brand-purple text-white shadow-sm'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                             }
                         `}
                     >
