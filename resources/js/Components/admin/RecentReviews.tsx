@@ -75,7 +75,7 @@ export function RecentReviews({ reviews }: RecentReviewsProps) {
                             <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-1">{review.comment}</p>
                         )}
                         <Link
-                            href={`/shop/product/${review.product_slug}`}
+                            href={`/product/${review.product_slug}`}
                             className="text-xs text-brand-purple hover:text-brand-purple/80 transition-colors"
                         >
                             {review.product_name}

@@ -32,6 +32,12 @@ import {
     TrendingDown,
     ExternalLink,
     Settings,
+    Loader,
+    Truck,
+    CheckCircle2,
+    XCircle,
+    GitBranch,
+    ClipboardList,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
 
@@ -88,12 +94,12 @@ interface Props {
     recentReviews?: ReviewItem[];
 }
 
-const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
-    pending: { color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
-    processing: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    shipped: { color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-    delivered: { color: 'text-green-700 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
-    cancelled: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
+const STATUS_STYLES: Record<string, { color: string; bg: string; icon: typeof Clock }> = {
+    pending: { color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30', icon: Clock },
+    processing: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', icon: Loader },
+    shipped: { color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', icon: Truck },
+    delivered: { color: 'text-green-700 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30', icon: CheckCircle2 },
+    cancelled: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', icon: XCircle },
 };
 
 export default function Dashboard({
@@ -256,7 +262,10 @@ export default function Dashboard({
                 return (
                     <Card key="orderPipeline" className="dark:bg-gray-800 dark:border-gray-700">
                         <CardContent className="p-6">
-                            <h2 className="text-lg font-semibold mb-4 dark:text-white">Order Pipeline</h2>
+                            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-white">
+                                <GitBranch className="h-5 w-5 text-purple-500" />
+                                Order Pipeline
+                            </h2>
                             <div className="flex rounded-full overflow-hidden h-4 mb-4">
                                 {Object.entries(ordersByStatus).map(([status, count]) => {
                                     const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
@@ -277,7 +286,10 @@ export default function Dashboard({
                                     const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : '0';
                                     return (
                                         <div key={status} className="flex items-center gap-2">
-                                            <div className={`w-3 h-3 rounded-full ${style.bg}`} />
+                                            {(() => {
+                                                const StatusIcon = style.icon;
+                                                return <StatusIcon className={`h-4 w-4 ${style.color}`} />;
+                                            })()}
                                             <span className={`text-sm font-medium capitalize ${style.color}`}>{status}</span>
                                             <span className="text-sm text-gray-500 dark:text-gray-400">{count} ({pct}%)</span>
                                         </div>
@@ -319,7 +331,10 @@ export default function Dashboard({
                     <Card key="recentOrders" className="dark:bg-gray-800 dark:border-gray-700">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold dark:text-white">Recent Orders</h2>
+                                <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
+                                    <ClipboardList className="h-5 w-5 text-blue-500" />
+                                    Recent Orders
+                                </h2>
                                 <Link href="/admin/orders" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
                                     View all <ExternalLink className="h-3 w-3" />
                                 </Link>
@@ -334,7 +349,16 @@ export default function Dashboard({
                                             <p className="text-sm text-gray-500 dark:text-gray-400">{order.customer_name}</p>
                                         </div>
                                         <div className="text-right">
-                                            <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
+                                            {(() => {
+                                                const style = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
+                                                const StatusIcon = style.icon;
+                                                return (
+                                                    <Badge className={`${getStatusColor(order.status)} inline-flex items-center gap-1`}>
+                                                        <StatusIcon className="h-3 w-3" />
+                                                        {order.status}
+                                                    </Badge>
+                                                );
+                                            })()}
                                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatPrice(order.total, language)}</p>
                                         </div>
                                     </div>
