@@ -109,9 +109,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                            </div>
+                            <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Times Used</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
@@ -130,9 +128,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
+                            <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Orders</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
@@ -145,9 +141,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            </div>
+                            <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Discount Given</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">

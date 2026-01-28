@@ -190,13 +190,13 @@ export default function Dashboard({
     const totalOrders = Object.values(ordersByStatus).reduce((sum, count) => sum + count, 0);
 
     const statCards = [
-        { name: 'Total Products', stat: stats.total_products, icon: Package, color: 'text-blue-600 bg-blue-100', isRevenue: false },
-        { name: 'Categories', stat: stats.total_categories, icon: FolderTree, color: 'text-purple-600 bg-purple-100', isRevenue: false },
-        { name: 'Total Orders', stat: stats.total_orders, icon: ShoppingCart, color: 'text-green-600 bg-green-100', isRevenue: false },
-        { name: 'Customers', stat: stats.total_customers, icon: Users, color: 'text-orange-600 bg-orange-100', isRevenue: false },
-        { name: 'Revenue', stat: stats.revenue, icon: DollarSign, color: 'text-emerald-600 bg-emerald-100', isRevenue: true },
-        { name: 'Pending Orders', stat: stats.pending_orders, icon: Clock, color: 'text-yellow-600 bg-yellow-100', isRevenue: false },
-        { name: 'Out of Stock', stat: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock.value > 0 ? 'text-red-600 bg-red-100' : 'text-gray-600 bg-gray-100', isRevenue: false },
+        { name: 'Total Products', stat: stats.total_products, icon: Package, color: 'text-blue-600', isRevenue: false },
+        { name: 'Categories', stat: stats.total_categories, icon: FolderTree, color: 'text-purple-600', isRevenue: false },
+        { name: 'Total Orders', stat: stats.total_orders, icon: ShoppingCart, color: 'text-green-600', isRevenue: false },
+        { name: 'Customers', stat: stats.total_customers, icon: Users, color: 'text-orange-600', isRevenue: false },
+        { name: 'Revenue', stat: stats.revenue, icon: DollarSign, color: 'text-emerald-600', isRevenue: true },
+        { name: 'Pending Orders', stat: stats.pending_orders, icon: Clock, color: 'text-yellow-600', isRevenue: false },
+        { name: 'Out of Stock', stat: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock.value > 0 ? 'text-red-600' : 'text-gray-600', isRevenue: false },
     ];
 
     // Low stock severity helper
@@ -224,7 +224,7 @@ export default function Dashboard({
                             return (
                                 <Card key={card.name} className="dark:bg-gray-800 dark:border-gray-700">
                                     <CardContent className="p-6">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-start justify-between">
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">{card.name}</p>
                                                 <p className="text-2xl font-bold mt-1 dark:text-white">{displayValue}</p>
@@ -242,9 +242,7 @@ export default function Dashboard({
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className={`p-3 rounded-lg ${card.color}`}>
-                                                <Icon className="h-6 w-6" />
-                                            </div>
+                                            <Icon className={`h-6 w-6 ${card.color}`} />
                                         </div>
                                     </CardContent>
                                 </Card>
