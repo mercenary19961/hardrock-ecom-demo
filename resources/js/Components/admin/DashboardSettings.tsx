@@ -23,10 +23,11 @@ interface DashboardSettingsProps {
 const SECTION_ICONS: Record<DashboardSectionId, string> = {
     stats: '📊',
     orderPipeline: '📈',
-    recentOrders: '🛒',
+    revenueChart: '💰',
     lowStock: '⚠️',
     topSelling: '🏆',
     recentActivity: '📝',
+    recentReviews: '⭐',
 };
 
 export function DashboardSettings({

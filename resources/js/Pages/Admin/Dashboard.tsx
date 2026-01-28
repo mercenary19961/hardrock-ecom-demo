@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, Deferred } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Card, CardContent, Badge } from '@/Components/ui';
 import { ActivityDrawer } from '@/Components/admin/ActivityDrawer';
 import { DashboardSettings } from '@/Components/admin/DashboardSettings';
+import { DateRangeSelector, DateRange } from '@/Components/admin/DateRangeSelector';
+import { RevenueChart, ChartDataPoint } from '@/Components/admin/RevenueChart';
+import { RecentReviews, ReviewItem } from '@/Components/admin/RecentReviews';
+import { ChartSkeleton } from '@/Components/admin/ChartSkeleton';
+import { ReviewsSkeleton } from '@/Components/admin/ReviewsSkeleton';
 import { useDashboardPreferences, DashboardSectionId } from '@/hooks/useDashboardPreferences';
-import { DashboardStats, Order, Product } from '@/types/models';
+import { Order, Product } from '@/types/models';
 import { formatPrice, getStatusColor } from '@/lib/utils';
 import {
     Package,
@@ -24,10 +29,35 @@ import {
     User,
     PackageX,
     TrendingUp,
+    TrendingDown,
     ExternalLink,
     Settings,
+    Loader,
+    Truck,
+    CheckCircle2,
+    XCircle,
+    GitBranch,
+    ClipboardList,
+    Ticket,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
+
+// Stat with trend indicator
+interface StatWithTrend {
+    value: number;
+    trend: 'up' | 'down' | 'neutral' | null;
+    percentage: number | null;
+}
+
+interface DashboardStats {
+    total_products: StatWithTrend;
+    total_categories: StatWithTrend;
+    total_orders: StatWithTrend;
+    total_customers: StatWithTrend;
+    revenue: StatWithTrend;
+    pending_orders: StatWithTrend;
+    out_of_stock: StatWithTrend;
+}
 
 interface ActivityLog {
     id: number;
@@ -51,30 +81,64 @@ interface ActivityLog {
     created_at: string;
 }
 
+interface ActiveCoupon {
+    id: number;
+    code: string;
+    name: string;
+    type: 'percentage' | 'fixed';
+    value: string;
+    usage_count: number;
+    usage_limit: number | null;
+    expires_at: string | null;
+}
+
 interface Props {
+    selectedRange: DateRange;
     stats: DashboardStats;
     recentOrders: Order[];
     ordersByStatus: Record<string, number>;
+    revenueByStatus: Record<string, number>;
     lowStockProducts: Product[];
     topSellingProducts: Product[];
     recentActivities: ActivityLog[];
+    activeCoupons: ActiveCoupon[];
+    // Deferred props
+    chartData?: ChartDataPoint[];
+    recentReviews?: ReviewItem[];
 }
 
-const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
-    pending: { color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30' },
-    processing: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-    shipped: { color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-    delivered: { color: 'text-green-700 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
-    cancelled: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
+const STATUS_STYLES: Record<string, { color: string; bg: string; icon: typeof Clock }> = {
+    pending: { color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30', icon: Clock },
+    processing: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', icon: Loader },
+    shipped: { color: 'text-purple-700 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', icon: Truck },
+    delivered: { color: 'text-green-700 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30', icon: CheckCircle2 },
+    cancelled: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', icon: XCircle },
 };
 
-export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStockProducts, topSellingProducts, recentActivities }: Props) {
+export default function Dashboard({
+    selectedRange,
+    stats,
+    recentOrders,
+    ordersByStatus,
+    revenueByStatus,
+    lowStockProducts,
+    topSellingProducts,
+    recentActivities,
+    activeCoupons,
+    chartData = [],
+    recentReviews = [],
+}: Props) {
     const { i18n } = useTranslation();
     const language = i18n.language;
 
     // Drawer states
     const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+
+    // Handle date range change
+    const handleRangeChange = (range: DateRange) => {
+        router.get('/admin', { range }, { preserveState: true, preserveScroll: true });
+    };
 
     // Dashboard customization
     const {
@@ -87,7 +151,21 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
     } = useDashboardPreferences();
 
     // Auto-refresh data every 30 seconds
-    usePolling({ interval: 30000 });
+    // Only poll immediate props - exclude deferred props (chartData, recentReviews)
+    // to avoid showing skeletons on every refresh
+    usePolling({
+        interval: 30000,
+        only: [
+            'stats',
+            'recentOrders',
+            'ordersByStatus',
+            'revenueByStatus',
+            'lowStockProducts',
+            'topSellingProducts',
+            'recentActivities',
+            'activeCoupons',
+        ],
+    });
 
     // Helper to format relative time
     const formatTimeAgo = (dateString: string) => {
@@ -133,13 +211,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
     const totalOrders = Object.values(ordersByStatus).reduce((sum, count) => sum + count, 0);
 
     const statCards = [
-        { name: 'Total Products', value: stats.total_products, icon: Package, color: 'text-blue-600 bg-blue-100' },
-        { name: 'Categories', value: stats.total_categories, icon: FolderTree, color: 'text-purple-600 bg-purple-100' },
-        { name: 'Total Orders', value: stats.total_orders, icon: ShoppingCart, color: 'text-green-600 bg-green-100' },
-        { name: 'Customers', value: stats.total_customers, icon: Users, color: 'text-orange-600 bg-orange-100' },
-        { name: 'Revenue', value: formatPrice(stats.revenue, language), icon: DollarSign, color: 'text-emerald-600 bg-emerald-100' },
-        { name: 'Pending Orders', value: stats.pending_orders, icon: Clock, color: 'text-yellow-600 bg-yellow-100' },
-        { name: 'Out of Stock', value: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock > 0 ? 'text-red-600 bg-red-100' : 'text-gray-600 bg-gray-100' },
+        { name: 'Total Products', stat: stats.total_products, icon: Package, color: 'text-blue-600', isRevenue: false },
+        { name: 'Categories', stat: stats.total_categories, icon: FolderTree, color: 'text-purple-600', isRevenue: false },
+        { name: 'Total Orders', stat: stats.total_orders, icon: ShoppingCart, color: 'text-green-600', isRevenue: false },
+        { name: 'Customers', stat: stats.total_customers, icon: Users, color: 'text-orange-600', isRevenue: false },
+        { name: 'Revenue', stat: stats.revenue, icon: DollarSign, color: 'text-emerald-600', isRevenue: true },
+        { name: 'Pending Orders', stat: stats.pending_orders, icon: Clock, color: 'text-yellow-600', isRevenue: false },
+        { name: 'Out of Stock', stat: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock.value > 0 ? 'text-red-600' : 'text-gray-600', isRevenue: false },
     ];
 
     // Low stock severity helper
@@ -159,95 +237,167 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
             case 'stats':
                 return (
                     <div key="stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {statCards.map((stat) => {
-                            const Icon = stat.icon;
+                        {statCards.map((card) => {
+                            const Icon = card.icon;
+                            const displayValue = card.isRevenue
+                                ? formatPrice(card.stat.value, language)
+                                : card.stat.value;
                             return (
-                                <Card key={stat.name} className="dark:bg-gray-800 dark:border-gray-700">
+                                <Card key={card.name} className="dark:bg-gray-800 dark:border-gray-700">
                                     <CardContent className="p-6">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-start justify-between">
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{stat.name}</p>
-                                                <p className="text-2xl font-bold mt-1 dark:text-white">{stat.value}</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">{card.name}</p>
+                                                <p className="text-2xl font-bold mt-1 dark:text-white">{displayValue}</p>
+                                                {/* Trend indicator */}
+                                                {card.stat.trend && card.stat.percentage !== null && (
+                                                    <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${
+                                                        card.stat.trend === 'up' ? 'text-green-600' : card.stat.trend === 'down' ? 'text-red-600' : 'text-gray-500'
+                                                    }`}>
+                                                        {card.stat.trend === 'up' ? (
+                                                            <TrendingUp className="h-3 w-3" />
+                                                        ) : card.stat.trend === 'down' ? (
+                                                            <TrendingDown className="h-3 w-3" />
+                                                        ) : null}
+                                                        <span>{card.stat.percentage}% vs last period</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className={`p-3 rounded-lg ${stat.color}`}>
-                                                <Icon className="h-6 w-6" />
-                                            </div>
+                                            <Icon className={`h-6 w-6 ${card.color}`} />
                                         </div>
                                     </CardContent>
                                 </Card>
                             );
                         })}
+                        {/* Active Coupons card */}
+                        <Link href="/admin/coupons">
+                            <Card className="dark:bg-gray-800 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer h-full">
+                                <CardContent className="p-6">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Active Coupons</p>
+                                            <p className="text-2xl font-bold mt-1 dark:text-white">{activeCoupons.length}</p>
+                                        </div>
+                                        <Ticket className="h-6 w-6 text-pink-500" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
                     </div>
                 );
 
             case 'orderPipeline':
                 if (totalOrders === 0) return null;
                 return (
-                    <Card key="orderPipeline" className="dark:bg-gray-800 dark:border-gray-700">
-                        <CardContent className="p-6">
-                            <h2 className="text-lg font-semibold mb-4 dark:text-white">Order Pipeline</h2>
-                            <div className="flex rounded-full overflow-hidden h-4 mb-4">
-                                {Object.entries(ordersByStatus).map(([status, count]) => {
-                                    const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
-                                    const pct = (count / totalOrders) * 100;
-                                    return (
-                                        <div
-                                            key={status}
-                                            className={`${style.bg} transition-all`}
-                                            style={{ width: `${pct}%` }}
-                                            title={`${status}: ${count}`}
-                                        />
-                                    );
-                                })}
-                            </div>
-                            <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                {Object.entries(ordersByStatus).map(([status, count]) => {
-                                    const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
-                                    const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : '0';
-                                    return (
-                                        <div key={status} className="flex items-center gap-2">
-                                            <div className={`w-3 h-3 rounded-full ${style.bg}`} />
-                                            <span className={`text-sm font-medium capitalize ${style.color}`}>{status}</span>
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">{count} ({pct}%)</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-                );
-
-            case 'recentOrders':
-                return (
-                    <Card key="recentOrders" className="dark:bg-gray-800 dark:border-gray-700">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold dark:text-white">Recent Orders</h2>
-                                <Link href="/admin/orders" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
-                                    View all <ExternalLink className="h-3 w-3" />
-                                </Link>
-                            </div>
-                            <div className="space-y-4">
-                                {recentOrders.map((order) => (
-                                    <div key={order.id} className="flex items-center justify-between py-3 border-b last:border-0 dark:border-gray-700">
-                                        <div>
-                                            <Link href={`/admin/orders/${order.id}`} className="font-medium hover:text-gray-600 dark:text-white dark:hover:text-gray-300">
-                                                {order.order_number}
-                                            </Link>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{order.customer_name}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatPrice(order.total, language)}</p>
+                    <div key="orderPipeline-combined" className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Order Pipeline - 3/4 width */}
+                        <Card className="lg:col-span-3 dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-6">
+                                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-white">
+                                    <GitBranch className="h-5 w-5 text-purple-500" />
+                                    Order Pipeline
+                                </h2>
+                                <div className="flex rounded-full overflow-hidden h-4 mb-4">
+                                    {Object.entries(ordersByStatus).map(([status, count]) => {
+                                        const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                        const pct = (count / totalOrders) * 100;
+                                        return (
+                                            <div
+                                                key={status}
+                                                className={`${style.bg} transition-all`}
+                                                style={{ width: `${pct}%` }}
+                                                title={`${status}: ${count}`}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                    {Object.entries(ordersByStatus).map(([status, count]) => {
+                                        const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                        const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : '0';
+                                        return (
+                                            <div key={status} className="flex items-center gap-2">
+                                                {(() => {
+                                                    const StatusIcon = style.icon;
+                                                    return <StatusIcon className={`h-4 w-4 ${style.color}`} />;
+                                                })()}
+                                                <span className={`text-sm font-medium capitalize ${style.color}`}>{status}</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{count} ({pct}%)</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Revenue by status */}
+                                {Object.keys(revenueByStatus).length > 0 && (
+                                    <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Revenue by Status</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {Object.entries(revenueByStatus).map(([status, revenue]) => {
+                                                const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                                return (
+                                                    <div key={status} className={`rounded-lg p-3 ${style.bg}`}>
+                                                        <p className={`text-xs font-medium capitalize ${style.color}`}>{status}</p>
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                                                            {formatPrice(revenue, language)}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                ))}
-                                {recentOrders.length === 0 && (
-                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">No orders yet</p>
                                 )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                        {/* Recent Orders - 1/4 width */}
+                        <Card className="lg:col-span-1 dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
+                                        <ClipboardList className="h-5 w-5 text-blue-500" />
+                                        Recent Orders
+                                    </h2>
+                                    <Link href="/admin/orders" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
+                                        View all <ExternalLink className="h-3 w-3" />
+                                    </Link>
+                                </div>
+                                <div className="overflow-y-auto max-h-52 space-y-3 pr-1">
+                                    {recentOrders.map((order) => (
+                                        <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0 dark:border-gray-700">
+                                            <div className="min-w-0 flex-1">
+                                                <Link href={`/admin/orders/${order.id}`} className="font-medium text-sm hover:text-gray-600 dark:text-white dark:hover:text-gray-300 truncate block">
+                                                    {order.order_number}
+                                                </Link>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{order.customer_name}</p>
+                                            </div>
+                                            <div className="text-right ml-2 shrink-0">
+                                                {(() => {
+                                                    const style = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
+                                                    const StatusIcon = style.icon;
+                                                    return (
+                                                        <Badge className={`${getStatusColor(order.status)} inline-flex items-center gap-1 text-xs`}>
+                                                            <StatusIcon className="h-3 w-3" />
+                                                            {order.status}
+                                                        </Badge>
+                                                    );
+                                                })()}
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatPrice(order.total, language)}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {recentOrders.length === 0 && (
+                                        <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">No orders yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                );
+
+            case 'revenueChart':
+                return (
+                    <Deferred key="revenueChart" data="chartData" fallback={<ChartSkeleton />}>
+                        <RevenueChart data={chartData} />
+                    </Deferred>
                 );
 
             case 'lowStock':
@@ -263,7 +413,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     View all <ExternalLink className="h-3 w-3" />
                                 </Link>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
                                 {lowStockProducts.map((product) => {
                                     const severity = getStockSeverity(product.stock);
                                     return (
@@ -302,7 +452,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     View all <ExternalLink className="h-3 w-3" />
                                 </Link>
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {topSellingProducts.map((product, index) => {
                                     const maxPurchased = topSellingProducts[0]?.times_purchased || 1;
                                     const barWidth = (product.times_purchased / maxPurchased) * 100;
@@ -347,7 +497,7 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                                     </button>
                                 )}
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {displayedActivities.length > 0 ? (
                                     displayedActivities.map((activity) => {
                                         const actionStyle = getActionStyle(activity.action);
@@ -397,6 +547,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
                     </Card>
                 );
 
+            case 'recentReviews':
+                return (
+                    <Deferred key="recentReviews" data="recentReviews" fallback={<ReviewsSkeleton />}>
+                        <RecentReviews reviews={recentReviews} />
+                    </Deferred>
+                );
+
             default:
                 return null;
         }
@@ -405,10 +562,10 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
     // Group sections by layout position
     const orderedSections = sections.filter(s => isSectionVisible(s.id));
 
-    // Sections that should be in a 2-column grid: recentOrders + lowStock, topSelling + recentActivity
+    // Sections that should be in a 2-column grid
     const gridPairs: [DashboardSectionId, DashboardSectionId][] = [
-        ['recentOrders', 'lowStock'],
-        ['topSelling', 'recentActivity'],
+        ['lowStock', 'topSelling'],
+        ['recentActivity', 'recentReviews'],
     ];
 
     // Render sections in order, grouping grid pairs
@@ -453,10 +610,13 @@ export default function Dashboard({ stats, recentOrders, ordersByStatus, lowStoc
             <Head title="Admin Dashboard" />
 
             <div className="space-y-6">
-                {/* Header with Quick Actions */}
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-                    <div className="flex items-center gap-3">
+                {/* Header with Date Range and Quick Actions */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-wrap">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                        <DateRangeSelector selected={selectedRange} onChange={handleRangeChange} />
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
                         <button
                             onClick={() => setSettingsOpen(true)}
                             className="inline-flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

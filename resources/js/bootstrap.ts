@@ -6,6 +6,33 @@ window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
 
 /**
+ * Clear all accessible cookies for the current domain
+ * This helps resolve stale cookie issues that cause 419 errors
+ */
+function clearAllCookies() {
+    const cookies = document.cookie.split(';');
+    const domain = window.location.hostname;
+    const paths = ['/', ''];
+
+    for (const cookie of cookies) {
+        const cookieName = cookie.split('=')[0].trim();
+        // Clear cookie for various path combinations
+        for (const path of paths) {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path};`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain};`;
+            // Also try with leading dot for subdomains
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=.${domain};`;
+        }
+    }
+}
+
+// Expose globally so inline onclick can use it
+(window as typeof window & { clearCookiesAndReload: () => void }).clearCookiesAndReload = function() {
+    clearAllCookies();
+    window.location.reload();
+};
+
+/**
  * Graceful 419 (CSRF Token Mismatch) Error Handler
  * Instead of showing a dead page, we handle it gracefully
  */
@@ -54,10 +81,10 @@ axios.interceptors.response.use(
                             Session Expired
                         </h3>
                         <p style="margin: 0 0 20px; color: #6B7280; font-size: 14px;">
-                            Your session has expired for security reasons. Click below to refresh and continue working.
+                            Your session has expired for security reasons. Click below to clear cookies and refresh.
                         </p>
                         <button
-                            onclick="window.location.reload()"
+                            onclick="window.clearCookiesAndReload()"
                             style="
                                 background: #7C3AED;
                                 color: white;

@@ -5,6 +5,7 @@ import {
     Package,
     FolderTree,
     ShoppingCart,
+    Ticket,
     ChevronLeft,
     ChevronRight,
     LogOut,
@@ -59,6 +60,7 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'products': { label: 'Products', icon: Package },
     'categories': { label: 'Categories', icon: FolderTree },
     'orders': { label: 'Orders', icon: ShoppingCart },
+    'coupons': { label: 'Coupons', icon: Ticket },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -72,6 +74,7 @@ const navigation = [
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
 // Global sidebar state (persists across navigation)
@@ -225,7 +228,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300 admin-scrollbar">
+        <div className="h-screen overflow-hidden bg-gray-100 dark:bg-gray-900 transition-colors duration-300 admin-scrollbar">
             {/* Mobile menu button */}
             <div className="lg:hidden fixed top-4 left-4 z-50">
                 <button
@@ -321,7 +324,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 
             {/* Main content */}
             <div
-                className={`min-h-screen flex flex-col transition-all duration-300 ${
+                className={`h-screen flex flex-col transition-all duration-300 ${
                     sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
                 }`}
             >
@@ -500,7 +503,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
                 </header>
 
                 {/* Page content */}
-                <main className="p-6 flex-1 bg-gray-100 dark:bg-gray-900">
+                <main className="p-6 flex-1 overflow-y-auto bg-gray-100 dark:bg-gray-900">
                     {children}
                 </main>
             </div>

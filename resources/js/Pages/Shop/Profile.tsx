@@ -478,7 +478,7 @@ export default function Profile({
                                     ) : (
                                         <div className="space-y-3">
                                             {coupons.slice(0, 3).map((coupon) => {
-                                                const daysLeft = getDaysUntilExpiry(coupon.ends_at);
+                                                const daysLeft = getDaysUntilExpiry(coupon.expires_at);
                                                 return (
                                                     <div
                                                         key={coupon.id}
@@ -669,7 +669,7 @@ export default function Profile({
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {coupons.map((coupon) => {
-                                            const daysLeft = getDaysUntilExpiry(coupon.ends_at);
+                                            const daysLeft = getDaysUntilExpiry(coupon.expires_at);
                                             const isExpiringSoon = daysLeft !== null && daysLeft <= 7;
                                             return (
                                                 <div
