@@ -165,11 +165,20 @@ class CouponController extends Controller
             ->with('success', 'Coupon deleted successfully.');
     }
 
-    public function toggleActive(Coupon $coupon): RedirectResponse
+    public function toggleActive(Request $request, Coupon $coupon)
     {
         $coupon->update(['is_active' => !$coupon->is_active]);
 
         $status = $coupon->is_active ? 'activated' : 'deactivated';
+
+        // Return JSON for AJAX requests (non-Inertia)
+        if (!$request->header('X-Inertia')) {
+            return response()->json([
+                'success' => true,
+                'is_active' => $coupon->is_active,
+                'message' => "Coupon {$status} successfully.",
+            ]);
+        }
 
         return back()->with('success', "Coupon {$status} successfully.");
     }

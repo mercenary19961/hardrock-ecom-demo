@@ -662,3 +662,57 @@ body.dark:has(.admin-scrollbar)::-webkit-scrollbar-button:hover {
     background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
     color: #a855f7;
 }
+
+/* ================================================
+   Admin Panel Background & Height Fix
+   ================================================ */
+
+/* Ensure html/body fill viewport and match admin panel background */
+html:has(.admin-scrollbar),
+body:has(.admin-scrollbar) {
+    background-color: #f3f4f6; /* gray-100 */
+    min-height: 100%;
+    height: 100%;
+}
+
+html:has(.dark .admin-scrollbar),
+body:has(.dark .admin-scrollbar),
+html.dark:has(.admin-scrollbar),
+body.dark:has(.admin-scrollbar) {
+    background-color: #111827; /* gray-900 */
+}
+
+/* Ensure #app root fills viewport */
+html:has(.admin-scrollbar) #app,
+body:has(.admin-scrollbar) #app {
+    min-height: 100vh;
+}
+
+/* ================================================
+   Admin Datetime Input Calendar Icon
+   ================================================ */
+
+/* Style the native calendar picker indicator */
+.admin-scrollbar input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.admin-scrollbar input[type="date"]::-webkit-calendar-picker-indicator,
+.admin-scrollbar input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+    margin-right: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.admin-scrollbar input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+.admin-scrollbar input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.admin-scrollbar input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Dark mode: invert the calendar icon to make it visible */
+.dark .admin-scrollbar input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark .admin-scrollbar input[type="date"]::-webkit-calendar-picker-indicator,
+.dark .admin-scrollbar input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}

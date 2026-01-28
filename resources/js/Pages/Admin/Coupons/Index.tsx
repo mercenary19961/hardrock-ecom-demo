@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+import axios from 'axios';
 
 interface Props {
     coupons: PaginatedData<Coupon>;
@@ -45,13 +46,21 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const perPageOptions = ['10', '15', '25', '50', '100'];
 
-// Helper to format currency
+// Helper to format currency (omit decimals if whole number)
 const formatCurrency = (amount: number) => {
+    const hasDecimals = amount % 1 !== 0;
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'JOD',
-        minimumFractionDigits: 2,
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: hasDecimals ? 2 : 0,
     }).format(amount);
+};
+
+// Helper to format percentage (omit decimals if whole number)
+const formatPercentage = (value: number) => {
+    const hasDecimals = value % 1 !== 0;
+    return hasDecimals ? value.toFixed(2) : value.toString();
 };
 
 // Helper to format date
@@ -161,8 +170,23 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
         }
     };
 
-    const handleToggleActive = (coupon: Coupon) => {
-        router.patch(`/admin/coupons/${coupon.id}/toggle-active`);
+    const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
+
+    const handleToggleActive = async (coupon: Coupon) => {
+        setTogglingIds((prev) => new Set(prev).add(coupon.id));
+        try {
+            await axios.patch(`/admin/coupons/${coupon.id}/toggle-active`);
+            router.reload({ only: ['coupons', 'statusCounts'] });
+        } catch {
+            // Reload to get the actual state on error
+            router.reload({ only: ['coupons', 'statusCounts'] });
+        } finally {
+            setTogglingIds((prev) => {
+                const next = new Set(prev);
+                next.delete(coupon.id);
+                return next;
+            });
+        }
     };
 
     return (
@@ -302,7 +326,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                             {coupon.type === 'percentage' ? (
                                                 <>
                                                     <Percent className="h-4 w-4" />
-                                                    {coupon.value}%
+                                                    {formatPercentage(coupon.value)}%
                                                 </>
                                             ) : (
                                                 <>
@@ -428,7 +452,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                                 <div className="flex items-center gap-1 text-gray-900 dark:text-white">
                                                     {coupon.type === 'percentage' ? (
                                                         <>
-                                                            <span className="font-medium">{coupon.value}%</span>
+                                                            <span className="font-medium">{formatPercentage(coupon.value)}%</span>
                                                             <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                 off
                                                             </span>
