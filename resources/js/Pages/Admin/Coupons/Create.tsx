@@ -216,7 +216,7 @@ export default function CreateCoupon() {
                                         value={data.value}
                                         onChange={(e) => setData('value', e.target.value)}
                                         error={errors.value}
-                                        placeholder={data.type === 'percentage' ? 'e.g., 20' : 'e.g., 5.00'}
+                                        placeholder={data.type === 'percentage' ? 'e.g., 20' : 'e.g., 5'}
                                         min="0.01"
                                         step="0.01"
                                         required
@@ -255,7 +255,7 @@ export default function CreateCoupon() {
                                         value={data.min_order_amount}
                                         onChange={(e) => setData('min_order_amount', e.target.value)}
                                         error={errors.min_order_amount}
-                                        placeholder="e.g., 50.00"
+                                        placeholder="e.g., 50"
                                         min="0"
                                         step="0.01"
                                     />
@@ -281,7 +281,7 @@ export default function CreateCoupon() {
                                             value={data.max_discount}
                                             onChange={(e) => setData('max_discount', e.target.value)}
                                             error={errors.max_discount}
-                                            placeholder="e.g., 30.00"
+                                            placeholder="e.g., 30"
                                             min="0"
                                             step="0.01"
                                         />

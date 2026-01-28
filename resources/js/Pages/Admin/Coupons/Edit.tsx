@@ -29,13 +29,23 @@ interface Props {
     };
 }
 
-// Helper to format currency
+// Helper to format currency (omit decimals if whole number)
 const formatCurrency = (amount: number) => {
+    const hasDecimals = amount % 1 !== 0;
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'JOD',
-        minimumFractionDigits: 2,
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: hasDecimals ? 2 : 0,
     }).format(amount);
+};
+
+// Helper to format numeric value (strip trailing zeros)
+const formatNumericValue = (value: number | string | null | undefined): string => {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(num)) return '';
+    return num % 1 !== 0 ? num.toString() : Math.floor(num).toString();
 };
 
 // Helper to format datetime for input
@@ -54,9 +64,9 @@ export default function EditCoupon({ coupon, stats }: Props) {
         description: coupon.description || '',
         description_ar: coupon.description_ar || '',
         type: coupon.type,
-        value: String(coupon.value),
-        min_order_amount: coupon.min_order_amount ? String(coupon.min_order_amount) : '',
-        max_discount: coupon.max_discount ? String(coupon.max_discount) : '',
+        value: formatNumericValue(coupon.value),
+        min_order_amount: formatNumericValue(coupon.min_order_amount),
+        max_discount: formatNumericValue(coupon.max_discount),
         usage_limit: coupon.usage_limit ? String(coupon.usage_limit) : '',
         per_user_limit: coupon.per_user_limit ? String(coupon.per_user_limit) : '',
         starts_at: formatDateTimeForInput(coupon.starts_at),
@@ -282,7 +292,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                                         value={data.value}
                                         onChange={(e) => setData('value', e.target.value)}
                                         error={errors.value}
-                                        placeholder={data.type === 'percentage' ? 'e.g., 20' : 'e.g., 5.00'}
+                                        placeholder={data.type === 'percentage' ? 'e.g., 20' : 'e.g., 5'}
                                         min="0.01"
                                         step="0.01"
                                         required
@@ -316,7 +326,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                                         value={data.min_order_amount}
                                         onChange={(e) => setData('min_order_amount', e.target.value)}
                                         error={errors.min_order_amount}
-                                        placeholder="e.g., 50.00"
+                                        placeholder="e.g., 50"
                                         min="0"
                                         step="0.01"
                                     />
@@ -342,7 +352,7 @@ export default function EditCoupon({ coupon, stats }: Props) {
                                             value={data.max_discount}
                                             onChange={(e) => setData('max_discount', e.target.value)}
                                             error={errors.max_discount}
-                                            placeholder="e.g., 30.00"
+                                            placeholder="e.g., 30"
                                             min="0"
                                             step="0.01"
                                         />
