@@ -25,8 +25,8 @@ class DashboardController extends Controller
 
     public function index(Request $request): Response
     {
-        // Get date range from query parameter (default: week)
-        $range = $request->get('range', 'week');
+        // Get date range from query parameter (default: month)
+        $range = $request->get('range', 'month');
         $dateRange = $this->getDateRange($range);
 
         // Get stats with trend indicators
