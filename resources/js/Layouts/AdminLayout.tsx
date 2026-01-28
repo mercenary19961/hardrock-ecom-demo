@@ -5,6 +5,7 @@ import {
     Package,
     FolderTree,
     ShoppingCart,
+    Ticket,
     ChevronLeft,
     ChevronRight,
     LogOut,
@@ -59,6 +60,7 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'products': { label: 'Products', icon: Package },
     'categories': { label: 'Categories', icon: FolderTree },
     'orders': { label: 'Orders', icon: ShoppingCart },
+    'coupons': { label: 'Coupons', icon: Ticket },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -72,6 +74,7 @@ const navigation = [
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
 ];
 
 // Global sidebar state (persists across navigation)

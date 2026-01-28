@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -30,6 +31,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
     Route::patch('orders/{order}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('orders.admin-notes');
     Route::post('orders/bulk-status', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
+
+    // Coupons management
+    Route::resource('coupons', CouponController::class)->except(['show']);
+    Route::patch('coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
 
     // Undo system routes
     Route::get('undo/{model}/{id}', [UndoController::class, 'status'])->name('undo.status');

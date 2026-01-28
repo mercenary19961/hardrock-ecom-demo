@@ -253,7 +253,14 @@ export interface Coupon {
     value: number;
     min_order_amount: number | null;
     max_discount: number | null;
-    ends_at: string | null;
+    usage_limit: number | null;
+    usage_count: number;
+    per_user_limit: number | null;
+    starts_at: string | null;
+    expires_at: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface ProfileStats {
