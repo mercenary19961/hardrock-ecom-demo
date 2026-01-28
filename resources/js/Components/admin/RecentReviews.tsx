@@ -56,7 +56,7 @@ export function RecentReviews({ reviews }: RecentReviewsProps) {
                 <MessageSquare className="h-5 w-5 text-brand-purple" />
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Reviews</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
                 {reviews.map((review) => (
                     <div key={review.id} className="border-b dark:border-gray-700 last:border-0 pb-3 last:pb-0">
                         <div className="flex items-center justify-between mb-1">

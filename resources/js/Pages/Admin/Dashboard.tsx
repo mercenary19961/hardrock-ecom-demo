@@ -349,8 +349,8 @@ export default function Dashboard({
                             </CardContent>
                         </Card>
                         {/* Recent Orders - 1/4 width */}
-                        <Card className="lg:col-span-1 dark:bg-gray-800 dark:border-gray-700 flex flex-col">
-                            <CardContent className="p-6 flex flex-col flex-1 min-h-0">
+                        <Card className="lg:col-span-1 dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
                                         <ClipboardList className="h-5 w-5 text-blue-500" />
@@ -360,7 +360,7 @@ export default function Dashboard({
                                         View all <ExternalLink className="h-3 w-3" />
                                     </Link>
                                 </div>
-                                <div className="flex-1 overflow-y-auto max-h-64 space-y-3 pr-1">
+                                <div className="overflow-y-auto max-h-52 space-y-3 pr-1">
                                     {recentOrders.map((order) => (
                                         <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0 dark:border-gray-700">
                                             <div className="min-w-0 flex-1">
@@ -413,7 +413,7 @@ export default function Dashboard({
                                     View all <ExternalLink className="h-3 w-3" />
                                 </Link>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
                                 {lowStockProducts.map((product) => {
                                     const severity = getStockSeverity(product.stock);
                                     return (
@@ -452,7 +452,7 @@ export default function Dashboard({
                                     View all <ExternalLink className="h-3 w-3" />
                                 </Link>
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {topSellingProducts.map((product, index) => {
                                     const maxPurchased = topSellingProducts[0]?.times_purchased || 1;
                                     const barWidth = (product.times_purchased / maxPurchased) * 100;
@@ -497,7 +497,7 @@ export default function Dashboard({
                                     </button>
                                 )}
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {displayedActivities.length > 0 ? (
                                     displayedActivities.map((activity) => {
                                         const actionStyle = getActionStyle(activity.action);
