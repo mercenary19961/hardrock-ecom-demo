@@ -8,6 +8,8 @@ interface UsePollingOptions {
     enabled?: boolean;
     /** Only poll when the tab is visible (default: true) */
     onlyWhenVisible?: boolean;
+    /** Specific props to reload. If not provided, reloads all props */
+    only?: string[];
 }
 
 /**
@@ -22,6 +24,7 @@ export function usePolling(options: UsePollingOptions = {}) {
         interval = 30000,
         enabled = true,
         onlyWhenVisible = true,
+        only,
     } = options;
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -33,9 +36,9 @@ export function usePolling(options: UsePollingOptions = {}) {
         }
 
         router.reload({
-            only: [], // Empty array reloads all props
+            only: only || [], // If 'only' is specified, reload only those props
         });
-    }, [onlyWhenVisible]);
+    }, [onlyWhenVisible, only]);
 
     useEffect(() => {
         if (!enabled) {

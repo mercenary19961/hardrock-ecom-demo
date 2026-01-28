@@ -117,7 +117,7 @@ export default function Dashboard({
 
     // Handle date range change
     const handleRangeChange = (range: DateRange) => {
-        router.get('/admin/dashboard', { range }, { preserveState: true, preserveScroll: true });
+        router.get('/admin', { range }, { preserveState: true, preserveScroll: true });
     };
 
     // Dashboard customization
@@ -131,7 +131,20 @@ export default function Dashboard({
     } = useDashboardPreferences();
 
     // Auto-refresh data every 30 seconds
-    usePolling({ interval: 30000 });
+    // Only poll immediate props - exclude deferred props (chartData, recentReviews)
+    // to avoid showing skeletons on every refresh
+    usePolling({
+        interval: 30000,
+        only: [
+            'stats',
+            'recentOrders',
+            'ordersByStatus',
+            'revenueByStatus',
+            'lowStockProducts',
+            'topSellingProducts',
+            'recentActivities',
+        ],
+    });
 
     // Helper to format relative time
     const formatTimeAgo = (dateString: string) => {
