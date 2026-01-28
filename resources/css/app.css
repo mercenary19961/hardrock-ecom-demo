@@ -693,13 +693,21 @@ body:has(.admin-scrollbar) #app {
    ================================================ */
 
 /* Style the native calendar picker indicator */
+.admin-scrollbar input[type="datetime-local"],
+.admin-scrollbar input[type="date"],
+.admin-scrollbar input[type="time"] {
+    position: relative;
+}
+
 .admin-scrollbar input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 .admin-scrollbar input[type="date"]::-webkit-calendar-picker-indicator,
 .admin-scrollbar input[type="time"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     padding: 4px;
-    margin-left: auto;
-    margin-right: 0;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     opacity: 0.6;
     transition: opacity 0.2s;
 }
@@ -710,9 +718,9 @@ body:has(.admin-scrollbar) #app {
     opacity: 1;
 }
 
-/* Dark mode: invert the calendar icon to make it visible */
-.dark .admin-scrollbar input[type="datetime-local"]::-webkit-calendar-picker-indicator,
-.dark .admin-scrollbar input[type="date"]::-webkit-calendar-picker-indicator,
-.dark .admin-scrollbar input[type="time"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+/* Dark mode: use dark color scheme for native date picker popup */
+.dark .admin-scrollbar input[type="datetime-local"],
+.dark .admin-scrollbar input[type="date"],
+.dark .admin-scrollbar input[type="time"] {
+    color-scheme: dark;
 }
