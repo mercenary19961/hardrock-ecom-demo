@@ -21,6 +21,7 @@ import {
     Settings,
     Power,
     Infinity,
+    Check,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
@@ -171,14 +172,30 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
     };
 
     const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const successTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const handleToggleActive = async (coupon: Coupon) => {
+    // Auto-hide success message after 3 seconds
+    useEffect(() => {
+        if (successMessage) {
+            if (successTimerRef.current) clearTimeout(successTimerRef.current);
+            successTimerRef.current = setTimeout(() => setSuccessMessage(null), 3000);
+        }
+        return () => {
+            if (successTimerRef.current) clearTimeout(successTimerRef.current);
+        };
+    }, [successMessage]);
+
+    const handleToggleActive = async (coupon: Coupon, e?: React.MouseEvent) => {
+        // Remove focus ring from the button
+        (e?.currentTarget as HTMLElement)?.blur();
+
         setTogglingIds((prev) => new Set(prev).add(coupon.id));
         try {
-            await axios.patch(`/admin/coupons/${coupon.id}/toggle-active`);
+            const response = await axios.patch(`/admin/coupons/${coupon.id}/toggle-active`);
+            setSuccessMessage(response.data.message);
             router.reload({ only: ['coupons', 'statusCounts'] });
         } catch {
-            // Reload to get the actual state on error
             router.reload({ only: ['coupons', 'statusCounts'] });
         } finally {
             setTogglingIds((prev) => {
@@ -349,7 +366,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => handleToggleActive(coupon)}
+                                                onClick={(e) => handleToggleActive(coupon, e)}
                                                 title={coupon.is_active ? 'Deactivate' : 'Activate'}
                                             >
                                                 <Power
@@ -511,7 +528,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        onClick={() => handleToggleActive(coupon)}
+                                                        onClick={(e) => handleToggleActive(coupon, e)}
                                                         title={coupon.is_active ? 'Deactivate' : 'Activate'}
                                                     >
                                                         <Power
@@ -655,6 +672,22 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                     </div>
                 </div>
             </div>
+
+            {/* Success Toast */}
+            {successMessage && (
+                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 pl-4 pr-3 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <Check className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                    <span className="font-medium">{successMessage}</span>
+                    <button
+                        type="button"
+                        onClick={() => setSuccessMessage(null)}
+                        className="ml-2 p-1 rounded-md hover:bg-green-100 dark:hover:bg-green-800/50 transition-colors"
+                        title="Dismiss"
+                    >
+                        <X className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </button>
+                </div>
+            )}
         </AdminLayout>
     );
 }
