@@ -38,6 +38,7 @@ import {
     XCircle,
     GitBranch,
     ClipboardList,
+    Ticket,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
 
@@ -80,6 +81,17 @@ interface ActivityLog {
     created_at: string;
 }
 
+interface ActiveCoupon {
+    id: number;
+    code: string;
+    name: string;
+    type: 'percentage' | 'fixed';
+    value: string;
+    usage_count: number;
+    usage_limit: number | null;
+    expires_at: string | null;
+}
+
 interface Props {
     selectedRange: DateRange;
     stats: DashboardStats;
@@ -89,6 +101,7 @@ interface Props {
     lowStockProducts: Product[];
     topSellingProducts: Product[];
     recentActivities: ActivityLog[];
+    activeCoupons: ActiveCoupon[];
     // Deferred props
     chartData?: ChartDataPoint[];
     recentReviews?: ReviewItem[];
@@ -111,6 +124,7 @@ export default function Dashboard({
     lowStockProducts,
     topSellingProducts,
     recentActivities,
+    activeCoupons,
     chartData = [],
     recentReviews = [],
 }: Props) {
@@ -149,6 +163,7 @@ export default function Dashboard({
             'lowStockProducts',
             'topSellingProducts',
             'recentActivities',
+            'activeCoupons',
         ],
     });
 
@@ -254,69 +269,128 @@ export default function Dashboard({
                                 </Card>
                             );
                         })}
+                        {/* Active Coupons card */}
+                        <Link href="/admin/coupons">
+                            <Card className="dark:bg-gray-800 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer h-full">
+                                <CardContent className="p-6">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Active Coupons</p>
+                                            <p className="text-2xl font-bold mt-1 dark:text-white">{activeCoupons.length}</p>
+                                        </div>
+                                        <Ticket className="h-6 w-6 text-pink-500" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
                     </div>
                 );
 
             case 'orderPipeline':
                 if (totalOrders === 0) return null;
                 return (
-                    <Card key="orderPipeline" className="dark:bg-gray-800 dark:border-gray-700">
-                        <CardContent className="p-6">
-                            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-white">
-                                <GitBranch className="h-5 w-5 text-purple-500" />
-                                Order Pipeline
-                            </h2>
-                            <div className="flex rounded-full overflow-hidden h-4 mb-4">
-                                {Object.entries(ordersByStatus).map(([status, count]) => {
-                                    const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
-                                    const pct = (count / totalOrders) * 100;
-                                    return (
-                                        <div
-                                            key={status}
-                                            className={`${style.bg} transition-all`}
-                                            style={{ width: `${pct}%` }}
-                                            title={`${status}: ${count}`}
-                                        />
-                                    );
-                                })}
-                            </div>
-                            <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                {Object.entries(ordersByStatus).map(([status, count]) => {
-                                    const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
-                                    const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : '0';
-                                    return (
-                                        <div key={status} className="flex items-center gap-2">
-                                            {(() => {
-                                                const StatusIcon = style.icon;
-                                                return <StatusIcon className={`h-4 w-4 ${style.color}`} />;
-                                            })()}
-                                            <span className={`text-sm font-medium capitalize ${style.color}`}>{status}</span>
-                                            <span className="text-sm text-gray-500 dark:text-gray-400">{count} ({pct}%)</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            {/* Revenue by status */}
-                            {Object.keys(revenueByStatus).length > 0 && (
-                                <div className="mt-4 pt-4 border-t dark:border-gray-700">
-                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Revenue by Status</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                        {Object.entries(revenueByStatus).map(([status, revenue]) => {
-                                            const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
-                                            return (
-                                                <div key={status} className={`rounded-lg p-3 ${style.bg}`}>
-                                                    <p className={`text-xs font-medium capitalize ${style.color}`}>{status}</p>
-                                                    <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">
-                                                        {formatPrice(revenue, language)}
-                                                    </p>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                    <div key="orderPipeline-combined" className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Order Pipeline - 3/4 width */}
+                        <Card className="lg:col-span-3 dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-6">
+                                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-white">
+                                    <GitBranch className="h-5 w-5 text-purple-500" />
+                                    Order Pipeline
+                                </h2>
+                                <div className="flex rounded-full overflow-hidden h-4 mb-4">
+                                    {Object.entries(ordersByStatus).map(([status, count]) => {
+                                        const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                        const pct = (count / totalOrders) * 100;
+                                        return (
+                                            <div
+                                                key={status}
+                                                className={`${style.bg} transition-all`}
+                                                style={{ width: `${pct}%` }}
+                                                title={`${status}: ${count}`}
+                                            />
+                                        );
+                                    })}
                                 </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                    {Object.entries(ordersByStatus).map(([status, count]) => {
+                                        const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                        const pct = totalOrders > 0 ? ((count / totalOrders) * 100).toFixed(1) : '0';
+                                        return (
+                                            <div key={status} className="flex items-center gap-2">
+                                                {(() => {
+                                                    const StatusIcon = style.icon;
+                                                    return <StatusIcon className={`h-4 w-4 ${style.color}`} />;
+                                                })()}
+                                                <span className={`text-sm font-medium capitalize ${style.color}`}>{status}</span>
+                                                <span className="text-sm text-gray-500 dark:text-gray-400">{count} ({pct}%)</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Revenue by status */}
+                                {Object.keys(revenueByStatus).length > 0 && (
+                                    <div className="mt-4 pt-4 border-t dark:border-gray-700">
+                                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Revenue by Status</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {Object.entries(revenueByStatus).map(([status, revenue]) => {
+                                                const style = STATUS_STYLES[status] || STATUS_STYLES.pending;
+                                                return (
+                                                    <div key={status} className={`rounded-lg p-3 ${style.bg}`}>
+                                                        <p className={`text-xs font-medium capitalize ${style.color}`}>{status}</p>
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-white mt-1">
+                                                            {formatPrice(revenue, language)}
+                                                        </p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                        {/* Recent Orders - 1/4 width */}
+                        <Card className="lg:col-span-1 dark:bg-gray-800 dark:border-gray-700 flex flex-col">
+                            <CardContent className="p-6 flex flex-col flex-1 min-h-0">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
+                                        <ClipboardList className="h-5 w-5 text-blue-500" />
+                                        Recent Orders
+                                    </h2>
+                                    <Link href="/admin/orders" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
+                                        View all <ExternalLink className="h-3 w-3" />
+                                    </Link>
+                                </div>
+                                <div className="flex-1 overflow-y-auto max-h-64 space-y-3 pr-1">
+                                    {recentOrders.map((order) => (
+                                        <div key={order.id} className="flex items-center justify-between py-2 border-b last:border-0 dark:border-gray-700">
+                                            <div className="min-w-0 flex-1">
+                                                <Link href={`/admin/orders/${order.id}`} className="font-medium text-sm hover:text-gray-600 dark:text-white dark:hover:text-gray-300 truncate block">
+                                                    {order.order_number}
+                                                </Link>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{order.customer_name}</p>
+                                            </div>
+                                            <div className="text-right ml-2 shrink-0">
+                                                {(() => {
+                                                    const style = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
+                                                    const StatusIcon = style.icon;
+                                                    return (
+                                                        <Badge className={`${getStatusColor(order.status)} inline-flex items-center gap-1 text-xs`}>
+                                                            <StatusIcon className="h-3 w-3" />
+                                                            {order.status}
+                                                        </Badge>
+                                                    );
+                                                })()}
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatPrice(order.total, language)}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {recentOrders.length === 0 && (
+                                        <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">No orders yet</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
                 );
 
             case 'revenueChart':
@@ -324,51 +398,6 @@ export default function Dashboard({
                     <Deferred key="revenueChart" data="chartData" fallback={<ChartSkeleton />}>
                         <RevenueChart data={chartData} />
                     </Deferred>
-                );
-
-            case 'recentOrders':
-                return (
-                    <Card key="recentOrders" className="dark:bg-gray-800 dark:border-gray-700">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
-                                    <ClipboardList className="h-5 w-5 text-blue-500" />
-                                    Recent Orders
-                                </h2>
-                                <Link href="/admin/orders" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
-                                    View all <ExternalLink className="h-3 w-3" />
-                                </Link>
-                            </div>
-                            <div className="space-y-4">
-                                {recentOrders.map((order) => (
-                                    <div key={order.id} className="flex items-center justify-between py-3 border-b last:border-0 dark:border-gray-700">
-                                        <div>
-                                            <Link href={`/admin/orders/${order.id}`} className="font-medium hover:text-gray-600 dark:text-white dark:hover:text-gray-300">
-                                                {order.order_number}
-                                            </Link>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{order.customer_name}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            {(() => {
-                                                const style = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
-                                                const StatusIcon = style.icon;
-                                                return (
-                                                    <Badge className={`${getStatusColor(order.status)} inline-flex items-center gap-1`}>
-                                                        <StatusIcon className="h-3 w-3" />
-                                                        {order.status}
-                                                    </Badge>
-                                                );
-                                            })()}
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatPrice(order.total, language)}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {recentOrders.length === 0 && (
-                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">No orders yet</p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
                 );
 
             case 'lowStock':
@@ -535,9 +564,8 @@ export default function Dashboard({
 
     // Sections that should be in a 2-column grid
     const gridPairs: [DashboardSectionId, DashboardSectionId][] = [
-        ['recentOrders', 'lowStock'],
-        ['topSelling', 'recentActivity'],
-        ['recentReviews', 'revenueChart'],
+        ['lowStock', 'topSelling'],
+        ['recentActivity', 'recentReviews'],
     ];
 
     // Render sections in order, grouping grid pairs

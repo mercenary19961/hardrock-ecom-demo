@@ -24,7 +24,6 @@ const SECTION_ICONS: Record<DashboardSectionId, string> = {
     stats: '📊',
     orderPipeline: '📈',
     revenueChart: '💰',
-    recentOrders: '🛒',
     lowStock: '⚠️',
     topSelling: '🏆',
     recentActivity: '📝',

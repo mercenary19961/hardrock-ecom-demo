@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
@@ -76,6 +77,13 @@ class DashboardController extends Controller
             'lowStockProducts' => $lowStockProducts,
             'topSellingProducts' => $topSellingProducts,
             'recentActivities' => $recentActivities,
+
+            // Active coupons
+            'activeCoupons' => Coupon::valid()
+                ->select('id', 'code', 'name', 'type', 'value', 'usage_count', 'usage_limit', 'expires_at')
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get(),
 
             // Deferred props for heavier queries
             'chartData' => Inertia::defer(fn () => $this->getChartData($dateRange, $range), 'chart'),
