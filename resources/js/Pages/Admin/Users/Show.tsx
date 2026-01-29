@@ -494,20 +494,25 @@ export default function ShowUser({
                                 </div>
                             ) : (
                                 <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
-                                    {reviews.slice(0, 10).map((review) => (
+                                    {reviews.slice(0, 10).map((review) => {
+                                        // Get primary image URL - use url property if available, fallback to path
+                                        const primaryImage = review.product?.images?.find(img => img.is_primary) || review.product?.images?.[0];
+                                        const imageUrl = primaryImage?.url || (primaryImage?.path ? `/images/${primaryImage.path}` : null);
+
+                                        return (
                                         <div
                                             key={review.id}
                                             className="flex gap-4 pb-4 border-b border-gray-100 dark:border-gray-700 last:border-0"
                                         >
-                                            {review.product?.images?.[0] ? (
+                                            {imageUrl ? (
                                                 <img
-                                                    src={`/images/${review.product.images[0].path}`}
-                                                    alt={review.product.name}
-                                                    className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
+                                                    src={imageUrl}
+                                                    alt={review.product?.name || 'Product'}
+                                                    className="h-14 w-14 rounded-lg object-contain bg-white dark:bg-gray-700 flex-shrink-0"
                                                 />
                                             ) : (
-                                                <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                                                    <Package className="h-6 w-6 text-gray-400" />
+                                                <div className="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                                                    <Package className="h-7 w-7 text-gray-400" />
                                                 </div>
                                             )}
                                             <div className="flex-1 min-w-0">
@@ -543,7 +548,8 @@ export default function ShowUser({
                                                 )}
                                             </div>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </CardContent>
