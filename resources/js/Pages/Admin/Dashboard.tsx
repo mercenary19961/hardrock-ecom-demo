@@ -146,6 +146,7 @@ export default function Dashboard({
         toggleSectionVisibility,
         moveSectionUp,
         moveSectionDown,
+        reorderSections,
         resetToDefaults,
         isSectionVisible,
     } = useDashboardPreferences();
@@ -270,19 +271,17 @@ export default function Dashboard({
                             );
                         })}
                         {/* Active Coupons card */}
-                        <Link href="/admin/coupons">
-                            <Card className="dark:bg-gray-800 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer h-full">
-                                <CardContent className="p-6">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Active Coupons</p>
-                                            <p className="text-2xl font-bold mt-1 dark:text-white">{activeCoupons.length}</p>
-                                        </div>
-                                        <Ticket className="h-6 w-6 text-pink-500" />
+                        <Card className="dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Active Coupons</p>
+                                        <p className="text-2xl font-bold mt-1 dark:text-white">{activeCoupons.length}</p>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                                    <Ticket className="h-6 w-6 text-pink-500" />
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 );
 
@@ -667,6 +666,7 @@ export default function Dashboard({
                 onToggleVisibility={toggleSectionVisibility}
                 onMoveUp={moveSectionUp}
                 onMoveDown={moveSectionDown}
+                onReorder={reorderSections}
                 onReset={resetToDefaults}
             />
         </AdminLayout>

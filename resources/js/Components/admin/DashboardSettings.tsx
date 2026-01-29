@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition, Switch } from '@headlessui/react';
 import {
     X,
@@ -17,6 +17,7 @@ interface DashboardSettingsProps {
     onToggleVisibility: (sectionId: DashboardSectionId) => void;
     onMoveUp: (sectionId: DashboardSectionId) => void;
     onMoveDown: (sectionId: DashboardSectionId) => void;
+    onReorder: (fromIndex: number, toIndex: number) => void;
     onReset: () => void;
 }
 
@@ -37,8 +38,44 @@ export function DashboardSettings({
     onToggleVisibility,
     onMoveUp,
     onMoveDown,
+    onReorder,
     onReset,
 }: DashboardSettingsProps) {
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', index.toString());
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (draggedIndex !== null && draggedIndex !== index) {
+            setDragOverIndex(index);
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (e: React.DragEvent, toIndex: number) => {
+        e.preventDefault();
+        if (draggedIndex !== null && draggedIndex !== toIndex) {
+            onReorder(draggedIndex, toIndex);
+        }
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
     return (
         <Transition show={isOpen} as={Fragment}>
             <Dialog onClose={onClose} className="relative z-50">
@@ -92,20 +129,30 @@ export function DashboardSettings({
                                                 {sections.map((section, index) => (
                                                     <div
                                                         key={section.id}
-                                                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, index)}
+                                                        onDragOver={(e) => handleDragOver(e, index)}
+                                                        onDragLeave={handleDragLeave}
+                                                        onDrop={(e) => handleDrop(e, index)}
+                                                        onDragEnd={handleDragEnd}
+                                                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors select-none ${
                                                             section.visible
                                                                 ? 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600'
                                                                 : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 opacity-60'
+                                                        } ${
+                                                            draggedIndex === index ? 'opacity-50' : ''
+                                                        } ${
+                                                            dragOverIndex === index ? 'border-purple-500 border-2' : ''
                                                         }`}
                                                     >
-                                                        {/* Drag handle (visual only for now) */}
-                                                        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                                                        {/* Drag handle */}
+                                                        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
 
                                                         {/* Icon */}
-                                                        <span className="text-lg">{SECTION_ICONS[section.id]}</span>
+                                                        <span className="text-lg select-none pointer-events-none">{SECTION_ICONS[section.id]}</span>
 
                                                         {/* Label */}
-                                                        <span className={`flex-1 text-sm font-medium ${
+                                                        <span className={`flex-1 text-sm font-medium select-none pointer-events-none ${
                                                             section.visible
                                                                 ? 'text-gray-900 dark:text-white'
                                                                 : 'text-gray-500 dark:text-gray-400'

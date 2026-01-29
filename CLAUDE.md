@@ -1650,6 +1650,17 @@ Phase 1 (completed) added: orders by status breakdown, top selling products, out
 - **SPA concern:** This is the most complex SPA feature — must ensure polling preserves the selected range and that `usePolling` passes the current query params
 - **Performance:** Each range variant needs its own cache key; consider longer TTL for "All Time"
 
+#### 6. Clickable Stat Cards (Optional)
+- Make stat cards clickable to navigate to relevant pages
+- **Destinations:**
+  - Total Products → `/admin/products`
+  - Categories → `/admin/categories`
+  - Total Orders → `/admin/orders`
+  - Pending Orders → `/admin/orders?status=pending`
+  - Out of Stock → `/admin/products?status=out_of_stock`
+  - Active Coupons → `/admin/coupons`
+- **Note:** Currently all stat cards are non-clickable for consistency. This could be added as a UX enhancement.
+
 ### Implementation Notes
 
 - All Phase 2 data should use `Inertia::defer()` to avoid slowing down the initial dashboard load
