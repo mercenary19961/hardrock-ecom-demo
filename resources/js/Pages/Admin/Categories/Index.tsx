@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Settings, Folder, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Folder, Eye } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
 
@@ -267,11 +267,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                             Status
                                         </div>
                                     </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            <Settings className="h-3.5 w-3.5" />
-                                            Actions
-                                        </div>
+                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Actions
                                     </th>
                                 </tr>
                             </thead>
@@ -301,8 +298,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                 {category.is_active ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <Link href={`/admin/categories/${category.id}`} preserveScroll>
                                                     <Button variant="ghost" size="sm" title="View">
                                                         <Eye className="h-4 w-4" />

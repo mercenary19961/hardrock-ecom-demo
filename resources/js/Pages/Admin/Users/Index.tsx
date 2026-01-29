@@ -91,7 +91,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -105,7 +105,7 @@ const formatDate = (dateString: string) => {
 export default function UsersIndex({ users, filters, roleCounts }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [role, setRole] = useState(filters.role || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+    const [perPage, setPerPage] = useState(filters.per_page || '16');
     const isFirstRender = useRef(true);
     const [viewMode, setViewMode] = useState<'table' | 'card'>(() => {
         if (typeof window !== 'undefined') {
@@ -181,7 +181,7 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                 {
                     search: searchVal || undefined,
                     role: roleVal || undefined,
-                    per_page: perPageVal !== '15' ? perPageVal : undefined,
+                    per_page: perPageVal !== '16' ? perPageVal : undefined,
                 },
                 {
                     preserveState: true,
@@ -546,82 +546,110 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                                 href={users.links[0].url || '#'}
                                 preserveScroll
                                 preserveState
-                                className={`px-3 py-2 rounded-lg text-sm ${
+                                className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
                                     users.links[0].url
-                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                        : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
                             >
-                                <ChevronLeft className="h-4 w-4" />
+                                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Link>
 
-                            {/* Page Numbers */}
-                            {users.links.slice(1, -1).map((link, index) => {
-                                const pageNum = index + 1;
+                            {/* Page Numbers - Smart pagination with ellipsis */}
+                            {(() => {
                                 const currentPage = users.current_page;
                                 const lastPage = users.last_page;
+                                const pageLinks = users.links.slice(1, -1);
 
-                                const showOnMobile =
-                                    pageNum === 1 ||
-                                    pageNum === lastPage ||
-                                    pageNum === currentPage ||
-                                    pageNum === currentPage - 1 ||
-                                    pageNum === currentPage + 1;
+                                // Build pages to show with different neighbor counts for mobile/desktop
+                                const buildPages = (neighborCount: number) => {
+                                    const pages: (number | 'ellipsis')[] = [];
+                                    for (let i = 1; i <= lastPage; i++) {
+                                        const isFirst = i === 1;
+                                        const isLast = i === lastPage;
+                                        const isCurrent = i === currentPage;
+                                        const isNeighbor = Math.abs(i - currentPage) <= neighborCount;
 
-                                const showLeftEllipsis = pageNum === currentPage - 1 && currentPage > 3;
-                                const showRightEllipsis =
-                                    pageNum === currentPage + 1 && currentPage < lastPage - 2;
+                                        if (isFirst || isLast || isCurrent || isNeighbor) {
+                                            const prevShown = pages[pages.length - 1];
+                                            if (typeof prevShown === 'number' && i - prevShown > 1) {
+                                                pages.push('ellipsis');
+                                            }
+                                            pages.push(i);
+                                        }
+                                    }
+                                    return pages;
+                                };
 
-                                return (
-                                    <span key={index} className={!showOnMobile ? 'hidden sm:inline' : ''}>
-                                        {showLeftEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
+                                const mobilePages = buildPages(1);  // 1 neighbor on mobile
+                                const desktopPages = buildPages(2); // 2 neighbors on desktop
+
+                                // Render helper
+                                const renderPage = (item: number | 'ellipsis', index: number, isMobile: boolean) => {
+                                    if (item === 'ellipsis') {
+                                        return (
+                                            <span key={`ellipsis-${isMobile ? 'm' : 'd'}-${index}`} className={`text-gray-400 dark:text-gray-500 ${isMobile ? 'px-1 py-1.5 text-xs' : 'px-2 py-2 text-sm'}`}>
                                                 ...
                                             </span>
-                                        )}
+                                        );
+                                    }
+
+                                    const pageNum = item;
+                                    const link = pageLinks[pageNum - 1];
+
+                                    return (
                                         <Link
-                                            href={link.url || '#'}
+                                            key={`page-${isMobile ? 'm' : 'd'}-${pageNum}`}
+                                            href={link?.url || '#'}
                                             preserveScroll
                                             preserveState
-                                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm ${
-                                                link.active
+                                            className={`rounded-lg ${isMobile ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'} ${
+                                                link?.active
                                                     ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                                    : link.url
-                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                                    : link?.url
+                                                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                                    : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                             }`}
                                         >
                                             {pageNum}
                                         </Link>
-                                        {showRightEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
-                                                ...
-                                            </span>
-                                        )}
-                                    </span>
+                                    );
+                                };
+
+                                return (
+                                    <>
+                                        {/* Mobile: 1 neighbor */}
+                                        <span className="flex sm:hidden gap-1">
+                                            {mobilePages.map((item, index) => renderPage(item, index, true))}
+                                        </span>
+                                        {/* Desktop: 2 neighbors */}
+                                        <span className="hidden sm:flex gap-1 sm:gap-2">
+                                            {desktopPages.map((item, index) => renderPage(item, index, false))}
+                                        </span>
+                                    </>
                                 );
-                            })}
+                            })()}
 
                             {/* Next Button */}
                             <Link
                                 href={users.links[users.links.length - 1].url || '#'}
                                 preserveScroll
                                 preserveState
-                                className={`px-3 py-2 rounded-lg text-sm ${
+                                className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
                                     users.links[users.links.length - 1].url
-                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                        : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                        : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
                             >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Link>
                         </div>
                     ) : (
                         <div className="flex-1" />
                     )}
                     <div className="flex-1 flex justify-end">
-                        <div className="flex items-center gap-2">
-                            <label htmlFor="users-per-page" className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <label htmlFor="users-per-page" className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                                 Show:
                             </label>
                             <select
@@ -629,7 +657,7 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                                 name="per_page"
                                 value={perPage}
                                 onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[80px]"
+                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[60px] sm:min-w-[80px]"
                             >
                                 {perPageOptions.map((option) => (
                                     <option key={option} value={option}>
