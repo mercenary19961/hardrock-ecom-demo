@@ -7,11 +7,13 @@ import {
     UserCircle,
     Mail,
     Phone,
-    Lock,
+    KeyRound,
     Shield,
     Calendar,
     Trash2,
     AlertTriangle,
+    Send,
+    Check,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -33,13 +35,43 @@ const formatDate = (dateString: string) => {
 
 export default function EditUser({ user }: Props) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [resetEmailStatus, setResetEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+    const [verifyEmailStatus, setVerifyEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
     const { data, setData, put, processing, errors } = useForm({
         name: user.name,
         email: user.email,
         phone: user.phone || '',
-        password: '',
     });
+
+    const handleSendResetEmail = () => {
+        setResetEmailStatus('sending');
+        router.post(`/admin/users/${user.id}/send-reset-email`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setResetEmailStatus('sent');
+                // Reset after 5 seconds so they can send again if needed
+                setTimeout(() => setResetEmailStatus('idle'), 5000);
+            },
+            onError: () => {
+                setResetEmailStatus('idle');
+            },
+        });
+    };
+
+    const handleSendVerificationEmail = () => {
+        setVerifyEmailStatus('sending');
+        router.post(`/admin/users/${user.id}/send-verification-email`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setVerifyEmailStatus('sent');
+                setTimeout(() => setVerifyEmailStatus('idle'), 5000);
+            },
+            onError: () => {
+                setVerifyEmailStatus('idle');
+            },
+        });
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -135,21 +167,40 @@ export default function EditUser({ user }: Props) {
                                     />
                                 </div>
 
-                                {/* Password */}
+                                {/* Password Reset */}
                                 <div>
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
-                                        <Lock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                        New Password (Optional)
+                                        <KeyRound className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                        Password
                                     </label>
-                                    <Input
-                                        type="password"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        error={errors.password}
-                                        placeholder="Leave blank to keep current password"
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Only fill this if you want to change the user's password. Must be at least 8 characters.
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full justify-start"
+                                        onClick={handleSendResetEmail}
+                                        disabled={resetEmailStatus !== 'idle'}
+                                    >
+                                        {resetEmailStatus === 'idle' && (
+                                            <>
+                                                <Send className="h-4 w-4 mr-2" />
+                                                Send Password Reset Link
+                                            </>
+                                        )}
+                                        {resetEmailStatus === 'sending' && (
+                                            <>
+                                                <Send className="h-4 w-4 mr-2 animate-pulse" />
+                                                Sending...
+                                            </>
+                                        )}
+                                        {resetEmailStatus === 'sent' && (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                                Reset Link Sent!
+                                            </>
+                                        )}
+                                    </Button>
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        This will send a password reset email to the user. They can then set their own new password.
                                     </p>
                                 </div>
                             </CardContent>
@@ -211,9 +262,38 @@ export default function EditUser({ user }: Props) {
                                             Verified
                                         </Badge>
                                     ) : (
-                                        <Badge variant="warning" className="text-xs">
-                                            Not Verified
-                                        </Badge>
+                                        <div className="space-y-2">
+                                            <Badge variant="warning" className="text-xs">
+                                                Not Verified
+                                            </Badge>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full text-xs"
+                                                onClick={handleSendVerificationEmail}
+                                                disabled={verifyEmailStatus !== 'idle'}
+                                            >
+                                                {verifyEmailStatus === 'idle' && (
+                                                    <>
+                                                        <Send className="h-3 w-3 mr-1.5" />
+                                                        Resend Verification
+                                                    </>
+                                                )}
+                                                {verifyEmailStatus === 'sending' && (
+                                                    <>
+                                                        <Send className="h-3 w-3 mr-1.5 animate-pulse" />
+                                                        Sending...
+                                                    </>
+                                                )}
+                                                {verifyEmailStatus === 'sent' && (
+                                                    <>
+                                                        <Check className="h-3 w-3 mr-1.5 text-green-600" />
+                                                        Sent!
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             </CardContent>

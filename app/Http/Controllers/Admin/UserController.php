@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -56,17 +58,33 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user)
     {
-        $data = $request->validated();
-
-        // Only update password if provided
-        if (empty($data['password'])) {
-            unset($data['password']);
-        }
-
-        $user->update($data);
+        $user->update($request->validated());
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User updated successfully.');
+    }
+
+    public function sendResetEmail(User $user)
+    {
+        // Send the password reset link
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('success', 'Password reset link sent to ' . $user->email);
+        }
+
+        return back()->withErrors(['email' => __($status)]);
+    }
+
+    public function sendVerificationEmail(User $user)
+    {
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('info', 'This user\'s email is already verified.');
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Verification email sent to ' . $user->email);
     }
 
     public function destroy(User $user)
@@ -77,7 +95,7 @@ class UserController extends Controller
         }
 
         // Prevent self-deletion
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return back()->withErrors(['error' => 'You cannot delete yourself.']);
         }
 

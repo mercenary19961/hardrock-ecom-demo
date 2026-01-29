@@ -30,10 +30,12 @@ Route::name('shop.')->group(function () {
     Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');
     Route::get('/cart/data', [CartController::class, 'data'])->name('cart.data');
 
-    // Checkout routes
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::post('/checkout/whatsapp', [CheckoutController::class, 'whatsappOrder'])->name('checkout.whatsapp');
+    // Checkout routes (require verified email)
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+        Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+        Route::post('/checkout/whatsapp', [CheckoutController::class, 'whatsappOrder'])->name('checkout.whatsapp');
+    });
 
     // Coupon routes
     Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
@@ -44,8 +46,8 @@ Route::name('shop.')->group(function () {
     // Order confirmation (accessible to anyone who just placed an order)
     Route::get('/order/{order}/confirmation', [OrderController::class, 'confirmation'])->name('order.confirmation');
 
-    // Order history (authenticated users only)
-    Route::middleware('auth')->group(function () {
+    // Order history and reviews (require verified email)
+    Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('orders');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
