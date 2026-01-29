@@ -56,7 +56,7 @@ export function InertiaProgress() {
         <AnimatePresence>
             {loading && (
                 <motion.div
-                    className="fixed inset-0 z-[99] flex items-center justify-center bg-white/80 backdrop-blur-[2px]"
+                    className="fixed inset-0 z-[99] flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-[2px]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -70,7 +70,7 @@ export function InertiaProgress() {
                         transition={{ duration: 0.2 }}
                     >
                         <GooeyLoader size={120} />
-                        <p className="text-sm text-gray-500 font-medium -mt-2">Loading...</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium -mt-2">Loading...</p>
                     </motion.div>
                 </motion.div>
             )}
