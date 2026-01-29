@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\UndoController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -35,6 +36,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Coupons management
     Route::resource('coupons', CouponController::class)->except(['show']);
     Route::patch('coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
+
+    // Users management (roles are immutable, only customers can be deleted)
+    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
+    Route::post('users/{user}/send-reset-email', [UserController::class, 'sendResetEmail'])->name('users.send-reset-email');
+    Route::post('users/{user}/send-verification-email', [UserController::class, 'sendVerificationEmail'])->name('users.send-verification-email');
 
     // Undo system routes
     Route::get('undo/{model}/{id}', [UndoController::class, 'status'])->name('undo.status');

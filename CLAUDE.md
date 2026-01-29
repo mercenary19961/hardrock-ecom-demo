@@ -1610,6 +1610,67 @@ Railway Project
 
 ---
 
+## Email Verification System
+
+### Overview
+
+The application implements Laravel's email verification using the `MustVerifyEmail` interface. Users receive a verification email upon registration.
+
+### Current State
+
+- **User Model:** Implements `MustVerifyEmail` interface
+- **Registration:** Auto-sends verification email via `Registered` event
+- **Verification:** Users click signed URL in email to verify
+- **Session Security:** Session is regenerated after email verification
+
+### Routes & Middleware
+
+| Route | Protection | Description |
+|-------|------------|-------------|
+| `/verify-email` | auth | Shows verification prompt page |
+| `/verify-email/{id}/{hash}` | signed, throttle:6,1 | Verifies email (from email link) |
+| `/email/verification-notification` | auth, throttle:6,1 | Resends verification email |
+
+### Currently NOT Enforced
+
+Email verification is **not currently required** for checkout or any other routes. The `'verified'` middleware has been removed to reduce friction.
+
+**TODO (Future):** Consider re-adding email verification requirement for:
+- Checkout (`/shop/checkout`)
+- Order history (`/shop/orders`)
+- Reviews (create/update/delete)
+
+To enforce, add `'verified'` middleware back to these route groups in `routes/web.php`.
+
+### Admin Capabilities
+
+Admins can manage user verification from the Users section:
+- View verification status (verified badge or "Not Verified" warning)
+- Resend verification email to unverified users
+- Send password reset emails
+
+### Google OAuth Integration
+
+Google OAuth users are automatically verified since Google verifies email ownership. The `SocialAuthController`:
+- Sets `email_verified_at = now()` for new OAuth users
+- Syncs verification status for existing users logging in via Google
+- Uses database transaction with `lockForUpdate()` to prevent race conditions
+- Saves Google avatar URL if user doesn't have one
+
+### Translation Keys
+
+Verification-related translations in `auth.json`:
+```json
+"verification": {
+    "title": "Verify Email",
+    "sent": "A verification link has been sent to your email.",
+    "resend": "Resend Verification Email",
+    "check": "Please check your email for a verification link."
+}
+```
+
+---
+
 ## Admin Dashboard Enhancement Plan (Phase 2 - Future)
 
 ### Overview
@@ -1649,6 +1710,17 @@ Phase 1 (completed) added: orders by status breakdown, top selling products, out
 - **Frontend:** Use `router.get()` with `only: [...]` to avoid full page reload when switching ranges; store selected range as a query parameter so it survives polling
 - **SPA concern:** This is the most complex SPA feature — must ensure polling preserves the selected range and that `usePolling` passes the current query params
 - **Performance:** Each range variant needs its own cache key; consider longer TTL for "All Time"
+
+#### 6. Clickable Stat Cards (Optional)
+- Make stat cards clickable to navigate to relevant pages
+- **Destinations:**
+  - Total Products → `/admin/products`
+  - Categories → `/admin/categories`
+  - Total Orders → `/admin/orders`
+  - Pending Orders → `/admin/orders?status=pending`
+  - Out of Stock → `/admin/products?status=out_of_stock`
+  - Active Coupons → `/admin/coupons`
+- **Note:** Currently all stat cards are non-clickable for consistency. This could be added as a UX enhancement.
 
 ### Implementation Notes
 

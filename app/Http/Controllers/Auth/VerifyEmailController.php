@@ -19,8 +19,13 @@ class VerifyEmailController extends Controller
         }
 
         if ($request->user()->markEmailAsVerified()) {
+            // Track verification method
+            $request->user()->update(['verified_via' => 'email']);
             event(new Verified($request->user()));
         }
+
+        // Regenerate session for security (similar to login)
+        $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
     }

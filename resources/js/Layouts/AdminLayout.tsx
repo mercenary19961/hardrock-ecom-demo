@@ -6,6 +6,7 @@ import {
     FolderTree,
     ShoppingCart,
     Ticket,
+    Users,
     ChevronLeft,
     ChevronRight,
     LogOut,
@@ -61,6 +62,7 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'categories': { label: 'Categories', icon: FolderTree },
     'orders': { label: 'Orders', icon: ShoppingCart },
     'coupons': { label: 'Coupons', icon: Ticket },
+    'users': { label: 'Users', icon: Users },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -72,6 +74,7 @@ interface AdminLayoutProps {
 const navigation = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
