@@ -38,7 +38,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
 
     // Users management (roles are immutable, only customers can be deleted)
-    Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
+    Route::resource('users', UserController::class)->except(['create', 'store']);
     // Rate limit email sending to prevent spam (10 per hour per admin)
     Route::post('users/{user}/send-reset-email', [UserController::class, 'sendResetEmail'])
         ->middleware('throttle:10,60')

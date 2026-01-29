@@ -15,7 +15,7 @@ import {
     Send,
     Check,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface Props {
     user: User;
@@ -43,6 +43,15 @@ export default function EditUser({ user }: Props) {
         email: user.email,
         phone: user.phone || '',
     });
+
+    // Check if form has changes
+    const hasChanges = useMemo(() => {
+        return (
+            data.name !== user.name ||
+            data.email !== user.email ||
+            data.phone !== (user.phone || '')
+        );
+    }, [data, user]);
 
     const handleSendResetEmail = () => {
         setResetEmailStatus('sending');
@@ -98,7 +107,12 @@ export default function EditUser({ user }: Props) {
                     Back to Users
                 </Link>
                 <div className="flex gap-3 ml-auto">
-                    <Button type="submit" form="user-edit-form" disabled={processing}>
+                    <Button
+                        type="submit"
+                        form="user-edit-form"
+                        disabled={processing || !hasChanges}
+                        className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
+                    >
                         {processing ? 'Saving...' : 'Save Changes'}
                     </Button>
                     <Link href="/admin/users">

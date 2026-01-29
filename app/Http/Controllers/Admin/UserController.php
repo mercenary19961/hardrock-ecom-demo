@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 
@@ -46,6 +48,90 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $request->only(['search', 'role', 'per_page']),
             'roleCounts' => $roleCounts,
+        ]);
+    }
+
+    public function show(User $user)
+    {
+        // Stats calculations
+        $orders = $user->orders()->get();
+        $deliveredOrders = $orders->where('status', 'delivered');
+
+        $stats = [
+            'total_orders' => $orders->count(),
+            'completed_orders' => $deliveredOrders->count(),
+            'total_spent' => (float) $deliveredOrders->sum('total'),
+            'average_order' => $deliveredOrders->count() > 0
+                ? round($deliveredOrders->sum('total') / $deliveredOrders->count(), 2)
+                : 0,
+            'highest_order' => (float) ($deliveredOrders->max('total') ?? 0),
+            'total_savings' => (float) $orders->sum('discount'),
+        ];
+
+        // Order history with pagination
+        $orderHistory = $user->orders()
+            ->with('items')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        // Reviews with product info
+        $reviews = $user->reviews()
+            ->with(['product' => function ($query) {
+                $query->select('id', 'name', 'name_ar', 'slug')->with('images');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $reviewStats = [
+            'total_reviews' => $reviews->count(),
+            'average_rating' => $reviews->count() > 0
+                ? round($reviews->avg('rating'), 1)
+                : 0,
+        ];
+
+        // Most purchased products (top 5)
+        $mostPurchased = DB::table('order_items')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.user_id', $user->id)
+            ->where('orders.status', 'delivered')
+            ->whereNotNull('order_items.product_id')
+            ->select('order_items.product_id', DB::raw('SUM(order_items.quantity) as total_quantity'))
+            ->groupBy('order_items.product_id')
+            ->orderByDesc('total_quantity')
+            ->take(5)
+            ->get();
+
+        $productIds = $mostPurchased->pluck('product_id');
+        $quantityMap = $mostPurchased->pluck('total_quantity', 'product_id');
+
+        $topProducts = Product::whereIn('id', $productIds)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'name_ar' => $p->name_ar,
+                'slug' => $p->slug,
+                'image' => $p->getPrimaryImageUrl(),
+                'times_purchased' => (int) $quantityMap[$p->id],
+            ])
+            ->sortByDesc('times_purchased')
+            ->values();
+
+        // Last order date
+        $lastOrder = $user->orders()->latest()->first();
+
+        // Active cart items
+        $cartItemsCount = $user->cart?->items()->count() ?? 0;
+
+        return Inertia::render('Admin/Users/Show', [
+            'user' => $user,
+            'stats' => $stats,
+            'orderHistory' => $orderHistory,
+            'reviews' => $reviews,
+            'reviewStats' => $reviewStats,
+            'topProducts' => $topProducts,
+            'lastOrderDate' => $lastOrder?->created_at,
+            'cartItemsCount' => $cartItemsCount,
         ]);
     }
 
