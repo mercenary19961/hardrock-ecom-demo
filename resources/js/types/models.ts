@@ -6,6 +6,7 @@ export interface User {
     avatar: string | null;
     role: "admin" | "customer";
     email_verified_at: string | null;
+    verified_via: "email" | "google" | null;
     created_at: string;
     updated_at: string;
 }
