@@ -39,8 +39,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Users management (roles are immutable, only customers can be deleted)
     Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
-    Route::post('users/{user}/send-reset-email', [UserController::class, 'sendResetEmail'])->name('users.send-reset-email');
-    Route::post('users/{user}/send-verification-email', [UserController::class, 'sendVerificationEmail'])->name('users.send-verification-email');
+    // Rate limit email sending to prevent spam (10 per hour per admin)
+    Route::post('users/{user}/send-reset-email', [UserController::class, 'sendResetEmail'])
+        ->middleware('throttle:10,60')
+        ->name('users.send-reset-email');
+    Route::post('users/{user}/send-verification-email', [UserController::class, 'sendVerificationEmail'])
+        ->middleware('throttle:10,60')
+        ->name('users.send-verification-email');
 
     // Undo system routes
     Route::get('undo/{model}/{id}', [UndoController::class, 'status'])->name('undo.status');
