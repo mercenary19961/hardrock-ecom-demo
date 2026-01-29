@@ -8,10 +8,18 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Check if an index exists on a table
+     * Check if an index exists on a table (database-agnostic)
      */
     private function indexExists(string $table, string $indexName): bool
     {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND name = ?", [$indexName]);
+            return count($indexes) > 0;
+        }
+
+        // MySQL / MariaDB
         $indexes = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$indexName]);
         return count($indexes) > 0;
     }
