@@ -435,54 +435,68 @@ export default function ReviewsIndex(props: Props) {
                 </div>
 
                 {/* Filters */}
-                <Card className="dark:bg-gray-800 dark:border-gray-700 p-4">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        {/* Search */}
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search reviews, users, products..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            />
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
+                    <div className="p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            {/* Search */}
+                            <div className="relative w-full sm:w-1/2">
+                                <label htmlFor="reviews-search" className="sr-only">Search reviews</label>
+                                <input
+                                    id="reviews-search"
+                                    name="search"
+                                    type="text"
+                                    placeholder="Search reviews, users, products..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    autoComplete="off"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-brand-purple-700 dark:focus:border-brand-purple-400 outline-none"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            </div>
+
+                            {/* Filters and Clear Button */}
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:ml-auto">
+                                {/* Clear Filters */}
+                                {hasFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear All Filters
+                                    </button>
+                                )}
+
+                                {/* Rating Filter */}
+                                <Select
+                                    value={rating}
+                                    onChange={setRating}
+                                    className="w-full sm:w-36"
+                                    placeholder="All Ratings"
+                                    options={[
+                                        { value: '', label: 'All Ratings' },
+                                        { value: '5', label: '5 Stars' },
+                                        { value: '4', label: '4 Stars' },
+                                        { value: '3', label: '3 Stars' },
+                                        { value: '2', label: '2 Stars' },
+                                        { value: '1', label: '1 Star' },
+                                    ]}
+                                />
+
+                                {/* Verified Filter */}
+                                <Select
+                                    value={verified}
+                                    onChange={setVerified}
+                                    className="w-full sm:w-40"
+                                    placeholder="All Reviews"
+                                    options={[
+                                        { value: '', label: 'All Reviews' },
+                                        { value: 'yes', label: 'Verified Only' },
+                                        { value: 'no', label: 'Unverified Only' },
+                                    ]}
+                                />
+                            </div>
                         </div>
-
-                        {/* Rating Filter */}
-                        <Select
-                            value={rating}
-                            onChange={setRating}
-                            className="min-w-[140px]"
-                            options={[
-                                { value: '', label: 'All Ratings' },
-                                { value: '5', label: '5 Stars' },
-                                { value: '4', label: '4 Stars' },
-                                { value: '3', label: '3 Stars' },
-                                { value: '2', label: '2 Stars' },
-                                { value: '1', label: '1 Star' },
-                            ]}
-                        />
-
-                        {/* Verified Filter */}
-                        <Select
-                            value={verified}
-                            onChange={setVerified}
-                            className="min-w-[160px]"
-                            options={[
-                                { value: '', label: 'All Reviews' },
-                                { value: 'yes', label: 'Verified Only' },
-                                { value: 'no', label: 'Unverified Only' },
-                            ]}
-                        />
-
-                        {/* Clear Filters */}
-                        {hasFilters && (
-                            <Button variant="outline" onClick={handleClearFilters}>
-                                <X className="h-4 w-4 mr-2" />
-                                Clear
-                            </Button>
-                        )}
                     </div>
                 </Card>
 
@@ -503,8 +517,8 @@ export default function ReviewsIndex(props: Props) {
 
                 {/* Reviews Table */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    {/* Reset columns button - only visible on desktop */}
-                    <div className="hidden md:flex justify-end px-4 pt-3">
+                    {/* Header bar with reset button */}
+                    <div className="hidden md:flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
                         <ResetColumnsButton resizable={resizable} />
                     </div>
                     <div className="overflow-x-auto">

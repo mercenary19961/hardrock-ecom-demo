@@ -59,28 +59,34 @@ class ProductController extends Controller
             }
         }
 
-        // Sorting
-        $sortField = $request->input('sort', 'newest');
-        switch ($sortField) {
-            case 'price_asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'popularity':
-                $query->orderBy('times_purchased', 'desc');
-                break;
-            case 'rating':
-                $query->orderBy('average_rating', 'desc')->orderBy('rating_count', 'desc');
-                break;
-            case 'oldest':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'newest':
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
+        // Sorting - supports sort + dir pattern like ReviewController
+        $sortField = $request->get('sort', 'name');
+        $sortDir = $request->get('dir', 'desc');
+        $direction = $sortDir === 'asc' ? 'asc' : 'desc';
+
+        // Allowed sort fields for security
+        $allowedSortFields = ['name', 'price', 'stock', 'average_rating', 'created_at', 'times_purchased', 'category'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'name';
+        }
+
+        // Handle sorting by related model fields
+        if ($sortField === 'name') {
+            $query->orderBy('name', $direction);
+        } elseif ($sortField === 'category') {
+            // Sort by category name using a subquery
+            $query->orderBy(
+                Category::select('name')
+                    ->whereColumn('categories.id', 'products.category_id')
+                    ->limit(1),
+                $direction
+            );
+        } elseif ($sortField === 'average_rating') {
+            // Secondary sort by rating_count for tie-breaking
+            $query->orderBy('average_rating', $direction)
+                ->orderBy('rating_count', $direction);
+        } else {
+            $query->orderBy($sortField, $direction);
         }
 
         $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
@@ -104,7 +110,7 @@ class ProductController extends Controller
             'products' => $products,
             'categories' => $categories,
             // Cast to object to ensure JSON serializes as {} not [] when empty
-            'filters' => (object) $request->only(['search', 'category', 'status', 'per_page', 'sort']),
+            'filters' => (object) $request->only(['search', 'category', 'status', 'per_page', 'sort', 'dir']),
         ]);
     }
 

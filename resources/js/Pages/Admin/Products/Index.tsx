@@ -7,12 +7,12 @@ import { formatPrice } from '@/lib/utils';
 import {
     Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List,
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
-    Star, ArrowUpDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
-    Clock, History, TrendingUp, TrendingDown, Flame, CircleCheck, CircleX,
-    Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
+    Star, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
+    CircleCheck, CircleX, Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { usePolling } from '@/hooks';
+import { usePolling, useResizableColumns } from '@/hooks';
+import { ResizableTh, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 
 // Product Card Image component with navigation for multiple images
 function ProductCardImage({
@@ -484,7 +484,7 @@ function ProductDetailModal({ product, onClose, language }: { product: Product |
 interface Props {
     products: PaginatedData<Product>;
     categories: (Category & { children?: Category[] })[];
-    filters?: { search?: string; category?: string; status?: string; per_page?: string; sort?: string };
+    filters?: { search?: string; category?: string; status?: string; per_page?: string; sort?: string; dir?: string };
 }
 
 // Helper function to build hierarchical category options
@@ -538,14 +538,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
-const sortOptions = [
-    { value: 'newest', label: 'Newest First', icon: Clock },
-    { value: 'oldest', label: 'Oldest First', icon: History },
-    { value: 'price_asc', label: 'Price: Low to High', icon: TrendingUp },
-    { value: 'price_desc', label: 'Price: High to Low', icon: TrendingDown },
-    { value: 'popularity', label: 'Most Popular', icon: Flame },
-    { value: 'rating', label: 'Highest Rated', icon: Star },
-];
 
 const statusOptions = [
     { value: '', label: 'All Status', icon: Layers },
@@ -567,7 +559,8 @@ export default function ProductsIndex({ products: productsProp, categories, filt
         if (filtersProp.search) safeFilters.search = String(filtersProp.search);
         if (filtersProp.category) safeFilters.category = String(filtersProp.category);
         if (filtersProp.status) safeFilters.status = String(filtersProp.status);
-        if (filtersProp.sort) safeFilters.sortOrder = String(filtersProp.sort);
+        if (filtersProp.sort) safeFilters.sort = String(filtersProp.sort);
+        if (filtersProp.dir) safeFilters.dir = String(filtersProp.dir);
         if (filtersProp.per_page) safeFilters.per_page = String(filtersProp.per_page);
     }
 
@@ -580,16 +573,17 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     const [search, setSearch] = useState(safeFilters.search || '');
     const [category, setCategory] = useState(safeFilters.category || '');
     const [status, setStatus] = useState(safeFilters.status || '');
-    const [sortValue, setSortValue] = useState(safeFilters.sortOrder || 'newest');
+    const [sortField, setSortField] = useState(safeFilters.sort || 'name');
+    const [sortDir, setSortDir] = useState(safeFilters.dir || 'desc');
     const [perPage, setPerPage] = useState(safeFilters.per_page || '16');
 
     // Sync state with URL params when props change (for SPA navigation)
-    // Use safeFilters values (which rename 'sort' to 'sortOrder' to avoid prototype collision)
     useEffect(() => {
         setSearch(safeFilters.search || '');
         setCategory(safeFilters.category || '');
         setStatus(safeFilters.status || '');
-        setSortValue(safeFilters.sortOrder || 'newest');
+        setSortField(safeFilters.sort || 'name');
+        setSortDir(safeFilters.dir || 'desc');
         setPerPage(safeFilters.per_page || '16');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
@@ -614,6 +608,22 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     // Auto-refresh data every 30 seconds, but pause when items are selected
     const hasSelection = selectedIds.size > 0;
     usePolling({ interval: 30000, enabled: !hasSelection });
+
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-products-table',
+        columns: [
+            { key: 'checkbox', defaultWidth: 50, minWidth: 40, maxWidth: 60 },
+            { key: 'product', defaultWidth: 280, minWidth: 180 },
+            { key: 'category', defaultWidth: 160, minWidth: 100 },
+            { key: 'price', defaultWidth: 120, minWidth: 90 },
+            { key: 'stock', defaultWidth: 90, minWidth: 70 },
+            { key: 'rating', defaultWidth: 130, minWidth: 100 },
+            { key: 'created', defaultWidth: 120, minWidth: 90 },
+            { key: 'status', defaultWidth: 100, minWidth: 80 },
+            { key: 'actions', defaultWidth: 150, minWidth: 120 },
+        ],
+    });
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -708,14 +718,22 @@ export default function ProductsIndex({ products: productsProp, categories, filt
     }, [productsData]);
 
     // SPA-style filter function
-    const applyFilters = useCallback((searchVal: string, categoryVal: string, statusVal: string, sortVal: string, perPageVal: string) => {
+    const applyFilters = useCallback((
+        searchVal: string,
+        categoryVal: string,
+        statusVal: string,
+        sortFieldVal: string,
+        sortDirVal: string,
+        perPageVal: string
+    ) => {
         router.get(
             '/admin/products',
             {
                 search: searchVal || undefined,
                 category: categoryVal || undefined,
                 status: statusVal || undefined,
-                sort: sortVal !== 'newest' ? sortVal : undefined,
+                sort: sortFieldVal !== 'name' ? sortFieldVal : undefined,
+                dir: sortDirVal !== 'desc' ? sortDirVal : undefined,
                 per_page: perPageVal !== '16' ? perPageVal : undefined,
             },
             {
@@ -732,39 +750,56 @@ export default function ProductsIndex({ products: productsProp, categories, filt
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, category, status, sortValue, perPage);
+        applyFilters(debouncedSearch, category, status, sortField, sortDir, perPage);
     }, [debouncedSearch, applyFilters]);
 
     // Instant filter for dropdowns
     const handleCategoryChange = (value: string) => {
         setCategory(value);
-        applyFilters(search, value, status, sortValue, perPage);
+        applyFilters(search, value, status, sortField, sortDir, perPage);
     };
 
     const handleStatusChange = (value: string) => {
         setStatus(value);
-        applyFilters(search, category, value, sortValue, perPage);
+        applyFilters(search, category, value, sortField, sortDir, perPage);
     };
 
-    const handleSortChange = (value: string) => {
-        setSortValue(value);
-        applyFilters(search, category, status, value, perPage);
+    // Handle sort toggle on column header click
+    const handleSortToggle = (field: string) => {
+        let newDir = 'desc';
+        if (sortField === field) {
+            newDir = sortDir === 'asc' ? 'desc' : 'asc';
+        }
+        setSortField(field);
+        setSortDir(newDir);
+        applyFilters(search, category, status, field, newDir, perPage);
+    };
+
+    // Get sort icon for column header
+    const getSortIcon = (field: string) => {
+        if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
+        return sortDir === 'asc' ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+        ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+        );
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, category, status, sortValue, value);
+        applyFilters(search, category, status, sortField, sortDir, value);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setCategory('');
         setStatus('');
-        setSortValue('newest');
-        applyFilters('', '', '', 'newest', perPage);
+        setSortField('name');
+        setSortDir('desc');
+        applyFilters('', '', '', 'name', 'desc', perPage);
     };
 
-    const hasActiveFilters = safeFilters.search || safeFilters.category || safeFilters.status || (safeFilters.sortOrder && safeFilters.sortOrder !== 'newest');
+    const hasActiveFilters = safeFilters.search || safeFilters.category || safeFilters.status || (safeFilters.sort && safeFilters.sort !== 'name');
 
     const handleDelete = (product: Product) => {
         if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
@@ -893,10 +928,10 @@ export default function ProductsIndex({ products: productsProp, categories, filt
 
                 {/* Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 space-y-3">
+                    <div className="p-4">
                         {/* Search and Filter Row */}
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                            <div className="relative flex-1">
+                            <div className="relative w-full sm:w-1/2">
                                 <label htmlFor="products-search" className="sr-only">Search products</label>
                                 <input
                                     id="products-search"
@@ -910,46 +945,31 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 />
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
-                            <Select
-                                value={category}
-                                onChange={handleCategoryChange}
-                                className="w-full sm:w-52 lg:w-56"
-                                placeholder="All Categories"
-                                options={buildCategoryOptions(categories)}
-                            />
-                            <Select
-                                value={status}
-                                onChange={handleStatusChange}
-                                className="w-full sm:w-44 lg:w-48"
-                                placeholder="All Status"
-                                options={statusOptions}
-                            />
-                        </div>
-
-                        {/* Sort and Clear Filters Row */}
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
-                            {/* Sort Section - slightly different styling */}
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                                <ArrowUpDown className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sort</span>
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:ml-auto">
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear All Filters
+                                    </button>
+                                )}
                                 <Select
-                                    value={sortValue}
-                                    onChange={handleSortChange}
-                                    className="w-full sm:w-48"
-                                    options={sortOptions}
+                                    value={category}
+                                    onChange={handleCategoryChange}
+                                    className="w-full sm:w-52 lg:w-56"
+                                    placeholder="All Categories"
+                                    options={buildCategoryOptions(categories)}
+                                />
+                                <Select
+                                    value={status}
+                                    onChange={handleStatusChange}
+                                    className="w-full sm:w-44 lg:w-48"
+                                    placeholder="All Status"
+                                    options={statusOptions}
                                 />
                             </div>
-
-                            {/* Clear Filters - distinct action styling */}
-                            {hasActiveFilters && (
-                                <button
-                                    onClick={handleClearFilters}
-                                    className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
-                                >
-                                    <X className="h-4 w-4" />
-                                    Clear All Filters
-                                </button>
-                            )}
                         </div>
                     </div>
                 </Card>
@@ -1092,11 +1112,20 @@ export default function ProductsIndex({ products: productsProp, categories, filt
 
                 {/* Table View - hidden on mobile, shown on desktop when table selected */}
                 <Card className={`${viewMode === 'table' ? 'hidden sm:block' : 'hidden'} dark:bg-gray-800 dark:border-gray-700`}>
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+                        <table className="w-full table-fixed">
+                            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="w-10 px-4 py-3">
+                                    <ResizableTh
+                                        columnKey="checkbox"
+                                        resizable={resizable}
+                                        className="px-4 py-3 text-center"
+                                        isResizable={false}
+                                    >
                                         <button onClick={toggleSelectAll} className="p-1">
                                             {allSelected ? (
                                                 <CheckSquare className="h-5 w-5 text-purple-600" />
@@ -1106,31 +1135,112 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                                 <Square className="h-5 w-5 text-gray-400" />
                                             )}
                                         </button>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Product
-                                    </th>
-                                    <th className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Category
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Price
-                                    </th>
-                                    <th className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Stock
-                                    </th>
-                                    <th className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Rating
-                                    </th>
-                                    <th className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Created
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
-                                    </th>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="product"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('name')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Package className="h-3.5 w-3.5" />
+                                            Product
+                                            {getSortIcon('name')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="category"
+                                        resizable={resizable}
+                                        className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('category')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Layers className="h-3.5 w-3.5" />
+                                            Category
+                                            {getSortIcon('category')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="price"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('price')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Tag className="h-3.5 w-3.5" />
+                                            Price
+                                            {getSortIcon('price')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="stock"
+                                        resizable={resizable}
+                                        className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('stock')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Package className="h-3.5 w-3.5" />
+                                            Stock
+                                            {getSortIcon('stock')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="rating"
+                                        resizable={resizable}
+                                        className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('average_rating')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Star className="h-3.5 w-3.5" />
+                                            Rating
+                                            {getSortIcon('average_rating')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="created"
+                                        resizable={resizable}
+                                        className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('created_at')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Calendar className="h-3.5 w-3.5" />
+                                            Created
+                                            {getSortIcon('created_at')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="status"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <div className="flex items-center gap-1.5">
+                                            <CircleCheck className="h-3.5 w-3.5" />
+                                            Status
+                                        </div>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <Sparkles className="h-3.5 w-3.5" />
+                                            Actions
+                                        </div>
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1140,7 +1250,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu ${selectedIds.has(product.id) ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
                                         onContextMenu={(e) => handleContextMenu(e, product)}
                                     >
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 text-center">
                                             <button onClick={() => toggleSelect(product.id)} className="p-1">
                                                 {selectedIds.has(product.id) ? (
                                                     <CheckSquare className="h-5 w-5 text-purple-600" />
@@ -1149,7 +1259,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                                 )}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 overflow-hidden">
                                             <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => setSelectedProduct(product)}
@@ -1167,11 +1277,12 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                                         </div>
                                                     )}
                                                 </button>
-                                                <div className="min-w-0">
-                                                    <div className="flex items-center gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2 min-w-0">
                                                         <button
                                                             onClick={() => setSelectedProduct(product)}
-                                                            className="font-medium text-gray-900 dark:text-white truncate max-w-[100px] lg:max-w-[150px] xl:max-w-[200px] hover:text-blue-600 dark:hover:text-blue-400 text-left"
+                                                            className="font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 text-left"
+                                                            title={product.name}
                                                         >
                                                             {product.name}
                                                         </button>
@@ -1205,31 +1316,33 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="hidden lg:table-cell px-6 py-4 text-gray-500 dark:text-gray-400">
-                                            {product.category?.name}
+                                        <td className="hidden lg:table-cell px-6 py-4 text-gray-500 dark:text-gray-400 overflow-hidden">
+                                            <span className="truncate block" title={product.category?.name}>
+                                                {product.category?.name}
+                                            </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium tabular-nums dark:text-white">
+                                        <td className="px-6 py-4 overflow-hidden">
+                                            <div className="font-medium tabular-nums dark:text-white whitespace-nowrap">
                                                 {formatPrice(product.price, language)}
                                             </div>
                                             {product.compare_price && (
-                                                <div className="text-sm text-gray-400 line-through tabular-nums">
+                                                <div className="text-sm text-gray-400 line-through tabular-nums whitespace-nowrap">
                                                     {formatPrice(product.compare_price, language)}
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="hidden lg:table-cell px-6 py-4">
+                                        <td className="hidden lg:table-cell px-6 py-4 overflow-hidden">
                                             <Badge variant={getStockBadgeVariant(product)}>
                                                 {product.stock}
                                             </Badge>
                                         </td>
-                                        <td className="hidden xl:table-cell px-6 py-4">
+                                        <td className="hidden xl:table-cell px-6 py-4 overflow-hidden">
                                             <StarRating rating={product.average_rating} count={product.rating_count} />
                                         </td>
-                                        <td className="hidden xl:table-cell px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                        <td className="hidden xl:table-cell px-6 py-4 text-sm text-gray-500 dark:text-gray-400 overflow-hidden whitespace-nowrap">
                                             {formatDate(product.created_at)}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 overflow-hidden">
                                             <Badge variant={product.is_active ? 'success' : 'default'}>
                                                 {product.is_active ? 'Active' : 'Inactive'}
                                             </Badge>

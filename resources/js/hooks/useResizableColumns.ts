@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 export interface ColumnDefinition {
     /** Unique identifier for the column */
@@ -64,20 +64,33 @@ export interface UseResizableColumnsReturn {
 export function useResizableColumns(options: UseResizableColumnsOptions): UseResizableColumnsReturn {
     const { storageKey, columns, enabled = true } = options;
 
-    // Build default widths from column definitions
-    const defaultWidths = columns.reduce((acc, col) => {
-        acc[col.key] = col.defaultWidth;
-        return acc;
-    }, {} as Record<string, number>);
+    // Create a stable key from columns config for memoization
+    // This avoids recomputing when columns array reference changes but values are the same
+    const columnsConfigKey = useMemo(
+        () => JSON.stringify(columns.map(c => ({ k: c.key, d: c.defaultWidth, min: c.minWidth, max: c.maxWidth }))),
+        [columns]
+    );
 
-    // Build constraints map
-    const constraints = columns.reduce((acc, col) => {
-        acc[col.key] = {
-            min: col.minWidth ?? 80,
-            max: col.maxWidth ?? Infinity,
-        };
-        return acc;
-    }, {} as Record<string, { min: number; max: number }>);
+    // Build default widths from column definitions (memoized)
+    const defaultWidths = useMemo(() => {
+        return columns.reduce((acc, col) => {
+            acc[col.key] = col.defaultWidth;
+            return acc;
+        }, {} as Record<string, number>);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [columnsConfigKey]);
+
+    // Build constraints map (memoized)
+    const constraints = useMemo(() => {
+        return columns.reduce((acc, col) => {
+            acc[col.key] = {
+                min: col.minWidth ?? 80,
+                max: col.maxWidth ?? Infinity,
+            };
+            return acc;
+        }, {} as Record<string, { min: number; max: number }>);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [columnsConfigKey]);
 
     // Initialize state from localStorage or defaults
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
