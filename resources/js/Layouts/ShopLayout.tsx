@@ -632,7 +632,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                         />
                                     </svg>
-                                    <span>{t("common:footer.location")}</span>
+                                    <span>
+                                        {language === 'ar'
+                                            ? (siteSettings?.store_address_ar || 'عمّان، الأردن')
+                                            : (siteSettings?.store_address || 'Amman, Jordan')}
+                                    </span>
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <svg
@@ -649,11 +653,11 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         />
                                     </svg>
                                     <a
-                                        href="tel:+962791700034"
+                                        href={`tel:${(siteSettings?.store_phone || '+962 79 170 0034').replace(/\s/g, '')}`}
                                         className="hover:text-white"
                                         dir="ltr"
                                     >
-                                        {t("common:footer.phone")}
+                                        {siteSettings?.store_phone || '+962 79 170 0034'}
                                     </a>
                                 </li>
                                 <li className="flex items-center gap-2">

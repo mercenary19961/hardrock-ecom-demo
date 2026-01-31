@@ -13,6 +13,7 @@ export interface SiteSettings {
     store_email: string;
     store_phone: string;
     store_address: string;
+    store_address_ar: string;
     currency_code: string;
     currency_symbol: string;
     currency_symbol_ar: string;

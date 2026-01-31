@@ -41,7 +41,7 @@ class SettingsController extends Controller
                 'store_phone' => [
                     'label' => 'Store Phone',
                     'type' => 'text',
-                    'default' => '+962 79 123 4567',
+                    'default' => '+962 79 170 0034',
                     'placeholder' => '+962 xx xxx xxxx',
                 ],
                 'store_address' => [
@@ -49,6 +49,13 @@ class SettingsController extends Controller
                     'type' => 'textarea',
                     'default' => 'Amman, Jordan',
                     'placeholder' => 'Enter store address',
+                ],
+                'store_address_ar' => [
+                    'label' => 'Store Address (Arabic)',
+                    'type' => 'textarea',
+                    'default' => 'عمّان، الأردن',
+                    'placeholder' => 'أدخل عنوان المتجر',
+                    'rtl' => true,
                 ],
             ],
         ],
