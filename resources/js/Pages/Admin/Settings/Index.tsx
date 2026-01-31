@@ -6,15 +6,12 @@ import {
     Save,
     Store,
     DollarSign,
-    Truck,
     Package,
-    ShoppingCart,
-    Bell,
     CheckCircle,
     X,
     Loader2,
 } from 'lucide-react';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 
 interface SettingField {
     key: string;
@@ -44,15 +41,13 @@ interface Props {
 const groupIcons: Record<string, typeof Settings> = {
     general: Store,
     currency: DollarSign,
-    shipping: Truck,
     inventory: Package,
-    checkout: ShoppingCart,
-    notifications: Bell,
 };
 
 export default function SettingsIndex({ settings }: Props) {
     const [activeGroup, setActiveGroup] = useState<string>(Object.keys(settings)[0] || 'general');
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [hasSavedOnce, setHasSavedOnce] = useState(false);
 
     // Build initial form data from settings
     const buildFormData = () => {
@@ -72,6 +67,7 @@ export default function SettingsIndex({ settings }: Props) {
         put('/admin/settings', {
             preserveScroll: true,
             onSuccess: () => {
+                setHasSavedOnce(true);
                 setSuccessMessage('Settings saved successfully.');
                 setTimeout(() => setSuccessMessage(null), 5000);
             },
@@ -281,7 +277,11 @@ export default function SettingsIndex({ settings }: Props) {
                                 {/* Save Button */}
                                 <div className="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-b-lg flex items-center justify-between">
                                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {isDirty ? 'You have unsaved changes' : 'All changes saved'}
+                                        {isDirty
+                                            ? 'You have unsaved changes'
+                                            : hasSavedOnce
+                                              ? 'All changes saved'
+                                              : 'No unsaved changes'}
                                     </p>
                                     <Button
                                         type="submit"
