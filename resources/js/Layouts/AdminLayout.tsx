@@ -19,6 +19,9 @@ import {
     Plus,
     Pencil,
     Loader2,
+    Star,
+    Settings,
+    BarChart3,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
@@ -63,6 +66,9 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'orders': { label: 'Orders', icon: ShoppingCart },
     'coupons': { label: 'Coupons', icon: Ticket },
     'users': { label: 'Users', icon: Users },
+    'reviews': { label: 'Reviews', icon: Star },
+    'reports': { label: 'Reports', icon: BarChart3 },
+    'settings': { label: 'Settings', icon: Settings },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -77,7 +83,10 @@ const navigation = [
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Reviews', href: '/admin/reviews', icon: Star },
     { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 // Global sidebar state (persists across navigation)
