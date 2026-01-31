@@ -1,7 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card } from '@/Components/ui';
+import { Button, Card, Select } from '@/Components/ui';
 import { Review, PaginatedData } from '@/types/models';
+import { useResizableColumns } from '@/hooks';
+import { ResizableTh, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 import {
     Star,
     Search,
@@ -18,6 +20,13 @@ import {
     User,
     Calendar,
     ThumbsUp,
+    MessageSquare,
+    Settings2,
+    Hash,
+    TrendingUp,
+    ShieldCheck,
+    BarChart3,
+    ArrowLeft,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -136,7 +145,24 @@ export default function ReviewsIndex(props: Props) {
     const [perPage, setPerPage] = useState(filterPerPage);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [contextMenu, setContextMenu] = useState<{ x: number; y: number; review: Review } | null>(null);
+    const contextMenuRef = useRef<HTMLDivElement>(null);
     const isFirstRender = useRef(true);
+
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-reviews-table',
+        columns: [
+            { key: 'checkbox', defaultWidth: 50, minWidth: 40, maxWidth: 60 },
+            { key: 'product', defaultWidth: 200, minWidth: 120 },
+            { key: 'customer', defaultWidth: 180, minWidth: 120 },
+            { key: 'rating', defaultWidth: 120, minWidth: 100 },
+            { key: 'review', defaultWidth: 280, minWidth: 150 },
+            { key: 'helpful', defaultWidth: 80, minWidth: 60 },
+            { key: 'date', defaultWidth: 110, minWidth: 90 },
+            { key: 'actions', defaultWidth: 100, minWidth: 80 },
+        ],
+    });
 
     // TODO: Re-enable auto-refresh once verified stable
     // import { usePolling } from '@/hooks';
@@ -273,6 +299,53 @@ export default function ReviewsIndex(props: Props) {
 
     const hasFilters = filters.search || filters.rating || filters.verified;
 
+    // Context menu handlers
+    const handleContextMenu = useCallback((e: React.MouseEvent, review: Review) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position, ensuring menu stays within viewport
+        const x = Math.min(e.clientX, window.innerWidth - 160);
+        const y = Math.min(e.clientY, window.innerHeight - 120);
+
+        setContextMenu({ x, y, review });
+    }, []);
+
+    const closeContextMenu = useCallback(() => {
+        setContextMenu(null);
+    }, []);
+
+    // Close context menu on click outside, escape key, or scroll
+    useEffect(() => {
+        if (!contextMenu) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+                closeContextMenu();
+            }
+        };
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                closeContextMenu();
+            }
+        };
+
+        const handleScroll = () => {
+            closeContextMenu();
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        window.addEventListener('scroll', handleScroll, true);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [contextMenu, closeContextMenu]);
+
     return (
         <AdminLayout>
             <Head title="Reviews" />
@@ -289,18 +362,26 @@ export default function ReviewsIndex(props: Props) {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Reviews</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                {stats?.total ?? 0}
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Reviews
                             </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats?.total ?? 0}
+                                </p>
+                            </div>
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Average Rating</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <TrendingUp className="h-3.5 w-3.5" />
+                                Average Rating
+                            </p>
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
                                     {stats?.average_rating ?? 0}
                                 </p>
                                 <StarRating rating={Math.round(stats?.average_rating ?? 0)} size="md" />
@@ -308,36 +389,46 @@ export default function ReviewsIndex(props: Props) {
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Verified Purchases</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                {stats?.verified_count ?? 0}
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                                Verified Purchases
                             </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats?.verified_count ?? 0}
+                                </p>
+                            </div>
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Rating Distribution</p>
-                            <div className="space-y-1">
-                                {[5, 4, 3, 2, 1].map((r) => {
-                                    const count = stats?.rating_distribution?.[r] ?? 0;
-                                    const total = stats?.total ?? 0;
-                                    const pct = total > 0 ? (count / total) * 100 : 0;
-                                    return (
-                                        <div key={r} className="flex items-center gap-2 text-xs">
-                                            <span className="w-3 text-gray-500 dark:text-gray-400">{r}</span>
-                                            <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-yellow-400 rounded-full"
-                                                    style={{ width: `${pct}%` }}
-                                                />
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <BarChart3 className="h-3.5 w-3.5" />
+                                Rating Distribution
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <div className="space-y-1 w-full max-w-[200px]">
+                                    {[5, 4, 3, 2, 1].map((r) => {
+                                        const count = stats?.rating_distribution?.[r] ?? 0;
+                                        const total = stats?.total ?? 0;
+                                        const pct = total > 0 ? (count / total) * 100 : 0;
+                                        return (
+                                            <div key={r} className="flex items-center gap-2 text-xs">
+                                                <span className="w-3 text-gray-500 dark:text-gray-400">{r}</span>
+                                                <div className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-yellow-400 rounded-full"
+                                                        style={{ width: `${pct}%` }}
+                                                    />
+                                                </div>
+                                                <span className="w-6 text-right text-gray-500 dark:text-gray-400">
+                                                    {count}
+                                                </span>
                                             </div>
-                                            <span className="w-6 text-right text-gray-500 dark:text-gray-400">
-                                                {count}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -359,29 +450,31 @@ export default function ReviewsIndex(props: Props) {
                         </div>
 
                         {/* Rating Filter */}
-                        <select
+                        <Select
                             value={rating}
-                            onChange={(e) => setRating(e.target.value)}
-                            className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[140px]"
-                        >
-                            <option value="">All Ratings</option>
-                            <option value="5">5 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="2">2 Stars</option>
-                            <option value="1">1 Star</option>
-                        </select>
+                            onChange={setRating}
+                            className="min-w-[140px]"
+                            options={[
+                                { value: '', label: 'All Ratings' },
+                                { value: '5', label: '5 Stars' },
+                                { value: '4', label: '4 Stars' },
+                                { value: '3', label: '3 Stars' },
+                                { value: '2', label: '2 Stars' },
+                                { value: '1', label: '1 Star' },
+                            ]}
+                        />
 
                         {/* Verified Filter */}
-                        <select
+                        <Select
                             value={verified}
-                            onChange={(e) => setVerified(e.target.value)}
-                            className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[160px]"
-                        >
-                            <option value="">All Reviews</option>
-                            <option value="yes">Verified Only</option>
-                            <option value="no">Unverified Only</option>
-                        </select>
+                            onChange={setVerified}
+                            className="min-w-[160px]"
+                            options={[
+                                { value: '', label: 'All Reviews' },
+                                { value: 'yes', label: 'Verified Only' },
+                                { value: 'no', label: 'Unverified Only' },
+                            ]}
+                        />
 
                         {/* Clear Filters */}
                         {hasFilters && (
@@ -410,31 +503,60 @@ export default function ReviewsIndex(props: Props) {
 
                 {/* Reviews Table */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
+                    {/* Reset columns button - only visible on desktop */}
+                    <div className="hidden md:flex justify-end px-4 pt-3">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full table-fixed">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="w-10 px-4 py-3">
+                                    <ResizableTh
+                                        columnKey="checkbox"
+                                        resizable={resizable}
+                                        className="px-4 py-3 text-center"
+                                        isResizable={false}
+                                    >
                                         <input
                                             type="checkbox"
                                             checked={selectedIds.length === reviewsData.length && reviewsData.length > 0}
                                             onChange={handleSelectAll}
                                             className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500"
                                         />
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="product"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('product')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Package className="h-3.5 w-3.5" />
                                             Product
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            {getSortIcon('product')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="customer"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('customer')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <User className="h-3.5 w-3.5" />
                                             Customer
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            {getSortIcon('customer')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="rating"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
                                         <button
                                             onClick={() => handleSortToggle('rating')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
@@ -443,11 +565,26 @@ export default function ReviewsIndex(props: Props) {
                                             Rating
                                             {getSortIcon('rating')}
                                         </button>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider max-w-xs">
-                                        Review
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="review"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('title')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <MessageSquare className="h-3.5 w-3.5" />
+                                            Review
+                                            {getSortIcon('title')}
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="helpful"
+                                        resizable={resizable}
+                                        className="text-left pl-2 pr-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
                                         <button
                                             onClick={() => handleSortToggle('helpful_count')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
@@ -456,8 +593,12 @@ export default function ReviewsIndex(props: Props) {
                                             Helpful
                                             {getSortIcon('helpful_count')}
                                         </button>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="date"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
                                         <button
                                             onClick={() => handleSortToggle('created_at')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
@@ -466,16 +607,28 @@ export default function ReviewsIndex(props: Props) {
                                             Date
                                             {getSortIcon('created_at')}
                                         </button>
-                                    </th>
-                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
-                                    </th>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <Settings2 className="h-3.5 w-3.5" />
+                                            Actions
+                                        </div>
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {reviewsData.map((review) => (
-                                    <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                        <td className="px-4 py-4">
+                                    <tr
+                                        key={review.id}
+                                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu"
+                                        onContextMenu={(e) => handleContextMenu(e, review)}
+                                    >
+                                        <td className="px-4 py-4 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedIds.includes(review.id)}
@@ -483,26 +636,27 @@ export default function ReviewsIndex(props: Props) {
                                                 className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500"
                                             />
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 overflow-hidden">
                                             <Link
                                                 href={`/admin/products/${review.product_id}/edit`}
-                                                className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 line-clamp-1 max-w-[200px]"
+                                                className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 truncate block"
+                                                title={review.product?.name || 'Unknown Product'}
                                             >
                                                 {review.product?.name || 'Unknown Product'}
                                             </Link>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                        <td className="px-6 py-4 overflow-hidden">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
                                                     <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
                                                         {review.user?.name?.charAt(0)?.toUpperCase() || '?'}
                                                     </span>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={review.user?.name}>
                                                         {review.user?.name || 'Unknown'}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={review.user?.email}>
                                                         {review.user?.email}
                                                     </p>
                                                 </div>
@@ -516,13 +670,13 @@ export default function ReviewsIndex(props: Props) {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 max-w-xs">
+                                        <td className="px-6 py-4 overflow-hidden">
                                             {review.title && (
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={review.title}>
                                                     {review.title}
                                                 </p>
                                             )}
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2" title={review.comment || undefined}>
                                                 {review.comment || <span className="italic text-gray-400">No comment</span>}
                                             </p>
                                         </td>
@@ -682,25 +836,28 @@ export default function ReviewsIndex(props: Props) {
                     )}
                     <div className="flex-1 flex justify-end">
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                            <label
-                                htmlFor="reviews-per-page"
-                                className="text-xs sm:text-sm text-gray-500 dark:text-gray-400"
-                            >
-                                Show:
-                            </label>
-                            <select
-                                id="reviews-per-page"
-                                name="per_page"
-                                value={perPage}
-                                onChange={(e) => handlePerPageChange(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none min-w-[60px] sm:min-w-[80px]"
-                            >
-                                {perPageOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}
-                                    </option>
-                                ))}
-                            </select>
+                            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Show:</span>
+                            {/* Mobile: small select */}
+                            <div className="sm:hidden">
+                                <Select
+                                    value={perPage}
+                                    onChange={handlePerPageChange}
+                                    className="w-14"
+                                    options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
+                                    dropdownPosition="top"
+                                    size="sm"
+                                />
+                            </div>
+                            {/* Desktop: default select */}
+                            <div className="hidden sm:block">
+                                <Select
+                                    value={perPage}
+                                    onChange={handlePerPageChange}
+                                    className="w-20"
+                                    options={perPageOptions.map(opt => ({ value: opt, label: opt }))}
+                                    dropdownPosition="top"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -717,6 +874,52 @@ export default function ReviewsIndex(props: Props) {
                         title="Dismiss"
                     >
                         <X className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </button>
+                </div>
+            )}
+
+            {/* Context Menu */}
+            {contextMenu && (
+                <div
+                    ref={contextMenuRef}
+                    className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 min-w-[160px] animate-in fade-in zoom-in-95 duration-100"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                >
+                    {/* Back */}
+                    <button
+                        onClick={() => {
+                            router.visit('/admin/reviews');
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        Back
+                    </button>
+
+                    {/* Show */}
+                    <Link
+                        href={`/admin/reviews/${contextMenu.review.id}`}
+                        preserveScroll
+                        onClick={closeContextMenu}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        Show
+                    </Link>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+                    {/* Delete */}
+                    <button
+                        onClick={() => {
+                            handleDelete(contextMenu.review);
+                            closeContextMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
                     </button>
                 </div>
             )}

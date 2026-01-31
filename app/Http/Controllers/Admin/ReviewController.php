@@ -51,13 +51,37 @@ class ReviewController extends Controller
         // Sorting
         $sortField = $request->get('sort', 'created_at');
         $sortDir = $request->get('dir', 'desc');
+        $direction = $sortDir === 'asc' ? 'asc' : 'desc';
 
-        $allowedSortFields = ['created_at', 'rating', 'helpful_count'];
+        $allowedSortFields = ['created_at', 'rating', 'helpful_count', 'title', 'product', 'customer'];
+
         if (!in_array($sortField, $allowedSortFields)) {
             $sortField = 'created_at';
         }
 
-        $query->orderBy($sortField, $sortDir === 'asc' ? 'asc' : 'desc');
+        // Handle sorting by related model fields
+        if ($sortField === 'product') {
+            // Sort by product name using a subquery
+            $query->orderBy(
+                Product::select('name')
+                    ->whereColumn('products.id', 'reviews.product_id')
+                    ->limit(1),
+                $direction
+            );
+        } elseif ($sortField === 'customer') {
+            // Sort by user name using a subquery
+            $query->orderBy(
+                \App\Models\User::select('name')
+                    ->whereColumn('users.id', 'reviews.user_id')
+                    ->limit(1),
+                $direction
+            );
+        } elseif ($sortField === 'title') {
+            // Sort by review title (use comment as fallback for reviews without title)
+            $query->orderByRaw("COALESCE(title, comment) {$direction}");
+        } else {
+            $query->orderBy($sortField, $direction);
+        }
 
         // Pagination
         $perPage = in_array($request->per_page, ['8', '16', '32', '64'])
