@@ -840,17 +840,38 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
     }, [hasChanges, isSubmitting, handleRevertChanges]);
 
     // Track scroll position to show/hide floating action bar
+    // Uses IntersectionObserver since scrolling happens inside AdminLayout's main element, not window
     useEffect(() => {
+        if (!topBarRef.current) return;
+
+        // Use IntersectionObserver to detect when top bar goes out of view
+        const observer = new IntersectionObserver(
+            (entries) => {
+                // When top bar is not intersecting (out of view), show floating bar
+                setShowFloatingBar(!entries[0].isIntersecting);
+            },
+            {
+                threshold: 0,
+                rootMargin: '0px',
+            }
+        );
+
+        observer.observe(topBarRef.current);
+
+        // For scroll-to-top button, listen to scroll on the main content area
+        const mainElement = document.querySelector('main.overflow-y-auto');
         const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 300);
-            // Show floating bar when top bar is out of view
-            if (topBarRef.current) {
-                const rect = topBarRef.current.getBoundingClientRect();
-                setShowFloatingBar(rect.bottom < 0);
+            if (mainElement) {
+                setShowScrollTop(mainElement.scrollTop > 300);
             }
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        mainElement?.addEventListener('scroll', handleScroll);
+
+        return () => {
+            observer.disconnect();
+            mainElement?.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
     // Close sale dropdown when clicking outside
@@ -889,7 +910,13 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
     }, []);
 
     const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Scroll the main content area, not window (AdminLayout uses overflow-y-auto on main)
+        const mainElement = document.querySelector('main.overflow-y-auto');
+        if (mainElement) {
+            mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
