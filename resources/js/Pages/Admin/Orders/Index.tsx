@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -373,7 +374,7 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
 
                 {/* Bulk Actions */}
                 {selectedOrders.length > 0 && (
-                    <Card className="dark:bg-gray-800 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                    <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                         <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                             <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
                                 {selectedOrders.length} order(s) selected
@@ -475,8 +476,8 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
 
                 {/* Table View */}
                 <Card className={`${viewMode === 'table' ? 'hidden sm:block' : 'hidden'} dark:bg-gray-800 dark:border-gray-700`}>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <StickyScrollWrapper>
+                        <table className="w-full min-w-[1000px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <th className="w-10 px-4 py-3">
@@ -562,7 +563,7 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {orders.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No orders found</div>
                     )}

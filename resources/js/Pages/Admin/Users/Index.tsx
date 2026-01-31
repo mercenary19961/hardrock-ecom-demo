@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 
 // Default avatar component with initials fallback
 function UserAvatar({ user, size = 'md' }: { user: User; size?: 'sm' | 'md' | 'lg' }) {
@@ -425,8 +426,8 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
 
                 {/* Desktop Table Layout - hidden on mobile, shown on desktop when table mode selected */}
                 <Card className={`${viewMode === 'table' ? 'hidden md:block' : 'hidden'} dark:bg-gray-800 dark:border-gray-700`}>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <StickyScrollWrapper>
+                        <table className="w-full min-w-[800px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -528,7 +529,7 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {users.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No users found

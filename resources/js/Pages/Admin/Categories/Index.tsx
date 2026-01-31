@@ -5,6 +5,7 @@ import { Category, PaginatedData } from '@/types/models';
 import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Folder, Eye } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 
 interface Props {
     categories: PaginatedData<Category>;
@@ -239,8 +240,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
 
                 {/* Desktop Table Layout */}
                 <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <StickyScrollWrapper>
+                        <table className="w-full min-w-[700px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -324,7 +325,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {categories.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No categories found

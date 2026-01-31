@@ -7,12 +7,12 @@ import { formatPrice } from '@/lib/utils';
 import {
     Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List,
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
-    Star, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
+    Star, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
     CircleCheck, CircleX, Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
-import { ResizableTh, ResetColumnsButton } from '@/Components/admin/ResizableTable';
+import { ResizableTh, ResetColumnsButton, SortIcon, StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 
 // Product Card Image component with navigation for multiple images
 function ProductCardImage({
@@ -775,15 +775,6 @@ export default function ProductsIndex({ products: productsProp, categories, filt
         applyFilters(search, category, status, field, newDir, perPage);
     };
 
-    // Get sort icon for column header
-    const getSortIcon = (field: string) => {
-        if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
-        return sortDir === 'asc' ? (
-            <ArrowUp className="h-3.5 w-3.5" />
-        ) : (
-            <ArrowDown className="h-3.5 w-3.5" />
-        );
-    };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
@@ -1116,8 +1107,8 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                     <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
                         <ResetColumnsButton resizable={resizable} />
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-fixed">
+                    <StickyScrollWrapper>
+                        <table className="w-full table-fixed min-w-[1200px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <ResizableTh
@@ -1147,7 +1138,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Package className="h-3.5 w-3.5" />
                                             Product
-                                            {getSortIcon('name')}
+                                            <SortIcon field="name" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1161,7 +1152,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Layers className="h-3.5 w-3.5" />
                                             Category
-                                            {getSortIcon('category')}
+                                            <SortIcon field="category" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1175,7 +1166,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Tag className="h-3.5 w-3.5" />
                                             Price
-                                            {getSortIcon('price')}
+                                            <SortIcon field="price" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1189,7 +1180,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Package className="h-3.5 w-3.5" />
                                             Stock
-                                            {getSortIcon('stock')}
+                                            <SortIcon field="stock" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1203,7 +1194,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Star className="h-3.5 w-3.5" />
                                             Rating
-                                            {getSortIcon('average_rating')}
+                                            <SortIcon field="average_rating" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1217,7 +1208,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                         >
                                             <Calendar className="h-3.5 w-3.5" />
                                             Created
-                                            {getSortIcon('created_at')}
+                                            <SortIcon field="created_at" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -1384,7 +1375,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {productsData.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">No products found</div>
                     )}

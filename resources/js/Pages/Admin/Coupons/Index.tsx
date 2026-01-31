@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling } from '@/hooks';
+import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 import axios from 'axios';
 
 interface Props {
@@ -406,8 +407,8 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
                 {/* Desktop Table Layout */}
                 <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <StickyScrollWrapper>
+                        <table className="w-full min-w-[900px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -555,7 +556,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                 })}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {coupons.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No coupons found

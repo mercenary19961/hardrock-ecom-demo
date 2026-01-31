@@ -377,11 +377,11 @@ export default function ReportsIndex({
                                         >
                                             {product.name}
                                         </Link>
-                                        <StarRating rating={Math.round(product.average_rating)} />
+                                        <StarRating rating={Math.round(product.average_rating ?? 0)} />
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {product.average_rating.toFixed(1)}
+                                            {(product.average_rating ?? 0).toFixed(1)}
                                         </p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             {product.rating_count} reviews

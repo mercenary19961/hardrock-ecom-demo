@@ -3,7 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Select } from '@/Components/ui';
 import { Review, PaginatedData } from '@/types/models';
 import { useResizableColumns } from '@/hooks';
-import { ResizableTh, ResetColumnsButton } from '@/Components/admin/ResizableTable';
+import { ResizableTh, ResetColumnsButton, SortIcon, StickyScrollWrapper } from '@/Components/admin/ResizableTable';
 import {
     Star,
     Search,
@@ -13,9 +13,6 @@ import {
     Trash2,
     Eye,
     CheckCircle,
-    ArrowUpDown,
-    ArrowUp,
-    ArrowDown,
     Package,
     User,
     Calendar,
@@ -219,15 +216,6 @@ export default function ReviewsIndex(props: Props) {
         }
     };
 
-    // Get sort icon
-    const getSortIcon = (field: string) => {
-        if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
-        return sortDir === 'asc' ? (
-            <ArrowUp className="h-3.5 w-3.5" />
-        ) : (
-            <ArrowDown className="h-3.5 w-3.5" />
-        );
-    };
 
     // Handle clear filters
     const handleClearFilters = () => {
@@ -297,7 +285,8 @@ export default function ReviewsIndex(props: Props) {
         });
     };
 
-    const hasFilters = filters.search || filters.rating || filters.verified;
+    const hasFilters = filters.search || filters.rating || filters.verified ||
+        (sortField !== 'created_at' || sortDir !== 'desc');
 
     // Context menu handlers
     const handleContextMenu = useCallback((e: React.MouseEvent, review: Review) => {
@@ -521,8 +510,8 @@ export default function ReviewsIndex(props: Props) {
                     <div className="hidden md:flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
                         <ResetColumnsButton resizable={resizable} />
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full table-fixed">
+                    <StickyScrollWrapper>
+                        <table className="w-full table-fixed min-w-[1000px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
                                     <ResizableTh
@@ -549,7 +538,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <Package className="h-3.5 w-3.5" />
                                             Product
-                                            {getSortIcon('product')}
+                                            <SortIcon field="product" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -563,7 +552,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <User className="h-3.5 w-3.5" />
                                             Customer
-                                            {getSortIcon('customer')}
+                                            <SortIcon field="customer" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -577,7 +566,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <Star className="h-3.5 w-3.5" />
                                             Rating
-                                            {getSortIcon('rating')}
+                                            <SortIcon field="rating" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -591,7 +580,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <MessageSquare className="h-3.5 w-3.5" />
                                             Review
-                                            {getSortIcon('title')}
+                                            <SortIcon field="title" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -605,7 +594,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <ThumbsUp className="h-3.5 w-3.5" />
                                             Helpful
-                                            {getSortIcon('helpful_count')}
+                                            <SortIcon field="helpful_count" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -619,7 +608,7 @@ export default function ReviewsIndex(props: Props) {
                                         >
                                             <Calendar className="h-3.5 w-3.5" />
                                             Date
-                                            {getSortIcon('created_at')}
+                                            <SortIcon field="created_at" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
                                         </button>
                                     </ResizableTh>
                                     <ResizableTh
@@ -731,7 +720,7 @@ export default function ReviewsIndex(props: Props) {
                                 )}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                 </Card>
 
                 {/* Pagination */}
