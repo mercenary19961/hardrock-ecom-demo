@@ -95,7 +95,7 @@ export default function ReviewShow({ review, userOtherReviews, productOtherRevie
                         </h1>
                     </div>
                     <Button
-                        variant="destructive"
+                        variant="danger"
                         onClick={handleDelete}
                         disabled={isDeleting}
                     >

@@ -356,7 +356,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                             <span className="text-sm text-gray-600 dark:text-gray-300">
                                 {selectedIds.length} review{selectedIds.length > 1 ? 's' : ''} selected
                             </span>
-                            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                            <Button variant="danger" size="sm" onClick={handleBulkDelete}>
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete Selected
                             </Button>
@@ -468,7 +468,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                             <div className="flex items-center gap-2">
                                                 <StarRating rating={review.rating} />
                                                 {review.is_verified_purchase && (
-                                                    <CheckCircle className="h-4 w-4 text-green-500" title="Verified Purchase" />
+                                                    <CheckCircle className="h-4 w-4 text-green-500" />
                                                 )}
                                             </div>
                                         </td>
