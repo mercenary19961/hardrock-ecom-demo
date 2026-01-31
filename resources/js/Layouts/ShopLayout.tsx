@@ -19,6 +19,7 @@ import { WishlistDrawer } from "@/Components/shop/WishlistDrawer";
 import { SearchBar } from "@/Components/shop/SearchBar";
 import { FloatingActionButton } from "@/Components/ui";
 import { Category, User as UserType } from "@/types/models";
+import { SiteSettings } from "@/types";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 
@@ -68,10 +69,16 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
     const { items: wishlistItems } = useWishlist();
     const { language, setLanguage } = useLanguage();
     const { getCategoryName } = useLocalized();
-    const { auth, categories } = usePage<{
+    const { auth, categories, siteSettings } = usePage<{
         auth: { user: UserType | null };
         categories?: Category[];
+        siteSettings?: SiteSettings;
     }>().props;
+
+    // Get store name based on language
+    const storeName = language === 'ar'
+        ? (siteSettings?.store_name_ar || 'متجر هارد روك')
+        : (siteSettings?.store_name || 'HardRock');
     const [cartOpen, setCartOpen] = useState(false);
     const [wishlistOpen, setWishlistOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -511,9 +518,9 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
             <footer className="bg-brand-slate text-white">
                 <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 lg:gap-16">
-                        {/* HardRock Brand */}
+                        {/* Store Brand */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4">HardRock</h3>
+                            <h3 className="text-lg font-bold mb-4">{storeName}</h3>
                             <p className="text-gray-400 text-sm mb-4">
                                 {t("common:footer.tagline")}
                             </p>
@@ -664,10 +671,10 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                                         />
                                     </svg>
                                     <a
-                                        href="mailto:sales@hardrock-co.com"
+                                        href={`mailto:${siteSettings?.store_email || 'support@hardrock-demo.com'}`}
                                         className="hover:text-white"
                                     >
-                                        sales@hardrock-co.com
+                                        {siteSettings?.store_email || 'support@hardrock-demo.com'}
                                     </a>
                                 </li>
                             </ul>
@@ -699,7 +706,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                     </div>
                     <div className="border-t border-white/10 mt-8 pt-8 text-center text-brand-purple-200 text-sm">
                         <p>
-                            &copy; {new Date().getFullYear()} HardRock.{" "}
+                            &copy; {new Date().getFullYear()} {storeName}.{" "}
                             {t("common:allRightsReserved")}
                         </p>
                     </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Category;
+use App\Models\Setting;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -52,6 +53,17 @@ class HandleInertiaRequests extends Middleware
                     ->ordered()
                     ->get()
             ),
+            'siteSettings' => fn () => Cache::remember('site_settings', 3600, fn () => [
+                'store_name' => Setting::get('store_name', 'HardRock Store'),
+                'store_name_ar' => Setting::get('store_name_ar', 'متجر هارد روك'),
+                'store_email' => Setting::get('store_email', 'support@hardrock-demo.com'),
+                'store_phone' => Setting::get('store_phone', '+962 79 123 4567'),
+                'store_address' => Setting::get('store_address', 'Amman, Jordan'),
+                'currency_code' => Setting::get('currency_code', 'JOD'),
+                'currency_symbol' => Setting::get('currency_symbol', 'JOD'),
+                'currency_symbol_ar' => Setting::get('currency_symbol_ar', 'دينار'),
+                'low_stock_threshold' => (int) Setting::get('low_stock_threshold', 10),
+            ]),
         ];
     }
 }

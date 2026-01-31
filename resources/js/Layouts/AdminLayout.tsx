@@ -24,6 +24,7 @@ import {
     BarChart3,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
+import { SiteSettings } from '@/types';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
 import { SkyToggle } from '@/Components/ui/SkyToggle';
 import axios from 'axios';
@@ -93,7 +94,8 @@ const navigation = [
 let globalSidebarOpen = true;
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
-    const { auth, url } = usePage<{ auth: { user: UserType }; url: string }>().props;
+    const { auth, url, siteSettings } = usePage<{ auth: { user: UserType }; url: string; siteSettings?: SiteSettings }>().props;
+    const storeName = siteSettings?.store_name || 'HardRock';
     const { toggleTheme, isDark } = useAdminTheme();
     const [sidebarOpen, setSidebarOpen] = useState(globalSidebarOpen);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -266,7 +268,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
                     <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
                         {(sidebarOpen || mobileMenuOpen) && (
                             <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0">
-                                HardRock Admin
+                                {storeName} Admin
                             </Link>
                         )}
                         <button

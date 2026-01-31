@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Review;
 use Illuminate\Http\Request;
@@ -143,7 +144,7 @@ class ReportsController extends Controller
             'out_of_stock' => Product::where('is_active', true)->where('stock', 0)->count(),
             'low_stock' => Product::where('is_active', true)
                 ->where('stock', '>', 0)
-                ->where('stock', '<=', 10)
+                ->where('stock', '<=', (int) Setting::get('low_stock_threshold', 10))
                 ->count(),
         ];
 

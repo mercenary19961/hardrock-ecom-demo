@@ -8,6 +8,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use Carbon\Carbon;
@@ -55,9 +56,10 @@ class DashboardController extends Controller
             ->map(fn ($v) => (float) $v);
 
         // Low stock products (not date-filtered - current inventory status)
+        $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
         $lowStockProducts = Product::with('category')
             ->where('stock', '>', 0)
-            ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)')
+            ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold])
             ->orderBy('stock')
             ->take(5)
             ->get();

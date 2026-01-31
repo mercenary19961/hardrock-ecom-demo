@@ -9,6 +9,7 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Setting;
 use App\Services\ActivityLogService;
 use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
@@ -47,8 +48,9 @@ class ProductController extends Controller
             } elseif ($request->status === 'out_of_stock') {
                 $query->where('stock', 0);
             } elseif ($request->status === 'low_stock') {
+                $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
                 $query->where('stock', '>', 0)
-                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)');
+                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold]);
             } elseif ($request->status === 'on_sale') {
                 $query->whereNotNull('compare_price')
                     ->whereColumn('compare_price', '>', 'price');

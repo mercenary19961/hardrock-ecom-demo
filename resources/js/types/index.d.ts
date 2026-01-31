@@ -7,10 +7,23 @@ export interface User {
     role?: 'admin' | 'customer';
 }
 
+export interface SiteSettings {
+    store_name: string;
+    store_name_ar: string;
+    store_email: string;
+    store_phone: string;
+    store_address: string;
+    currency_code: string;
+    currency_symbol: string;
+    currency_symbol_ar: string;
+    low_stock_threshold: number;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User | null;
     };
+    siteSettings?: SiteSettings;
 };

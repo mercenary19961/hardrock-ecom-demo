@@ -53,8 +53,8 @@ class SettingsController extends Controller
             ],
         ],
         'currency' => [
-            'label' => 'Currency & Pricing',
-            'description' => 'Configure currency display and tax settings',
+            'label' => 'Currency',
+            'description' => 'Configure currency display settings',
             'fields' => [
                 'currency_code' => [
                     'label' => 'Currency Code',
@@ -72,30 +72,15 @@ class SettingsController extends Controller
                 'currency_symbol' => [
                     'label' => 'Currency Symbol',
                     'type' => 'text',
-                    'default' => 'JD',
+                    'default' => 'JOD',
                     'placeholder' => '$, €, £, etc.',
                 ],
                 'currency_symbol_ar' => [
                     'label' => 'Currency Symbol (Arabic)',
                     'type' => 'text',
-                    'default' => 'د.أ',
+                    'default' => 'دينار',
                     'placeholder' => 'دينار، ريال، etc.',
                     'rtl' => true,
-                ],
-                'tax_rate' => [
-                    'label' => 'Tax Rate (%)',
-                    'type' => 'number',
-                    'default' => '16',
-                    'placeholder' => '0',
-                    'min' => 0,
-                    'max' => 100,
-                    'step' => 0.01,
-                ],
-                'tax_included' => [
-                    'label' => 'Prices Include Tax',
-                    'type' => 'boolean',
-                    'default' => true,
-                    'description' => 'If enabled, displayed prices already include tax',
                 ],
             ],
         ],
@@ -185,6 +170,9 @@ class SettingsController extends Controller
 
         // Clear all settings cache
         Setting::clearCache();
+
+        // Clear the shared site settings cache
+        \Illuminate\Support\Facades\Cache::forget('site_settings');
 
         return back()->with('success', 'Settings saved successfully.');
     }
