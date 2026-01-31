@@ -91,7 +91,8 @@ class CouponController extends Controller
 
         return Inertia::render('Admin/Coupons/Index', [
             'coupons' => $coupons,
-            'filters' => $request->only(['search', 'status', 'type', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'type', 'per_page']),
             'statusCounts' => $statusCounts,
         ]);
     }

@@ -84,7 +84,8 @@ class OrderController extends Controller
             'orders' => $orders,
             'statusCounts' => $statusCounts,
             'paymentStatusCounts' => $paymentStatusCounts,
-            'filters' => $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset']),
         ]);
     }
 

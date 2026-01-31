@@ -105,7 +105,8 @@ class CategoryController extends Controller
 
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
-            'filters' => $request->only(['search', 'status', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'per_page']),
             'statusCounts' => $statusCounts,
         ]);
     }

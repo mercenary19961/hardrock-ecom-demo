@@ -46,7 +46,8 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'role', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'role', 'per_page']),
             'roleCounts' => $roleCounts,
         ]);
     }

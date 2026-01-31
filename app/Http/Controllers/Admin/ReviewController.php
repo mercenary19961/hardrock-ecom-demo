@@ -88,7 +88,8 @@ class ReviewController extends Controller
 
         return Inertia::render('Admin/Reviews/Index', [
             'reviews' => $reviews,
-            'filters' => $request->only(['search', 'rating', 'verified', 'product_id', 'sort', 'dir', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'rating', 'verified', 'product_id', 'sort', 'dir', 'per_page']),
             'stats' => $stats,
         ]);
     }

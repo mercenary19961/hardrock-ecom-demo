@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Badge } from '@/Components/ui';
+import { Button, Card } from '@/Components/ui';
 import { Review, PaginatedData } from '@/types/models';
 import {
     Star,
@@ -11,7 +11,6 @@ import {
     Trash2,
     Eye,
     CheckCircle,
-    Filter,
     ArrowUpDown,
     ArrowUp,
     ArrowDown,
@@ -19,10 +18,8 @@ import {
     User,
     Calendar,
     ThumbsUp,
-    AlertTriangle,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePolling } from '@/hooks';
 
 interface Props {
     reviews: PaginatedData<Review>;
@@ -85,19 +82,65 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
     );
 }
 
-export default function ReviewsIndex({ reviews, filters, stats }: Props) {
-    const [search, setSearch] = useState(filters.search || '');
-    const [rating, setRating] = useState(filters.rating || '');
-    const [verified, setVerified] = useState(filters.verified || '');
-    const [sort, setSort] = useState(filters.sort || 'created_at');
-    const [dir, setDir] = useState(filters.dir || 'desc');
-    const [perPage, setPerPage] = useState(filters.per_page || '16');
+const defaultReviews = {
+    data: [],
+    current_page: 1,
+    last_page: 1,
+    per_page: 16,
+    total: 0,
+    from: 0,
+    to: 0,
+    links: [
+        { url: null, label: '&laquo; Previous', active: false },
+        { url: null, label: '1', active: true },
+        { url: null, label: 'Next &raquo;', active: false },
+    ],
+};
+
+const defaultStats = {
+    total: 0,
+    average_rating: 0,
+    verified_count: 0,
+    rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+};
+
+export default function ReviewsIndex(props: Props) {
+    // Guard against props being completely undefined during Inertia transitions
+    const safeProps = props || {};
+
+    // Safely destructure with defaults to prevent undefined errors
+    const reviews = safeProps.reviews ?? defaultReviews;
+    // IMPORTANT: PHP returns [] (empty array) when no filters, not {} (empty object)
+    // This causes filters?.sort to be Array.prototype.sort instead of undefined!
+    const rawFilters = safeProps.filters;
+    const filters = (Array.isArray(rawFilters) || !rawFilters) ? {} : rawFilters;
+    const stats = safeProps.stats ?? defaultStats;
+
+    // Ensure reviews.data and reviews.links are always arrays
+    const reviewsData = Array.isArray(reviews?.data) ? reviews.data : [];
+    const reviewsLinks = Array.isArray(reviews?.links) ? reviews.links : defaultReviews.links;
+
+    // Extract filter values safely BEFORE any hooks
+    const filterSearch = filters?.search || '';
+    const filterRating = filters?.rating || '';
+    const filterVerified = filters?.verified || '';
+    const filterSort = filters?.sort || 'created_at';
+    const filterDir = filters?.dir || 'desc';
+    const filterPerPage = filters?.per_page || '16';
+
+    const [search, setSearch] = useState(filterSearch);
+    const [rating, setRating] = useState(filterRating);
+    const [verified, setVerified] = useState(filterVerified);
+    const [sortField, setSortField] = useState(filterSort);
+    const [sortDir, setSortDir] = useState(filterDir);
+    const [perPage, setPerPage] = useState(filterPerPage);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const isFirstRender = useRef(true);
 
-    // Auto-refresh data every 30 seconds
-    usePolling({ interval: 30000 });
+    // TODO: Re-enable auto-refresh once verified stable
+    // import { usePolling } from '@/hooks';
+    // usePolling({ interval: 30000 });
 
     const debouncedSearch = useDebounce(search, 300);
 
@@ -137,23 +180,23 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, rating, verified, sort, dir, perPage);
-    }, [debouncedSearch, rating, verified, sort, dir, perPage, applyFilters]);
+        applyFilters(debouncedSearch, rating, verified, sortField, sortDir, perPage);
+    }, [debouncedSearch, rating, verified, sortField, sortDir, perPage, applyFilters]);
 
     // Handle sort toggle
-    const handleSort = (field: string) => {
-        if (sort === field) {
-            setDir(dir === 'asc' ? 'desc' : 'asc');
+    const handleSortToggle = (field: string) => {
+        if (sortField === field) {
+            setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
         } else {
-            setSort(field);
-            setDir('desc');
+            setSortField(field);
+            setSortDir('desc');
         }
     };
 
     // Get sort icon
     const getSortIcon = (field: string) => {
-        if (sort !== field) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
-        return dir === 'asc' ? (
+        if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />;
+        return sortDir === 'asc' ? (
             <ArrowUp className="h-3.5 w-3.5" />
         ) : (
             <ArrowDown className="h-3.5 w-3.5" />
@@ -165,8 +208,8 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
         setSearch('');
         setRating('');
         setVerified('');
-        setSort('created_at');
-        setDir('desc');
+        setSortField('created_at');
+        setSortDir('desc');
         router.get('/admin/reviews', {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
@@ -177,10 +220,10 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
 
     // Handle select all
     const handleSelectAll = () => {
-        if (selectedIds.length === reviews.data.length) {
+        if (selectedIds.length === reviewsData.length) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(reviews.data.map((r) => r.id));
+            setSelectedIds(reviewsData.map((r) => r.id));
         }
     };
 
@@ -249,7 +292,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                         <div className="p-4">
                             <p className="text-sm text-gray-500 dark:text-gray-400">Total Reviews</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                {stats.total}
+                                {stats?.total ?? 0}
                             </p>
                         </div>
                     </Card>
@@ -258,9 +301,9 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                             <p className="text-sm text-gray-500 dark:text-gray-400">Average Rating</p>
                             <div className="flex items-center gap-2 mt-1">
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {stats.average_rating}
+                                    {stats?.average_rating ?? 0}
                                 </p>
-                                <StarRating rating={Math.round(stats.average_rating)} size="md" />
+                                <StarRating rating={Math.round(stats?.average_rating ?? 0)} size="md" />
                             </div>
                         </div>
                     </Card>
@@ -268,7 +311,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                         <div className="p-4">
                             <p className="text-sm text-gray-500 dark:text-gray-400">Verified Purchases</p>
                             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                                {stats.verified_count}
+                                {stats?.verified_count ?? 0}
                             </p>
                         </div>
                     </Card>
@@ -277,8 +320,9 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Rating Distribution</p>
                             <div className="space-y-1">
                                 {[5, 4, 3, 2, 1].map((r) => {
-                                    const count = stats.rating_distribution[r] || 0;
-                                    const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                                    const count = stats?.rating_distribution?.[r] ?? 0;
+                                    const total = stats?.total ?? 0;
+                                    const pct = total > 0 ? (count / total) * 100 : 0;
                                     return (
                                         <div key={r} className="flex items-center gap-2 text-xs">
                                             <span className="w-3 text-gray-500 dark:text-gray-400">{r}</span>
@@ -373,7 +417,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                     <th className="w-10 px-4 py-3">
                                         <input
                                             type="checkbox"
-                                            checked={selectedIds.length === reviews.data.length && reviews.data.length > 0}
+                                            checked={selectedIds.length === reviewsData.length && reviewsData.length > 0}
                                             onChange={handleSelectAll}
                                             className="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500"
                                         />
@@ -392,7 +436,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                     </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <button
-                                            onClick={() => handleSort('rating')}
+                                            onClick={() => handleSortToggle('rating')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
                                         >
                                             <Star className="h-3.5 w-3.5" />
@@ -405,7 +449,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                     </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <button
-                                            onClick={() => handleSort('helpful_count')}
+                                            onClick={() => handleSortToggle('helpful_count')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
                                         >
                                             <ThumbsUp className="h-3.5 w-3.5" />
@@ -415,7 +459,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                     </th>
                                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         <button
-                                            onClick={() => handleSort('created_at')}
+                                            onClick={() => handleSortToggle('created_at')}
                                             className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
                                         >
                                             <Calendar className="h-3.5 w-3.5" />
@@ -429,7 +473,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {reviews.data.map((review) => (
+                                {reviewsData.map((review) => (
                                     <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <td className="px-4 py-4">
                                             <input
@@ -509,7 +553,7 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                                         </td>
                                     </tr>
                                 ))}
-                                {reviews.data.length === 0 && (
+                                {reviewsData.length === 0 && (
                                     <tr>
                                         <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                             <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -525,15 +569,15 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
                 {/* Pagination */}
                 <div className="flex items-center justify-between">
                     <div className="flex-1" />
-                    {reviews.last_page > 1 ? (
+                    {(reviews?.last_page ?? 1) > 1 ? (
                         <div className="flex justify-center gap-1 sm:gap-2">
                             {/* Previous Button */}
                             <Link
-                                href={reviews.links[0].url || '#'}
+                                href={reviewsLinks[0]?.url || '#'}
                                 preserveScroll
                                 preserveState
                                 className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
-                                    reviews.links[0].url
+                                    reviewsLinks[0]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
@@ -543,9 +587,9 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
 
                             {/* Page Numbers - Smart pagination with ellipsis */}
                             {(() => {
-                                const currentPage = reviews.current_page;
-                                const lastPage = reviews.last_page;
-                                const pageLinks = reviews.links.slice(1, -1);
+                                const currentPage = reviews?.current_page ?? 1;
+                                const lastPage = reviews?.last_page ?? 1;
+                                const pageLinks = reviewsLinks.slice(1, -1);
 
                                 const buildPages = (neighborCount: number) => {
                                     const pages: (number | 'ellipsis')[] = [];
@@ -621,11 +665,11 @@ export default function ReviewsIndex({ reviews, filters, stats }: Props) {
 
                             {/* Next Button */}
                             <Link
-                                href={reviews.links[reviews.links.length - 1].url || '#'}
+                                href={reviewsLinks[reviewsLinks.length - 1]?.url || '#'}
                                 preserveScroll
                                 preserveState
                                 className={`px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm ${
-                                    reviews.links[reviews.links.length - 1].url
+                                    reviewsLinks[reviewsLinks.length - 1]?.url
                                         ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                         : 'bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed'
                                 }`}
