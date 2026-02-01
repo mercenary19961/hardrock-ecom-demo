@@ -38,16 +38,32 @@ class UserController extends Controller
             'customer' => User::where('role', 'customer')->count(),
         ];
 
+        // Sorting
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
+
+        // Map frontend field names to database columns
+        $sortableFields = [
+            'name' => 'name',
+            'email' => 'email',
+            'phone' => 'phone',
+            'role' => 'role',
+            'created_at' => 'created_at',
+        ];
+
+        $sortColumn = $sortableFields[$sortField] ?? 'created_at';
+        $sortDirection = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+
         // Pagination
-        $perPage = $request->input('per_page', 15);
-        $users = $query->orderBy('created_at', 'desc')
+        $perPage = $request->input('per_page', 16);
+        $users = $query->orderBy($sortColumn, $sortDirection)
                        ->paginate($perPage)
                        ->withQueryString();
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             // Cast to object to ensure JSON serializes as {} not [] when empty
-            'filters' => (object) $request->only(['search', 'role', 'per_page']),
+            'filters' => (object) $request->only(['search', 'role', 'per_page', 'sort', 'dir']),
             'roleCounts' => $roleCounts,
         ]);
     }
