@@ -25,6 +25,8 @@ import {
     CalendarCheck,
     CalendarX,
     Calendar,
+    CheckCircle,
+    AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -43,6 +45,13 @@ interface Props {
         dir?: string;
     };
     statusCounts: { all: number; active: number; inactive: number; expired: number };
+    stats?: {
+        total: number;
+        active: number;
+        expired: number;
+        total_uses: number;
+        total_savings: number;
+    };
 }
 
 // Debounce hook for search
@@ -121,7 +130,16 @@ const getStatusBadgeVariant = (status: string): 'success' | 'default' | 'warning
     }
 };
 
-export default function CouponsIndex({ coupons, filters }: Props) {
+const defaultStats = {
+    total: 0,
+    active: 0,
+    expired: 0,
+    total_uses: 0,
+    total_savings: 0,
+};
+
+export default function CouponsIndex({ coupons, filters, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [type, setType] = useState(filters.type || '');
@@ -278,6 +296,65 @@ export default function CouponsIndex({ coupons, filters }: Props) {
                             <span className="sm:hidden">Add</span>
                         </Button>
                     </Link>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Coupons
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.total}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Active
+                            </p>
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.active}
+                                </p>
+                                <span className="text-sm text-gray-400 dark:text-gray-500">
+                                    / {stats.total}
+                                </span>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                Expired/Exhausted
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.expired > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.expired}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                Total Savings Given
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                    {formatCurrency(stats.total_savings)}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Search and Filters */}

@@ -123,11 +123,21 @@ class CouponController extends Controller
             })->count(),
         ];
 
+        // Calculate stats for the dashboard cards
+        $stats = [
+            'total' => $statusCounts['all'],
+            'active' => $statusCounts['active'],
+            'expired' => $statusCounts['expired'],
+            'total_uses' => Coupon::sum('usage_count'),
+            'total_savings' => Order::whereNotNull('coupon_id')->sum('discount'),
+        ];
+
         return Inertia::render('Admin/Coupons/Index', [
             'coupons' => $coupons,
             // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'status', 'type', 'started', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
+            'stats' => $stats,
         ]);
     }
 
