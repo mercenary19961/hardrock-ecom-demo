@@ -98,12 +98,22 @@ class OrderController extends Controller
             ->groupBy('payment_status')
             ->pluck('count', 'payment_status');
 
+        // Calculate stats for the dashboard cards
+        $totalOrders = Order::count();
+        $stats = [
+            'total' => $totalOrders,
+            'pending' => $statusCounts['pending'] ?? 0,
+            'revenue' => Order::where('payment_status', 'paid')->sum('total'),
+            'today' => Order::whereDate('created_at', today())->count(),
+        ];
+
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
             'statusCounts' => $statusCounts,
             'paymentStatusCounts' => $paymentStatusCounts,
             // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset', 'sort', 'dir']),
+            'stats' => $stats,
         ]);
     }
 

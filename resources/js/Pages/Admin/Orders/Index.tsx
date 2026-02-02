@@ -7,7 +7,7 @@ import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import {
     Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package,
     Calendar, Download, CheckSquare, Square, CreditCard, Filter, Layers,
-    Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity
+    Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity, Hash
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -27,6 +27,12 @@ interface Props {
         date_preset?: string;
         sort?: string;
         dir?: string;
+    };
+    stats?: {
+        total: number;
+        pending: number;
+        revenue: number;
+        today: number;
     };
 }
 
@@ -49,6 +55,13 @@ const statusOptions = [
     { value: 'cancelled', label: 'Cancelled', icon: XCircle },
 ];
 
+const defaultStats = {
+    total: 0,
+    pending: 0,
+    revenue: 0,
+    today: 0,
+};
+
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -68,7 +81,8 @@ function getPaymentStatusColor(status: string): string {
     return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
 }
 
-export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts, filters }: Props) {
+export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts, filters, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const { i18n } = useTranslation();
     const language = i18n.language;
     const [search, setSearch] = useState(filters.search || '');
@@ -287,6 +301,62 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                             </button>
                         </div>
                     </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Orders
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.total}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5" />
+                                Pending
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.pending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.pending}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                Revenue (Paid)
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                    {formatPrice(stats.revenue, language)}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5" />
+                                Today
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.today > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.today}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Search and Filters */}
