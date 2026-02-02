@@ -38,6 +38,17 @@ class UserController extends Controller
             'customer' => User::where('role', 'customer')->count(),
         ];
 
+        // Calculate stats for the dashboard cards
+        $thirtyDaysAgo = now()->subDays(30);
+        $stats = [
+            'total' => $roleCounts['all'],
+            'admins' => $roleCounts['admin'],
+            'customers' => $roleCounts['customer'],
+            'verified' => User::whereNotNull('email_verified_at')->count(),
+            'unverified' => User::whereNull('email_verified_at')->count(),
+            'new_users' => User::where('created_at', '>=', $thirtyDaysAgo)->count(),
+        ];
+
         // Sorting
         $sortField = $request->input('sort', 'created_at');
         $sortDir = $request->input('dir', 'desc');
@@ -65,6 +76,7 @@ class UserController extends Controller
             // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'role', 'per_page', 'sort', 'dir']),
             'roleCounts' => $roleCounts,
+            'stats' => $stats,
         ]);
     }
 

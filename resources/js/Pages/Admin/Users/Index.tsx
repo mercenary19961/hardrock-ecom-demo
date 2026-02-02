@@ -19,6 +19,10 @@ import {
     Eye,
     LayoutGrid,
     List,
+    Hash,
+    CheckCircle,
+    AlertCircle,
+    UserPlus,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -77,6 +81,14 @@ interface Props {
     users: PaginatedData<User>;
     filters: { search?: string; role?: string; per_page?: string; sort?: string; dir?: string };
     roleCounts: { all: number; admin: number; customer: number };
+    stats?: {
+        total: number;
+        admins: number;
+        customers: number;
+        verified: number;
+        unverified: number;
+        new_users: number;
+    };
 }
 
 // Debounce hook for search
@@ -93,6 +105,15 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
+const defaultStats = {
+    total: 0,
+    admins: 0,
+    customers: 0,
+    verified: 0,
+    unverified: 0,
+    new_users: 0,
+};
+
 // Helper to format date
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -102,7 +123,8 @@ const formatDate = (dateString: string) => {
     });
 };
 
-export default function UsersIndex({ users, filters, roleCounts }: Props) {
+export default function UsersIndex({ users, filters, roleCounts, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const [search, setSearch] = useState(filters.search || '');
     const [role, setRole] = useState(filters.role || '');
     const [perPage, setPerPage] = useState(filters.per_page || '16');
@@ -302,6 +324,65 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                             <LayoutGrid className="h-4 w-4" />
                         </button>
                     </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Users
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.total}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Verified
+                            </p>
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.verified}
+                                </p>
+                                <span className="text-sm text-gray-400 dark:text-gray-500">
+                                    / {stats.total}
+                                </span>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                Unverified
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.unverified > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.unverified}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <UserPlus className="h-3.5 w-3.5" />
+                                New (30 days)
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.new_users > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.new_users}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Filters */}
