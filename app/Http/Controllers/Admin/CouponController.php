@@ -61,12 +61,30 @@ class CouponController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Pagination
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
-            ? (int) $request->per_page
-            : 15;
+        // Sorting
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
 
-        $coupons = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        // Validate sort field
+        $allowedSortFields = ['code', 'name', 'type', 'value', 'usage_count', 'expires_at', 'created_at', 'is_active'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
+
+        // Apply sorting
+        $query->orderBy($sortField, $sortDir);
+
+        // Pagination
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
+            ? (int) $request->per_page
+            : 16;
+
+        $coupons = $query->paginate($perPage);
 
         // Get status counts
         $statusCounts = [
@@ -92,7 +110,7 @@ class CouponController extends Controller
         return Inertia::render('Admin/Coupons/Index', [
             'coupons' => $coupons,
             // Cast to object to ensure JSON serializes as {} not [] when empty
-            'filters' => (object) $request->only(['search', 'status', 'type', 'per_page']),
+            'filters' => (object) $request->only(['search', 'status', 'type', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
         ]);
     }

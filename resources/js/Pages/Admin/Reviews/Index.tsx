@@ -22,6 +22,7 @@ import {
     Hash,
     TrendingUp,
     ShieldCheck,
+    ShieldX,
     BarChart3,
     ArrowLeft,
 } from 'lucide-react';
@@ -463,12 +464,12 @@ export default function ReviewsIndex(props: Props) {
                                     className="w-full sm:w-36"
                                     placeholder="All Ratings"
                                     options={[
-                                        { value: '', label: 'All Ratings' },
-                                        { value: '5', label: '5 Stars' },
-                                        { value: '4', label: '4 Stars' },
-                                        { value: '3', label: '3 Stars' },
-                                        { value: '2', label: '2 Stars' },
-                                        { value: '1', label: '1 Star' },
+                                        { value: '', label: 'All Ratings', icon: Star },
+                                        { value: '5', label: '5 Stars', icon: Star },
+                                        { value: '4', label: '4 Stars', icon: Star },
+                                        { value: '3', label: '3 Stars', icon: Star },
+                                        { value: '2', label: '2 Stars', icon: Star },
+                                        { value: '1', label: '1 Star', icon: Star },
                                     ]}
                                 />
 
@@ -476,12 +477,12 @@ export default function ReviewsIndex(props: Props) {
                                 <Select
                                     value={verified}
                                     onChange={setVerified}
-                                    className="w-full sm:w-40"
+                                    className="w-full sm:w-44"
                                     placeholder="All Reviews"
                                     options={[
-                                        { value: '', label: 'All Reviews' },
-                                        { value: 'yes', label: 'Verified Only' },
-                                        { value: 'no', label: 'Unverified Only' },
+                                        { value: '', label: 'All Reviews', icon: MessageSquare },
+                                        { value: 'yes', label: 'Verified Only', icon: ShieldCheck },
+                                        { value: 'no', label: 'Unverified Only', icon: ShieldX },
                                     ]}
                                 />
                             </div>

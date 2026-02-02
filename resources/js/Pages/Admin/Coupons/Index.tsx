@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Badge } from '@/Components/ui';
+import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Coupon, PaginatedData } from '@/types/models';
 import {
     Plus,
@@ -21,15 +21,26 @@ import {
     Power,
     Infinity,
     Check,
+    Filter,
+    Tag,
+    Hash,
+    Settings,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePolling } from '@/hooks';
-import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
+import { usePolling, useResizableColumns } from '@/hooks';
+import { StickyScrollWrapper, ResizableTh, SortIcon, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 import axios from 'axios';
 
 interface Props {
     coupons: PaginatedData<Coupon>;
-    filters: { search?: string; status?: string; type?: string; per_page?: string };
+    filters: {
+        search?: string;
+        status?: string;
+        type?: string;
+        per_page?: string;
+        sort?: string;
+        dir?: string;
+    };
     statusCounts: { all: number; active: number; inactive: number; expired: number };
 }
 
@@ -45,7 +56,13 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
+
+const typeOptions = [
+    { value: '', label: 'All Types', icon: Layers },
+    { value: 'percentage', label: 'Percentage', icon: Percent },
+    { value: 'fixed', label: 'Fixed Amount', icon: DollarSign },
+];
 
 // Helper to format currency (omit decimals if whole number)
 const formatCurrency = (amount: number) => {
@@ -101,7 +118,10 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [type, setType] = useState(filters.type || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+    const [perPage, setPerPage] = useState(filters.per_page || '16');
+    const [sortField, setSortField] = useState(filters.sort || 'created_at');
+    const [sortDir, setSortDir] = useState(filters.dir || 'desc');
+    const [showFilters, setShowFilters] = useState(false);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
@@ -109,16 +129,32 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
     const debouncedSearch = useDebounce(search, 300);
 
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-coupons-table',
+        columns: [
+            { key: 'code', defaultWidth: 150, minWidth: 100 },
+            { key: 'name', defaultWidth: 180, minWidth: 120 },
+            { key: 'value', defaultWidth: 140, minWidth: 100 },
+            { key: 'usage', defaultWidth: 120, minWidth: 80 },
+            { key: 'dates', defaultWidth: 160, minWidth: 120 },
+            { key: 'status', defaultWidth: 100, minWidth: 80 },
+            { key: 'actions', defaultWidth: 120, minWidth: 100 },
+        ],
+    });
+
     // SPA-style filter function
     const applyFilters = useCallback(
-        (searchVal: string, statusVal: string, typeVal: string, perPageVal: string) => {
+        (searchVal: string, statusVal: string, typeVal: string, perPageVal: string, sortFieldVal: string, sortDirVal: string) => {
             router.get(
                 '/admin/coupons',
                 {
                     search: searchVal || undefined,
                     status: statusVal || undefined,
                     type: typeVal || undefined,
-                    per_page: perPageVal !== '15' ? perPageVal : undefined,
+                    per_page: perPageVal !== '16' ? perPageVal : undefined,
+                    sort: sortFieldVal !== 'created_at' ? sortFieldVal : undefined,
+                    dir: sortDirVal !== 'desc' ? sortDirVal : undefined,
                 },
                 {
                     preserveState: true,
@@ -136,34 +172,46 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, status, type, perPage);
+        applyFilters(debouncedSearch, status, type, perPage, sortField, sortDir);
     }, [debouncedSearch, applyFilters]);
 
     const handleStatusFilter = (newStatus: string) => {
         const statusValue = newStatus === 'all' ? '' : newStatus;
         setStatus(statusValue);
-        applyFilters(search, statusValue, type, perPage);
+        applyFilters(search, statusValue, type, perPage, sortField, sortDir);
     };
 
     const handleTypeFilter = (newType: string) => {
         const typeValue = newType === 'all' ? '' : newType;
         setType(typeValue);
-        applyFilters(search, status, typeValue, perPage);
+        applyFilters(search, status, typeValue, perPage, sortField, sortDir);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, status, type, value);
+        applyFilters(search, status, type, value, sortField, sortDir);
+    };
+
+    const handleSortToggle = (field: string) => {
+        let newDir = 'desc';
+        if (sortField === field) {
+            newDir = sortDir === 'desc' ? 'asc' : 'desc';
+        }
+        setSortField(field);
+        setSortDir(newDir);
+        applyFilters(search, status, type, perPage, field, newDir);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setStatus('');
         setType('');
-        applyFilters('', '', '', perPage);
+        setSortField('created_at');
+        setSortDir('desc');
+        applyFilters('', '', '', perPage, 'created_at', 'desc');
     };
 
-    const hasActiveFilters = filters.search || filters.status || filters.type;
+    const hasActiveFilters = filters.search || filters.status || filters.type || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
 
     const handleDelete = (coupon: Coupon) => {
         if (confirm(`Are you sure you want to delete coupon "${coupon.code}"?`)) {
@@ -277,42 +325,67 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                     </button>
                 </div>
 
-                {/* Search and Type Filter */}
+                {/* Search and Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="relative flex-1">
-                            <label htmlFor="coupons-search" className="sr-only">
-                                Search coupons
-                            </label>
-                            <input
-                                id="coupons-search"
-                                name="search"
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by code or name..."
-                                autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
-                        <div className="flex gap-2">
-                            <select
-                                value={type}
-                                onChange={(e) => handleTypeFilter(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            >
-                                <option value="">All Types</option>
-                                <option value="percentage">Percentage</option>
-                                <option value="fixed">Fixed Amount</option>
-                            </select>
-                            {hasActiveFilters && (
-                                <Button variant="outline" onClick={handleClearFilters}>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear
+                    <div className="p-4 space-y-4">
+                        {/* Search Row */}
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                            <div className="relative w-full sm:w-1/2">
+                                <label htmlFor="coupons-search" className="sr-only">
+                                    Search coupons
+                                </label>
+                                <input
+                                    id="coupons-search"
+                                    name="search"
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search by code or name..."
+                                    autoComplete="off"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            </div>
+                            <div className="flex items-center gap-3 sm:ml-auto">
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear All Filters
+                                    </button>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={showFilters ? 'bg-gray-100 dark:bg-gray-700' : ''}
+                                >
+                                    <Filter className="h-4 w-4 mr-2" />
+                                    Filters
                                 </Button>
-                            )}
+                            </div>
                         </div>
+
+                        {/* Expanded Filters */}
+                        {showFilters && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                {/* Type Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <Tag className="h-4 w-4 inline mr-1" />
+                                        Coupon Type
+                                    </label>
+                                    <Select
+                                        value={type}
+                                        onChange={handleTypeFilter}
+                                        className="w-full"
+                                        placeholder="All Types"
+                                        options={typeOptions}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </Card>
 
@@ -407,43 +480,109 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
                 {/* Desktop Table Layout */}
                 <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
                     <StickyScrollWrapper>
-                        <table className="w-full min-w-[900px]">
+                        <table className="w-full table-fixed min-w-[900px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                    <ResizableTh
+                                        columnKey="code"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('code')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Ticket className="h-3.5 w-3.5" />
                                             Code
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="code" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="name"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('name')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Tag className="h-3.5 w-3.5" />
+                                            Name
+                                            <SortIcon field="name" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="value"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('value')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Percent className="h-3.5 w-3.5" />
                                             Value
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Usage
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="value" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="usage"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('usage_count')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Hash className="h-3.5 w-3.5" />
+                                            Usage
+                                            <SortIcon field="usage_count" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="dates"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('expires_at')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Clock className="h-3.5 w-3.5" />
                                             Dates
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="expires_at" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="status"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('is_active')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <ToggleLeft className="h-3.5 w-3.5" />
                                             Status
+                                            <SortIcon field="is_active" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <Settings className="h-3.5 w-3.5" />
+                                            Actions
                                         </div>
-                                    </th>
-                                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Actions
-                                    </th>
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -596,17 +735,8 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                     pageNum === currentPage - 1 ||
                                     pageNum === currentPage + 1;
 
-                                const showLeftEllipsis = pageNum === currentPage - 1 && currentPage > 3;
-                                const showRightEllipsis =
-                                    pageNum === currentPage + 1 && currentPage < lastPage - 2;
-
                                 return (
                                     <span key={index} className={!showOnMobile ? 'hidden sm:inline' : ''}>
-                                        {showLeftEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
-                                                ...
-                                            </span>
-                                        )}
                                         <Link
                                             href={link.url || '#'}
                                             preserveScroll
@@ -621,11 +751,6 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                         >
                                             {pageNum}
                                         </Link>
-                                        {showRightEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
-                                                ...
-                                            </span>
-                                        )}
                                     </span>
                                 );
                             })}
