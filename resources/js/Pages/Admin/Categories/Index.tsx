@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Folder, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Folder, Eye, Hash, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
 import { StickyScrollWrapper, ResizableTh, SortIcon, ResetColumnsButton } from '@/Components/admin/ResizableTable';
@@ -11,6 +11,14 @@ interface Props {
     categories: PaginatedData<Category>;
     filters: { search?: string; status?: string; per_page?: string; sort?: string; dir?: string };
     statusCounts: { active: number; inactive: number };
+    stats?: {
+        total: number;
+        parents: number;
+        subcategories: number;
+        active: number;
+        inactive: number;
+        empty: number;
+    };
 }
 
 // Debounce hook for search
@@ -33,7 +41,17 @@ const statusOptions = [
     { value: 'inactive', label: 'Inactive', icon: XCircle },
 ];
 
-export default function CategoriesIndex({ categories, filters, statusCounts }: Props) {
+const defaultStats = {
+    total: 0,
+    parents: 0,
+    subcategories: 0,
+    active: 0,
+    inactive: 0,
+    empty: 0,
+};
+
+export default function CategoriesIndex({ categories, filters, statusCounts, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [perPage, setPerPage] = useState(filters.per_page || '16');
@@ -146,6 +164,65 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                             <span className="sm:hidden">Add</span>
                         </Button>
                     </Link>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Categories
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.total}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                Active
+                            </p>
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.active}
+                                </p>
+                                <span className="text-sm text-gray-400 dark:text-gray-500">
+                                    / {stats.total}
+                                </span>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <XCircle className="h-3.5 w-3.5" />
+                                Inactive
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.inactive > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.inactive}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                Empty (0 products)
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.empty > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.empty}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Filters */}

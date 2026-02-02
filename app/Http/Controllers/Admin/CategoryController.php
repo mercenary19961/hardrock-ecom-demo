@@ -129,11 +129,23 @@ class CategoryController extends Controller
             'inactive' => Category::where('is_active', false)->count(),
         ];
 
+        // Calculate stats for the dashboard cards
+        $totalCategories = Category::count();
+        $stats = [
+            'total' => $totalCategories,
+            'parents' => Category::whereNull('parent_id')->count(),
+            'subcategories' => Category::whereNotNull('parent_id')->count(),
+            'active' => $statusCounts['active'],
+            'inactive' => $statusCounts['inactive'],
+            'empty' => Category::withCount('products')->get()->where('products_count', 0)->count(),
+        ];
+
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
             // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'status', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
+            'stats' => $stats,
         ]);
     }
 
