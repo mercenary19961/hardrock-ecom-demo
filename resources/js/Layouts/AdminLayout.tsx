@@ -260,14 +260,14 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
             {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 left-0 z-40 bg-gray-900 text-white transition-all duration-300 ${
-                    mobileMenuOpen ? 'w-64' : sidebarOpen ? 'w-64' : 'w-20'
+                    mobileMenuOpen ? 'w-72' : sidebarOpen ? 'w-72' : 'w-20'
                 } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo */}
-                    <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+                    <div className="flex items-center justify-between h-16 px-6 border-b border-gray-800">
                         {(sidebarOpen || mobileMenuOpen) && (
-                            <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0">
+                            <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0 whitespace-nowrap">
                                 {storeName} Admin
                             </Link>
                         )}
@@ -338,12 +338,12 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 
             {/* Main content */}
             <div
-                className={`h-screen flex flex-col transition-all duration-300 ${
-                    sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+                className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${
+                    sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'
                 }`}
             >
                 {/* Top bar */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300 flex-shrink-0">
+                <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300 flex-shrink-0">
                     {/* Breadcrumbs - hidden on mobile */}
                     <nav className="hidden lg:flex items-center gap-1 text-sm">
                         {breadcrumbs.map((crumb, index) => {

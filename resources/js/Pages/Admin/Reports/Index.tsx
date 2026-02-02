@@ -484,7 +484,7 @@ export default function ReportsIndex({
                                 View all
                             </Link>
                         </div>
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                             {categoryPerformance.map((category) => (
                                 <div key={category.id} className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-0">
                                     <div>
