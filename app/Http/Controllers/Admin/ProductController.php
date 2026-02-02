@@ -106,11 +106,28 @@ class ProductController extends Controller
             ->ordered()
             ->get(['id', 'name', 'parent_id', 'sort_order']);
 
+        // Calculate stats for the dashboard cards
+        $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
+
+        $stats = [
+            'total' => Product::count(),
+            'active' => Product::where('is_active', true)->count(),
+            'out_of_stock' => Product::where('stock', 0)->count(),
+            'low_stock' => Product::where('stock', '>', 0)
+                ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold])
+                ->count(),
+            'featured' => Product::where('is_featured', true)->count(),
+            'on_sale' => Product::whereNotNull('compare_price')
+                ->whereColumn('compare_price', '>', 'price')
+                ->count(),
+        ];
+
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
             // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'category', 'status', 'per_page', 'sort', 'dir']),
+            'stats' => $stats,
         ]);
     }
 

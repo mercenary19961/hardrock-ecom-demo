@@ -8,7 +8,8 @@ import {
     Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, LayoutGrid, List,
     MoreVertical, ImageIcon, Eye, Package, Tag, Layers, Info, Palette, Ruler,
     Star, Sparkles, Calendar, CheckSquare, Square, MinusSquare,
-    CircleCheck, CircleX, Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink
+    CircleCheck, CircleX, Percent, AlertTriangle, PackageX, Power, PowerOff, StarOff, ExternalLink,
+    Hash, TrendingUp
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -485,6 +486,14 @@ interface Props {
     products: PaginatedData<Product>;
     categories: (Category & { children?: Category[] })[];
     filters?: { search?: string; category?: string; status?: string; per_page?: string; sort?: string; dir?: string };
+    stats?: {
+        total: number;
+        active: number;
+        out_of_stock: number;
+        low_stock: number;
+        featured: number;
+        on_sale: number;
+    };
 }
 
 // Helper function to build hierarchical category options
@@ -549,7 +558,17 @@ const statusOptions = [
     { value: 'out_of_stock', label: 'Out of Stock', icon: PackageX },
 ];
 
-export default function ProductsIndex({ products: productsProp, categories, filters: filtersProp }: Props) {
+const defaultStats = {
+    total: 0,
+    active: 0,
+    out_of_stock: 0,
+    low_stock: 0,
+    featured: 0,
+    on_sale: 0,
+};
+
+export default function ProductsIndex({ products: productsProp, categories, filters: filtersProp, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const { i18n } = useTranslation();
     const language = i18n.language;
 
@@ -915,6 +934,65 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                             </Button>
                         </Link>
                     </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" />
+                                Total Products
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.total}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <CircleCheck className="h-3.5 w-3.5" />
+                                Active Products
+                            </p>
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                                    {stats.active}
+                                </p>
+                                <span className="text-sm text-gray-400 dark:text-gray-500">
+                                    / {stats.total}
+                                </span>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <PackageX className="h-3.5 w-3.5" />
+                                Out of Stock
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.out_of_stock > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.out_of_stock}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                        <div className="p-4 min-h-[120px] flex flex-col">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                                Low Stock
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                                <p className={`text-3xl font-bold ${stats.low_stock > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.low_stock}
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
 
                 {/* Filters */}
