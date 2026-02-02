@@ -1,16 +1,17 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Badge } from '@/Components/ui';
+import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Order, PaginatedData } from '@/types/models';
 import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import {
     Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package,
-    Calendar, Download, CheckSquare, Square, CreditCard, Filter
+    Calendar, Download, CheckSquare, Square, CreditCard, Filter, Layers,
+    Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePolling } from '@/hooks';
-import { StickyScrollWrapper } from '@/Components/admin/ResizableTable';
+import { usePolling, useResizableColumns } from '@/hooks';
+import { StickyScrollWrapper, ResizableTh, SortIcon, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 
 interface Props {
     orders: PaginatedData<Order>;
@@ -24,6 +25,8 @@ interface Props {
         date_from?: string;
         date_to?: string;
         date_preset?: string;
+        sort?: string;
+        dir?: string;
     };
 }
 
@@ -36,7 +39,15 @@ const datePresets = [
     { value: 'week', label: 'This Week' },
     { value: 'month', label: 'This Month' },
 ];
-const perPageOptions = ['5', '10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
+
+const statusOptions = [
+    { value: '', label: 'All Status', icon: Layers },
+    { value: 'pending', label: 'Pending', icon: Clock },
+    { value: 'processing', label: 'Processing', icon: ShoppingCart },
+    { value: 'delivered', label: 'Delivered', icon: Truck },
+    { value: 'cancelled', label: 'Cancelled', icon: XCircle },
+];
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -66,7 +77,9 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
     const [datePreset, setDatePreset] = useState(filters.date_preset || '');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+    const [perPage, setPerPage] = useState(filters.per_page || '16');
+    const [sortField, setSortField] = useState(filters.sort || 'created_at');
+    const [sortDir, setSortDir] = useState(filters.dir || 'desc');
     const [showFilters, setShowFilters] = useState(false);
     const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
     const [bulkStatus, setBulkStatus] = useState('');
@@ -81,6 +94,21 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
     usePolling({ interval: 30000 });
     const debouncedSearch = useDebounce(search, 300);
 
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-orders-table',
+        columns: [
+            { key: 'checkbox', defaultWidth: 50, minWidth: 40 },
+            { key: 'order', defaultWidth: 180, minWidth: 120 },
+            { key: 'customer', defaultWidth: 220, minWidth: 150 },
+            { key: 'date', defaultWidth: 180, minWidth: 140 },
+            { key: 'total', defaultWidth: 120, minWidth: 100 },
+            { key: 'status', defaultWidth: 120, minWidth: 100 },
+            { key: 'payment', defaultWidth: 120, minWidth: 100 },
+            { key: 'actions', defaultWidth: 100, minWidth: 80 },
+        ],
+    });
+
     useEffect(() => {
         localStorage.setItem('ordersViewMode', viewMode);
     }, [viewMode]);
@@ -92,7 +120,9 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
         perPageVal: string,
         datePresetVal: string,
         dateFromVal: string,
-        dateToVal: string
+        dateToVal: string,
+        sortFieldVal: string,
+        sortDirVal: string
     ) => {
         router.get(
             '/admin/orders',
@@ -100,10 +130,12 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                 search: searchVal || undefined,
                 status: statusVal || undefined,
                 payment_status: paymentStatusVal || undefined,
-                per_page: perPageVal !== '15' ? perPageVal : undefined,
+                per_page: perPageVal !== '16' ? perPageVal : undefined,
                 date_preset: datePresetVal || undefined,
                 date_from: dateFromVal || undefined,
                 date_to: dateToVal || undefined,
+                sort: sortFieldVal !== 'created_at' ? sortFieldVal : undefined,
+                dir: sortDirVal !== 'desc' ? sortDirVal : undefined,
             },
             {
                 preserveState: true,
@@ -118,36 +150,47 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, currentStatus, paymentStatus, perPage, datePreset, dateFrom, dateTo);
+        applyFilters(debouncedSearch, currentStatus, paymentStatus, perPage, datePreset, dateFrom, dateTo, sortField, sortDir);
     }, [debouncedSearch, applyFilters]);
 
     const handleStatusFilter = (status: string) => {
         const newStatus = status === 'all' ? '' : status;
         setCurrentStatus(newStatus);
-        applyFilters(search, newStatus, paymentStatus, perPage, datePreset, dateFrom, dateTo);
+        applyFilters(search, newStatus, paymentStatus, perPage, datePreset, dateFrom, dateTo, sortField, sortDir);
     };
 
     const handlePaymentStatusFilter = (status: string) => {
         const newStatus = status === 'all' ? '' : status;
         setPaymentStatus(newStatus);
-        applyFilters(search, currentStatus, newStatus, perPage, datePreset, dateFrom, dateTo);
+        applyFilters(search, currentStatus, newStatus, perPage, datePreset, dateFrom, dateTo, sortField, sortDir);
     };
 
     const handleDatePresetChange = (preset: string) => {
         setDatePreset(preset);
         setDateFrom('');
         setDateTo('');
-        applyFilters(search, currentStatus, paymentStatus, perPage, preset, '', '');
+        applyFilters(search, currentStatus, paymentStatus, perPage, preset, '', '', sortField, sortDir);
     };
 
     const handleDateRangeChange = () => {
         setDatePreset('');
-        applyFilters(search, currentStatus, paymentStatus, perPage, '', dateFrom, dateTo);
+        applyFilters(search, currentStatus, paymentStatus, perPage, '', dateFrom, dateTo, sortField, sortDir);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, currentStatus, paymentStatus, value, datePreset, dateFrom, dateTo);
+        applyFilters(search, currentStatus, paymentStatus, value, datePreset, dateFrom, dateTo, sortField, sortDir);
+    };
+
+    // Handle sort toggle on column header click
+    const handleSortToggle = (field: string) => {
+        let newDir = 'desc';
+        if (sortField === field) {
+            newDir = sortDir === 'desc' ? 'asc' : 'desc';
+        }
+        setSortField(field);
+        setSortDir(newDir);
+        applyFilters(search, currentStatus, paymentStatus, perPage, datePreset, dateFrom, dateTo, field, newDir);
     };
 
     const handleClearFilters = () => {
@@ -157,7 +200,9 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
         setDatePreset('');
         setDateFrom('');
         setDateTo('');
-        applyFilters('', '', '', perPage, '', '', '');
+        setSortField('created_at');
+        setSortDir('desc');
+        applyFilters('', '', '', perPage, '', '', '', 'created_at', 'desc');
     };
 
     const handleSelectAll = () => {
@@ -204,7 +249,7 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
         window.location.href = `/admin/orders/export?${params.toString()}`;
     };
 
-    const hasActiveFilters = filters.search || filters.status || filters.payment_status || filters.date_preset || filters.date_from || filters.date_to;
+    const hasActiveFilters = filters.search || filters.status || filters.payment_status || filters.date_preset || filters.date_from || filters.date_to || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
     const totalOrders = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
 
     return (
@@ -241,35 +286,12 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                     </div>
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex flex-wrap gap-2">
-                    {statuses.map((status) => {
-                        const count = status === 'all' ? totalOrders : statusCounts[status];
-                        return (
-                            <button
-                                key={status}
-                                onClick={() => handleStatusFilter(status)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                    (filters.status || 'all') === status
-                                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }`}
-                            >
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
-                                {count !== undefined && (
-                                    <span className="ml-1 opacity-70">({count})</span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
-
                 {/* Search and Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-4 space-y-4">
                         {/* Search Row */}
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                            <div className="relative flex-1">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                            <div className="relative w-full sm:w-1/2">
                                 <label htmlFor="orders-search" className="sr-only">Search orders</label>
                                 <input
                                     id="orders-search"
@@ -282,43 +304,64 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                 />
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={showFilters ? 'bg-gray-100 dark:bg-gray-700' : ''}
-                            >
-                                <Filter className="h-4 w-4 mr-2" />
-                                Filters
-                            </Button>
-                            {hasActiveFilters && (
-                                <Button variant="outline" onClick={handleClearFilters}>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear
+                            <div className="flex items-center gap-3 sm:ml-auto">
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear All Filters
+                                    </button>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={showFilters ? 'bg-gray-100 dark:bg-gray-700' : ''}
+                                >
+                                    <Filter className="h-4 w-4 mr-2" />
+                                    Filters
                                 </Button>
-                            )}
+                            </div>
                         </div>
 
                         {/* Expanded Filters */}
                         {showFilters && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                {/* Order Status */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <Package className="h-4 w-4 inline mr-1" />
+                                        Order Status
+                                    </label>
+                                    <Select
+                                        value={currentStatus}
+                                        onChange={handleStatusFilter}
+                                        className="w-full"
+                                        placeholder="All Status"
+                                        options={statusOptions}
+                                    />
+                                </div>
+
                                 {/* Payment Status */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         <CreditCard className="h-4 w-4 inline mr-1" />
                                         Payment Status
                                     </label>
-                                    <select
-                                        value={paymentStatus || 'all'}
-                                        onChange={(e) => handlePaymentStatusFilter(e.target.value)}
-                                        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400"
-                                    >
-                                        {paymentStatuses.map((status) => (
-                                            <option key={status} value={status}>
-                                                {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                {status !== 'all' && paymentStatusCounts[status] !== undefined && ` (${paymentStatusCounts[status]})`}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <Select
+                                        value={paymentStatus}
+                                        onChange={handlePaymentStatusFilter}
+                                        className="w-full"
+                                        placeholder="All Payment"
+                                        options={[
+                                            { value: '', label: 'All Payment', icon: Layers },
+                                            { value: 'pending', label: 'Pending', icon: Clock },
+                                            { value: 'paid', label: 'Paid', icon: CheckSquare },
+                                            { value: 'failed', label: 'Failed', icon: XCircle },
+                                            { value: 'refunded', label: 'Refunded', icon: CreditCard },
+                                        ]}
+                                    />
                                 </div>
 
                                 {/* Date Preset */}
@@ -327,22 +370,25 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                         <Calendar className="h-4 w-4 inline mr-1" />
                                         Date Range
                                     </label>
-                                    <select
+                                    <Select
                                         value={datePreset}
-                                        onChange={(e) => handleDatePresetChange(e.target.value)}
-                                        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400"
-                                    >
-                                        {datePresets.map((preset) => (
-                                            <option key={preset.value} value={preset.value}>
-                                                {preset.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={handleDatePresetChange}
+                                        className="w-full"
+                                        placeholder="All Time"
+                                        options={[
+                                            { value: '', label: 'All Time', icon: Layers },
+                                            { value: 'today', label: 'Today', icon: Calendar },
+                                            { value: 'yesterday', label: 'Yesterday', icon: Calendar },
+                                            { value: 'week', label: 'This Week', icon: Calendar },
+                                            { value: 'month', label: 'This Month', icon: Calendar },
+                                        ]}
+                                    />
                                 </div>
 
                                 {/* Custom Date From */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <Calendar className="h-4 w-4 inline mr-1" />
                                         From Date
                                     </label>
                                     <input
@@ -350,13 +396,14 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                         value={dateFrom}
                                         onChange={(e) => setDateFrom(e.target.value)}
                                         onBlur={handleDateRangeChange}
-                                        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400"
+                                        className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                                     />
                                 </div>
 
                                 {/* Custom Date To */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <Calendar className="h-4 w-4 inline mr-1" />
                                         To Date
                                     </label>
                                     <input
@@ -364,7 +411,7 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                         value={dateTo}
                                         onChange={(e) => setDateTo(e.target.value)}
                                         onBlur={handleDateRangeChange}
-                                        className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400"
+                                        className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-white px-3 py-2 text-sm outline-none focus:border-gray-900 dark:focus:border-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                                     />
                                 </div>
                             </div>
@@ -476,11 +523,20 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
 
                 {/* Table View */}
                 <Card className={`${viewMode === 'table' ? 'hidden sm:block' : 'hidden'} dark:bg-gray-800 dark:border-gray-700`}>
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
                     <StickyScrollWrapper>
-                        <table className="w-full min-w-[1000px]">
+                        <table className="w-full table-fixed min-w-[1000px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="w-10 px-4 py-3">
+                                    <ResizableTh
+                                        columnKey="checkbox"
+                                        resizable={resizable}
+                                        className="px-4 py-3"
+                                        isResizable={false}
+                                    >
                                         <button onClick={handleSelectAll} className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600">
                                             {selectedOrders.length === orders.data.length && orders.data.length > 0 ? (
                                                 <CheckSquare className="h-4 w-4 text-blue-600" />
@@ -488,28 +544,99 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                                 <Square className="h-4 w-4 text-gray-400" />
                                             )}
                                         </button>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Order
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Customer
-                                    </th>
-                                    <th className="hidden lg:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Date
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Total
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="hidden xl:table-cell text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Payment
-                                    </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="order"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('order_number')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Package className="h-3.5 w-3.5" />
+                                            Order
+                                            <SortIcon field="order_number" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="customer"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('customer_name')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <User className="h-3.5 w-3.5" />
+                                            Customer
+                                            <SortIcon field="customer_name" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="date"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('created_at')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Calendar className="h-3.5 w-3.5" />
+                                            Date
+                                            <SortIcon field="created_at" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="total"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('total')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <DollarSign className="h-3.5 w-3.5" />
+                                            Total
+                                            <SortIcon field="total" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="status"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('status')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Activity className="h-3.5 w-3.5" />
+                                            Status
+                                            <SortIcon field="status" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="payment"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('payment_status')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <CreditCard className="h-3.5 w-3.5" />
+                                            Payment
+                                            <SortIcon field="payment_status" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
                                         Actions
-                                    </th>
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -533,10 +660,10 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                             </Link>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-gray-900 dark:text-white">{order.customer_name}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{order.customer_email}</div>
+                                            <div className="text-gray-900 dark:text-white truncate">{order.customer_name}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{order.customer_email}</div>
                                         </td>
-                                        <td className="hidden lg:table-cell px-6 py-4 text-gray-500 dark:text-gray-400">
+                                        <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
                                             {formatDateTime(order.created_at)}
                                         </td>
                                         <td className="px-6 py-4 font-medium tabular-nums text-gray-900 dark:text-white">
@@ -547,7 +674,7 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                                 {order.status}
                                             </Badge>
                                         </td>
-                                        <td className="hidden xl:table-cell px-6 py-4">
+                                        <td className="px-6 py-4">
                                             <Badge className={getPaymentStatusColor(order.payment_status)}>
                                                 {order.payment_status}
                                             </Badge>

@@ -64,11 +64,29 @@ class OrderController extends Controller
             }
         }
 
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
-            ? (int) $request->per_page
-            : 15;
+        // Sorting parameters (default: created_at descending - most recent first)
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
 
-        $orders = $query->recent()->paginate($perPage)->withQueryString();
+        // Validate sort field
+        $allowedSortFields = ['order_number', 'customer_name', 'created_at', 'total', 'status', 'payment_status'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
+
+        // Apply sorting (don't use ->recent() when custom sort is applied)
+        $query->orderBy($sortField, $sortDir);
+
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
+            ? (int) $request->per_page
+            : 16;
+
+        $orders = $query->paginate($perPage)->withQueryString();
 
         // Status counts
         $statusCounts = Order::selectRaw('status, count(*) as count')
@@ -85,7 +103,7 @@ class OrderController extends Controller
             'statusCounts' => $statusCounts,
             'paymentStatusCounts' => $paymentStatusCounts,
             // Cast to object to ensure JSON serializes as {} not [] when empty
-            'filters' => (object) $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset']),
+            'filters' => (object) $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset', 'sort', 'dir']),
         ]);
     }
 

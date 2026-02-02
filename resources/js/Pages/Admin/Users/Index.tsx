@@ -732,14 +732,14 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
                 <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 pl-4 pr-3 py-3 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <Check className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                     <span className="font-medium">{successMessage}</span>
-                    <button
+                    <Button
                         type="button"
                         onClick={() => setSuccessMessage(null)}
                         className="ml-2 p-1 rounded-md hover:bg-green-100 dark:hover:bg-green-800/50 transition-colors"
                         title="Dismiss"
                     >
                         <X className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </button>
+                    </Button>
                 </div>
             )}
 
