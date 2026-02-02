@@ -433,8 +433,8 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
 
                 {/* Desktop Table Layout - hidden on mobile, shown on desktop when table mode selected */}
                 <Card className={`${viewMode === 'table' ? 'hidden md:block' : 'hidden'} dark:bg-gray-800 dark:border-gray-700`}>
-                    {/* Reset columns button */}
-                    <div className="flex justify-end px-4 pt-3">
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
                         <ResetColumnsButton resizable={resizable} />
                     </div>
                     <StickyScrollWrapper>
