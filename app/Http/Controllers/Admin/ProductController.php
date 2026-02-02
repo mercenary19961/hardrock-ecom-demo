@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProductsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
@@ -17,6 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
@@ -493,9 +496,9 @@ class ProductController extends Controller
     }
 
     /**
-     * Export products to CSV, Excel (HTML), or JSON format
+     * Export products to CSV, Excel, or JSON format
      */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request): StreamedResponse|BinaryFileResponse
     {
         $query = Product::with(['category', 'primaryImage']);
 
@@ -626,7 +629,7 @@ class ProductController extends Controller
                     $product->rating_count,
                     $product->view_count,
                     $product->created_at->format('Y-m-d H:i:s'),
-                    $product->primaryImage?->url ?? '',
+                    $product->primaryImage?->path ?? '',
                 ]);
             }
 
@@ -639,89 +642,12 @@ class ProductController extends Controller
     /**
      * Export products as Excel (HTML table format - opens in Excel without dependencies)
      */
-    private function exportExcel($products, string $timestamp): StreamedResponse
+    private function exportExcel($products, string $timestamp): BinaryFileResponse
     {
-        $headers = [
-            'Content-Type' => 'application/vnd.ms-excel',
-            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.xls\"",
-        ];
-
-        $callback = function () use ($products) {
-            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
-            echo '<head><meta charset="UTF-8"><style>td, th { border: 1px solid #ccc; padding: 5px; } th { background: #f0f0f0; font-weight: bold; }</style></head>';
-            echo '<body><table>';
-
-            // Header row
-            echo '<tr>';
-            echo '<th>ID</th>';
-            echo '<th>SKU</th>';
-            echo '<th>Name</th>';
-            echo '<th>Name (AR)</th>';
-            echo '<th>Category</th>';
-            echo '<th>Price</th>';
-            echo '<th>Compare Price</th>';
-            echo '<th>Discount %</th>';
-            echo '<th>Stock</th>';
-            echo '<th>Size Stock</th>';
-            echo '<th>Status</th>';
-            echo '<th>Featured</th>';
-            echo '<th>Color</th>';
-            echo '<th>Available Sizes</th>';
-            echo '<th>Times Purchased</th>';
-            echo '<th>Avg Rating</th>';
-            echo '<th>Review Count</th>';
-            echo '<th>View Count</th>';
-            echo '<th>Created At</th>';
-            echo '<th>Primary Image</th>';
-            echo '</tr>';
-
-            // Data rows
-            foreach ($products as $product) {
-                $discountPercent = '';
-                if ($product->compare_price && $product->compare_price > $product->price) {
-                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1) . '%';
-                }
-
-                $sizeStock = '';
-                if ($product->size_stock && is_array($product->size_stock)) {
-                    $sizeStock = collect($product->size_stock)
-                        ->map(fn($qty, $size) => "{$size}:{$qty}")
-                        ->join(', ');
-                }
-
-                $availableSizes = '';
-                if ($product->available_sizes && is_array($product->available_sizes)) {
-                    $availableSizes = implode(', ', $product->available_sizes);
-                }
-
-                echo '<tr>';
-                echo '<td>' . htmlspecialchars($product->id) . '</td>';
-                echo '<td>' . htmlspecialchars($product->sku ?? '') . '</td>';
-                echo '<td>' . htmlspecialchars($product->name) . '</td>';
-                echo '<td>' . htmlspecialchars($product->name_ar ?? '') . '</td>';
-                echo '<td>' . htmlspecialchars($product->category?->name ?? '') . '</td>';
-                echo '<td>' . number_format($product->price, 2) . '</td>';
-                echo '<td>' . ($product->compare_price ? number_format($product->compare_price, 2) : '') . '</td>';
-                echo '<td>' . $discountPercent . '</td>';
-                echo '<td>' . $product->stock . '</td>';
-                echo '<td>' . htmlspecialchars($sizeStock) . '</td>';
-                echo '<td>' . ($product->is_active ? 'Active' : 'Inactive') . '</td>';
-                echo '<td>' . ($product->is_featured ? 'Yes' : 'No') . '</td>';
-                echo '<td>' . htmlspecialchars($product->color ?? '') . '</td>';
-                echo '<td>' . htmlspecialchars($availableSizes) . '</td>';
-                echo '<td>' . $product->times_purchased . '</td>';
-                echo '<td>' . ($product->average_rating ? number_format($product->average_rating, 1) : '') . '</td>';
-                echo '<td>' . $product->rating_count . '</td>';
-                echo '<td>' . $product->view_count . '</td>';
-                echo '<td>' . $product->created_at->format('Y-m-d H:i:s') . '</td>';
-                echo '<td>' . htmlspecialchars($product->primaryImage?->url ?? '') . '</td>';
-                echo '</tr>';
-            }
-
-            echo '</table></body></html>';
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new ProductsExport($products),
+            "products-{$timestamp}.xlsx"
+        );
     }
 
     /**
@@ -764,7 +690,7 @@ class ProductController extends Controller
                     'view_count' => $product->view_count,
                     'created_at' => $product->created_at->toISOString(),
                     'updated_at' => $product->updated_at->toISOString(),
-                    'primary_image' => $product->primaryImage?->url,
+                    'primary_image' => $product->primaryImage?->path,
                 ];
             });
 

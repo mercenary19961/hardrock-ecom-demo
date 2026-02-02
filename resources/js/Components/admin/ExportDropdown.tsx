@@ -11,7 +11,7 @@ interface ExportFormat {
 
 const exportFormats: ExportFormat[] = [
     { value: 'csv', label: 'CSV', icon: FileText, extension: '.csv' },
-    { value: 'xlsx', label: 'Excel', icon: FileSpreadsheet, extension: '.xls' },
+    { value: 'xlsx', label: 'Excel', icon: FileSpreadsheet, extension: '.xlsx' },
     { value: 'json', label: 'JSON', icon: FileJson, extension: '.json' },
 ];
 
