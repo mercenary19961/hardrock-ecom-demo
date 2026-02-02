@@ -350,55 +350,48 @@ export default function ReviewsIndex(props: Props) {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Hash className="h-3.5 w-3.5" />
-                                Total Reviews
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Reviews</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {stats?.total ?? 0}
                                 </p>
                             </div>
+                            <Hash className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <TrendingUp className="h-3.5 w-3.5" />
-                                Average Rating
-                            </p>
-                            <div className="flex-1 flex items-center justify-center gap-2">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                    {stats?.average_rating ?? 0}
-                                </p>
-                                <StarRating rating={Math.round(stats?.average_rating ?? 0)} size="md" />
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Average Rating</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        {stats?.average_rating ?? 0}
+                                    </p>
+                                    <StarRating rating={Math.round(stats?.average_rating ?? 0)} size="md" />
+                                </div>
                             </div>
+                            <TrendingUp className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <ShieldCheck className="h-3.5 w-3.5" />
-                                Verified Purchases
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                    {stats?.verified_count ?? 0}
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Verified Purchases</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats?.verified_count ?? 0} <span className="text-sm font-normal text-gray-400">/ {stats?.total ?? 0}</span>
                                 </p>
                             </div>
+                            <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <BarChart3 className="h-3.5 w-3.5" />
-                                Rating Distribution
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <div className="space-y-1 w-full max-w-[200px]">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Rating Distribution</p>
+                                <div className="space-y-1">
                                     {[5, 4, 3, 2, 1].map((r) => {
                                         const count = stats?.rating_distribution?.[r] ?? 0;
                                         const total = stats?.total ?? 0;
@@ -420,6 +413,7 @@ export default function ReviewsIndex(props: Props) {
                                     })}
                                 </div>
                             </div>
+                            <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400 ml-4" />
                         </div>
                     </Card>
                 </div>
