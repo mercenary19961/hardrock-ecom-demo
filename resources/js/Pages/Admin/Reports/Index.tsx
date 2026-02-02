@@ -9,11 +9,11 @@ import {
     Package,
     Star,
     TrendingUp,
-    Calendar,
-    ArrowUpRight,
-    ArrowDownRight,
+    ClipboardList,
+    Award,
+    Crown,
+    FolderTree,
 } from 'lucide-react';
-import { useState } from 'react';
 import { formatPrice } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -213,9 +213,7 @@ export default function ReportsIndex({
                                     {formatPrice(revenueSummary.total, language)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-                            </div>
+                            <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
@@ -226,9 +224,7 @@ export default function ReportsIndex({
                                     {formatPrice(revenueSummary.average, language)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                            </div>
+                            <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
@@ -239,9 +235,7 @@ export default function ReportsIndex({
                                     {revenueSummary.orders}
                                 </p>
                             </div>
-                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                            </div>
+                            <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </Card>
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
@@ -252,9 +246,7 @@ export default function ReportsIndex({
                                     {revenueSummary.completed_orders}
                                 </p>
                             </div>
-                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                                <Package className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                            </div>
+                            <Package className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                     </Card>
                 </div>
@@ -262,7 +254,8 @@ export default function ReportsIndex({
                 {/* Revenue Chart & Orders by Status */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <Card className="lg:col-span-2 dark:bg-gray-800 dark:border-gray-700 p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-green-500" />
                             Revenue Over Time
                         </h2>
                         {revenueOverTime.length > 0 ? (
@@ -281,7 +274,8 @@ export default function ReportsIndex({
                     </Card>
 
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-6">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5 text-blue-500" />
                             Orders by Status
                         </h2>
                         <div className="space-y-3">
@@ -313,7 +307,8 @@ export default function ReportsIndex({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Award className="h-5 w-5 text-indigo-500" />
                                 Top Selling Products
                             </h2>
                             <Link
@@ -356,7 +351,8 @@ export default function ReportsIndex({
 
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Star className="h-5 w-5 text-yellow-500" />
                                 Top Rated Products
                             </h2>
                             <Link
@@ -377,11 +373,11 @@ export default function ReportsIndex({
                                         >
                                             {product.name}
                                         </Link>
-                                        <StarRating rating={Math.round(product.average_rating ?? 0)} />
+                                        <StarRating rating={Math.round(Number(product.average_rating) || 0)} />
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {(product.average_rating ?? 0).toFixed(1)}
+                                            {(Number(product.average_rating) || 0).toFixed(1)}
                                         </p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             {product.rating_count} reviews
@@ -425,7 +421,8 @@ export default function ReportsIndex({
 
                     <Card className="lg:col-span-2 dark:bg-gray-800 dark:border-gray-700 p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Crown className="h-5 w-5 text-purple-500" />
                                 Top Customers
                             </h2>
                             <Link
@@ -476,7 +473,8 @@ export default function ReportsIndex({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card className="dark:bg-gray-800 dark:border-gray-700 p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <FolderTree className="h-5 w-5 text-amber-500" />
                                 Category Performance
                             </h2>
                             <Link
@@ -505,7 +503,7 @@ export default function ReportsIndex({
                                             <div className="flex items-center gap-1 justify-end">
                                                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    {category.avg_rating.toFixed(1)}
+                                                    {(Number(category.avg_rating) || 0).toFixed(1)}
                                                 </span>
                                             </div>
                                         )}

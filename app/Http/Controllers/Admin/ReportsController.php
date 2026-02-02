@@ -135,6 +135,7 @@ class ReportsController extends Controller
         ];
 
         // Inventory stats
+        $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
         $inventoryStats = [
             'total_products' => Product::where('is_active', true)->count(),
             'total_stock' => Product::where('is_active', true)->sum('stock'),
@@ -144,7 +145,7 @@ class ReportsController extends Controller
             'out_of_stock' => Product::where('is_active', true)->where('stock', 0)->count(),
             'low_stock' => Product::where('is_active', true)
                 ->where('stock', '>', 0)
-                ->where('stock', '<=', (int) Setting::get('low_stock_threshold', 10))
+                ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold])
                 ->count(),
         ];
 
