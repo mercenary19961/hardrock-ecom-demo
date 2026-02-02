@@ -22,6 +22,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Use 'id' for route model binding in admin panel (Category model uses 'slug' by default for frontend)
     Route::resource('categories', CategoryController::class)->scoped(['category' => 'id']);
     Route::resource('products', ProductController::class)->except(['show'])->scoped(['product' => 'id']);
+    Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
     Route::post('products/bulk-action', [ProductController::class, 'bulkAction'])->name('products.bulk-action');
     Route::patch('products/{product:id}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
     Route::patch('products/{product:id}/toggle-active', [ProductController::class, 'toggleActive'])->name('products.toggle-active');

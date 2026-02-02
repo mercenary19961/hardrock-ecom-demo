@@ -14,6 +14,7 @@ import {
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
 import { ResizableTh, ResetColumnsButton, SortIcon, StickyScrollWrapper } from '@/Components/admin/ResizableTable';
+import { ExportDropdown } from '@/Components/admin/ExportDropdown';
 
 // Product Card Image component with navigation for multiple images
 function ProductCardImage({
@@ -909,6 +910,17 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                         Products
                     </h1>
                     <div className="flex items-center gap-2">
+                        {/* Export Dropdown */}
+                        <ExportDropdown
+                            baseUrl="/admin/products/export"
+                            filters={{
+                                search: safeFilters.search,
+                                category: safeFilters.category,
+                                status: safeFilters.status,
+                            }}
+                            selectedIds={Array.from(selectedIds)}
+                            className="hidden sm:block"
+                        />
                         {/* View Toggle - hidden on mobile */}
                         <div className="hidden sm:flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                             <button

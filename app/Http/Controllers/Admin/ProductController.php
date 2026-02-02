@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
@@ -489,5 +490,291 @@ class ProductController extends Controller
         $this->activityLogService->log($product, 'restored', $restoredChanges);
 
         return back()->with('success', 'Product restored to previous state.');
+    }
+
+    /**
+     * Export products to CSV, Excel (HTML), or JSON format
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $query = Product::with(['category', 'primaryImage']);
+
+        // Apply same filters as index()
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        if ($request->filled('category')) {
+            $categoryId = $request->category;
+            $childIds = Category::where('parent_id', $categoryId)->pluck('id')->toArray();
+            $categoryIds = array_merge([$categoryId], $childIds);
+            $query->whereIn('category_id', $categoryIds);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->active();
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            } elseif ($request->status === 'out_of_stock') {
+                $query->where('stock', 0);
+            } elseif ($request->status === 'low_stock') {
+                $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
+                $query->where('stock', '>', 0)
+                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold]);
+            } elseif ($request->status === 'on_sale') {
+                $query->whereNotNull('compare_price')
+                    ->whereColumn('compare_price', '>', 'price');
+            } elseif ($request->status === 'featured') {
+                $query->where('is_featured', true);
+            }
+        }
+
+        // If specific IDs are provided (for selected export)
+        if ($request->filled('product_ids')) {
+            $query->whereIn('id', $request->product_ids);
+        }
+
+        $products = $query->orderBy('name')->get();
+
+        $format = $request->input('format', 'csv');
+        $timestamp = now()->format('Y-m-d-His');
+
+        return match ($format) {
+            'json' => $this->exportJson($products, $timestamp),
+            'xlsx' => $this->exportExcel($products, $timestamp),
+            default => $this->exportCsv($products, $timestamp),
+        };
+    }
+
+    /**
+     * Export products as CSV
+     */
+    private function exportCsv($products, string $timestamp): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.csv\"",
+        ];
+
+        $callback = function () use ($products) {
+            $file = fopen('php://output', 'w');
+
+            // Add UTF-8 BOM for proper Arabic display in Excel
+            fwrite($file, "\xEF\xBB\xBF");
+
+            // Header row
+            fputcsv($file, [
+                'ID',
+                'SKU',
+                'Name',
+                'Name (AR)',
+                'Category',
+                'Price',
+                'Compare Price',
+                'Discount %',
+                'Stock',
+                'Size Stock',
+                'Status',
+                'Featured',
+                'Color',
+                'Available Sizes',
+                'Times Purchased',
+                'Avg Rating',
+                'Review Count',
+                'View Count',
+                'Created At',
+                'Primary Image',
+            ]);
+
+            // Data rows
+            foreach ($products as $product) {
+                $discountPercent = '';
+                if ($product->compare_price && $product->compare_price > $product->price) {
+                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1) . '%';
+                }
+
+                $sizeStock = '';
+                if ($product->size_stock && is_array($product->size_stock)) {
+                    $sizeStock = collect($product->size_stock)
+                        ->map(fn($qty, $size) => "{$size}:{$qty}")
+                        ->join(', ');
+                }
+
+                $availableSizes = '';
+                if ($product->available_sizes && is_array($product->available_sizes)) {
+                    $availableSizes = implode(', ', $product->available_sizes);
+                }
+
+                fputcsv($file, [
+                    $product->id,
+                    $product->sku,
+                    $product->name,
+                    $product->name_ar,
+                    $product->category?->name ?? '',
+                    number_format($product->price, 2),
+                    $product->compare_price ? number_format($product->compare_price, 2) : '',
+                    $discountPercent,
+                    $product->stock,
+                    $sizeStock,
+                    $product->is_active ? 'Active' : 'Inactive',
+                    $product->is_featured ? 'Yes' : 'No',
+                    $product->color ?? '',
+                    $availableSizes,
+                    $product->times_purchased,
+                    $product->average_rating ? number_format($product->average_rating, 1) : '',
+                    $product->rating_count,
+                    $product->view_count,
+                    $product->created_at->format('Y-m-d H:i:s'),
+                    $product->primaryImage?->url ?? '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export products as Excel (HTML table format - opens in Excel without dependencies)
+     */
+    private function exportExcel($products, string $timestamp): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.xls\"",
+        ];
+
+        $callback = function () use ($products) {
+            echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            echo '<head><meta charset="UTF-8"><style>td, th { border: 1px solid #ccc; padding: 5px; } th { background: #f0f0f0; font-weight: bold; }</style></head>';
+            echo '<body><table>';
+
+            // Header row
+            echo '<tr>';
+            echo '<th>ID</th>';
+            echo '<th>SKU</th>';
+            echo '<th>Name</th>';
+            echo '<th>Name (AR)</th>';
+            echo '<th>Category</th>';
+            echo '<th>Price</th>';
+            echo '<th>Compare Price</th>';
+            echo '<th>Discount %</th>';
+            echo '<th>Stock</th>';
+            echo '<th>Size Stock</th>';
+            echo '<th>Status</th>';
+            echo '<th>Featured</th>';
+            echo '<th>Color</th>';
+            echo '<th>Available Sizes</th>';
+            echo '<th>Times Purchased</th>';
+            echo '<th>Avg Rating</th>';
+            echo '<th>Review Count</th>';
+            echo '<th>View Count</th>';
+            echo '<th>Created At</th>';
+            echo '<th>Primary Image</th>';
+            echo '</tr>';
+
+            // Data rows
+            foreach ($products as $product) {
+                $discountPercent = '';
+                if ($product->compare_price && $product->compare_price > $product->price) {
+                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1) . '%';
+                }
+
+                $sizeStock = '';
+                if ($product->size_stock && is_array($product->size_stock)) {
+                    $sizeStock = collect($product->size_stock)
+                        ->map(fn($qty, $size) => "{$size}:{$qty}")
+                        ->join(', ');
+                }
+
+                $availableSizes = '';
+                if ($product->available_sizes && is_array($product->available_sizes)) {
+                    $availableSizes = implode(', ', $product->available_sizes);
+                }
+
+                echo '<tr>';
+                echo '<td>' . htmlspecialchars($product->id) . '</td>';
+                echo '<td>' . htmlspecialchars($product->sku ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($product->name) . '</td>';
+                echo '<td>' . htmlspecialchars($product->name_ar ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($product->category?->name ?? '') . '</td>';
+                echo '<td>' . number_format($product->price, 2) . '</td>';
+                echo '<td>' . ($product->compare_price ? number_format($product->compare_price, 2) : '') . '</td>';
+                echo '<td>' . $discountPercent . '</td>';
+                echo '<td>' . $product->stock . '</td>';
+                echo '<td>' . htmlspecialchars($sizeStock) . '</td>';
+                echo '<td>' . ($product->is_active ? 'Active' : 'Inactive') . '</td>';
+                echo '<td>' . ($product->is_featured ? 'Yes' : 'No') . '</td>';
+                echo '<td>' . htmlspecialchars($product->color ?? '') . '</td>';
+                echo '<td>' . htmlspecialchars($availableSizes) . '</td>';
+                echo '<td>' . $product->times_purchased . '</td>';
+                echo '<td>' . ($product->average_rating ? number_format($product->average_rating, 1) : '') . '</td>';
+                echo '<td>' . $product->rating_count . '</td>';
+                echo '<td>' . $product->view_count . '</td>';
+                echo '<td>' . $product->created_at->format('Y-m-d H:i:s') . '</td>';
+                echo '<td>' . htmlspecialchars($product->primaryImage?->url ?? '') . '</td>';
+                echo '</tr>';
+            }
+
+            echo '</table></body></html>';
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export products as JSON
+     */
+    private function exportJson($products, string $timestamp): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.json\"",
+        ];
+
+        $callback = function () use ($products) {
+            $data = $products->map(function ($product) {
+                $discountPercent = null;
+                if ($product->compare_price && $product->compare_price > $product->price) {
+                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1);
+                }
+
+                return [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'name_ar' => $product->name_ar,
+                    'category' => $product->category?->name,
+                    'category_id' => $product->category_id,
+                    'price' => (float) $product->price,
+                    'compare_price' => $product->compare_price ? (float) $product->compare_price : null,
+                    'discount_percent' => $discountPercent,
+                    'stock' => $product->stock,
+                    'size_stock' => $product->size_stock,
+                    'is_active' => $product->is_active,
+                    'is_featured' => $product->is_featured,
+                    'color' => $product->color,
+                    'color_hex' => $product->color_hex,
+                    'available_sizes' => $product->available_sizes,
+                    'times_purchased' => $product->times_purchased,
+                    'average_rating' => $product->average_rating ? (float) $product->average_rating : null,
+                    'rating_count' => $product->rating_count,
+                    'view_count' => $product->view_count,
+                    'created_at' => $product->created_at->toISOString(),
+                    'updated_at' => $product->updated_at->toISOString(),
+                    'primary_image' => $product->primaryImage?->url,
+                ];
+            });
+
+            echo json_encode([
+                'exported_at' => now()->toISOString(),
+                'count' => $data->count(),
+                'products' => $data->values(),
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
