@@ -12,8 +12,6 @@ import {
     ChevronRight,
     Ticket,
     Layers,
-    CheckCircle,
-    XCircle,
     Clock,
     Percent,
     DollarSign,
@@ -21,10 +19,12 @@ import {
     Power,
     Infinity,
     Check,
-    Filter,
     Tag,
     Hash,
     Settings,
+    CalendarCheck,
+    CalendarX,
+    Calendar,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -37,6 +37,7 @@ interface Props {
         search?: string;
         status?: string;
         type?: string;
+        started?: string;
         per_page?: string;
         sort?: string;
         dir?: string;
@@ -62,6 +63,12 @@ const typeOptions = [
     { value: '', label: 'All Types', icon: Layers },
     { value: 'percentage', label: 'Percentage', icon: Percent },
     { value: 'fixed', label: 'Fixed Amount', icon: DollarSign },
+];
+
+const startedOptions = [
+    { value: '', label: 'All Coupons', icon: Calendar },
+    { value: 'started', label: 'Started', icon: CalendarCheck },
+    { value: 'not_started', label: 'Not Started', icon: CalendarX },
 ];
 
 // Helper to format currency (omit decimals if whole number)
@@ -114,14 +121,14 @@ const getStatusBadgeVariant = (status: string): 'success' | 'default' | 'warning
     }
 };
 
-export default function CouponsIndex({ coupons, filters, statusCounts }: Props) {
+export default function CouponsIndex({ coupons, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [type, setType] = useState(filters.type || '');
+    const [started, setStarted] = useState(filters.started || '');
     const [perPage, setPerPage] = useState(filters.per_page || '16');
     const [sortField, setSortField] = useState(filters.sort || 'created_at');
     const [sortDir, setSortDir] = useState(filters.dir || 'desc');
-    const [showFilters, setShowFilters] = useState(false);
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
@@ -145,13 +152,14 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
     // SPA-style filter function
     const applyFilters = useCallback(
-        (searchVal: string, statusVal: string, typeVal: string, perPageVal: string, sortFieldVal: string, sortDirVal: string) => {
+        (searchVal: string, statusVal: string, typeVal: string, startedVal: string, perPageVal: string, sortFieldVal: string, sortDirVal: string) => {
             router.get(
                 '/admin/coupons',
                 {
                     search: searchVal || undefined,
                     status: statusVal || undefined,
                     type: typeVal || undefined,
+                    started: startedVal || undefined,
                     per_page: perPageVal !== '16' ? perPageVal : undefined,
                     sort: sortFieldVal !== 'created_at' ? sortFieldVal : undefined,
                     dir: sortDirVal !== 'desc' ? sortDirVal : undefined,
@@ -172,24 +180,22 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, status, type, perPage, sortField, sortDir);
+        applyFilters(debouncedSearch, status, type, started, perPage, sortField, sortDir);
     }, [debouncedSearch, applyFilters]);
 
-    const handleStatusFilter = (newStatus: string) => {
-        const statusValue = newStatus === 'all' ? '' : newStatus;
-        setStatus(statusValue);
-        applyFilters(search, statusValue, type, perPage, sortField, sortDir);
+    const handleTypeFilter = (newType: string) => {
+        setType(newType);
+        applyFilters(search, status, newType, started, perPage, sortField, sortDir);
     };
 
-    const handleTypeFilter = (newType: string) => {
-        const typeValue = newType === 'all' ? '' : newType;
-        setType(typeValue);
-        applyFilters(search, status, typeValue, perPage, sortField, sortDir);
+    const handleStartedFilter = (newStarted: string) => {
+        setStarted(newStarted);
+        applyFilters(search, status, type, newStarted, perPage, sortField, sortDir);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, status, type, value, sortField, sortDir);
+        applyFilters(search, status, type, started, value, sortField, sortDir);
     };
 
     const handleSortToggle = (field: string) => {
@@ -199,19 +205,20 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
         }
         setSortField(field);
         setSortDir(newDir);
-        applyFilters(search, status, type, perPage, field, newDir);
+        applyFilters(search, status, type, started, perPage, field, newDir);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setStatus('');
         setType('');
+        setStarted('');
         setSortField('created_at');
         setSortDir('desc');
-        applyFilters('', '', '', perPage, 'created_at', 'desc');
+        applyFilters('', '', '', '', perPage, 'created_at', 'desc');
     };
 
-    const hasActiveFilters = filters.search || filters.status || filters.type || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
+    const hasActiveFilters = filters.search || filters.status || filters.type || filters.started || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
 
     const handleDelete = (coupon: Coupon) => {
         if (confirm(`Are you sure you want to delete coupon "${coupon.code}"?`)) {
@@ -261,7 +268,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Ticket className="h-6 w-6 text-purple-600" />
+                        <Ticket className="h-6 w-6 text-green-600" />
                         Coupons
                     </h1>
                     <Link href="/admin/coupons/create">
@@ -273,63 +280,11 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                     </Link>
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => handleStatusFilter('all')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            !filters.status
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <Layers className="h-4 w-4" />
-                        All
-                        <span className="opacity-70">({statusCounts.all})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('active')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'active'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <CheckCircle className="h-4 w-4" />
-                        Active
-                        <span className="opacity-70">({statusCounts.active})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('inactive')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'inactive'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <XCircle className="h-4 w-4" />
-                        Inactive
-                        <span className="opacity-70">({statusCounts.inactive})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('expired')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'expired'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <Clock className="h-4 w-4" />
-                        Expired
-                        <span className="opacity-70">({statusCounts.expired})</span>
-                    </button>
-                </div>
-
                 {/* Search and Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 space-y-4">
-                        {/* Search Row */}
-                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                    <div className="p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            {/* Search */}
                             <div className="relative w-full sm:w-1/2">
                                 <label htmlFor="coupons-search" className="sr-only">
                                     Search coupons
@@ -346,46 +301,42 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                 />
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             </div>
-                            <div className="flex items-center gap-3 sm:ml-auto">
+
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:ml-auto">
+                                {/* Clear Filters */}
                                 {hasActiveFilters && (
                                     <button
                                         onClick={handleClearFilters}
-                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600 whitespace-nowrap"
                                     >
-                                        <X className="h-4 w-4" />
-                                        Clear All Filters
+                                        <X className="h-4 w-4 flex-shrink-0" />
+                                        Clear Filters
                                     </button>
                                 )}
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowFilters(!showFilters)}
-                                    className={showFilters ? 'bg-gray-100 dark:bg-gray-700' : ''}
-                                >
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    Filters
-                                </Button>
-                            </div>
-                        </div>
 
-                        {/* Expanded Filters */}
-                        {showFilters && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                {/* Type Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        <Tag className="h-4 w-4 inline mr-1" />
-                                        Coupon Type
-                                    </label>
+                                {/* Filter Dropdowns - side by side on mobile */}
+                                <div className="flex gap-3 sm:contents">
+                                    {/* Type Filter */}
                                     <Select
                                         value={type}
                                         onChange={handleTypeFilter}
-                                        className="w-full"
+                                        className="flex-1 sm:flex-none sm:w-[120px] md:w-40"
                                         placeholder="All Types"
                                         options={typeOptions}
                                     />
+
+                                    {/* Started Filter */}
+                                    <Select
+                                        value={started}
+                                        onChange={handleStartedFilter}
+                                        className="flex-1 sm:flex-none sm:w-[120px] md:w-40"
+                                        placeholder="All Coupons"
+                                        options={startedOptions}
+                                    />
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </Card>
 
@@ -598,8 +549,13 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                                     {coupon.code}
                                                 </code>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
-                                                {coupon.name}
+                                            <td className="px-6 py-4 overflow-hidden">
+                                                <span
+                                                    className="block truncate text-gray-900 dark:text-white"
+                                                    title={coupon.name}
+                                                >
+                                                    {coupon.name}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-1 text-gray-900 dark:text-white">

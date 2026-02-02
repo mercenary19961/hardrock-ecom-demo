@@ -259,7 +259,10 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orders</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <ShoppingCart className="h-6 w-6 text-indigo-600" />
+                        Orders
+                    </h1>
                     <div className="flex items-center gap-2">
                         {/* Export Button */}
                         <Button variant="outline" onClick={handleExport} className="hidden sm:flex">

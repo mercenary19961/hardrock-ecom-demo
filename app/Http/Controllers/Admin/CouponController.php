@@ -61,6 +61,22 @@ class CouponController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filter by started status
+        if ($request->filled('started')) {
+            switch ($request->started) {
+                case 'started':
+                    // Coupons that have started (no start date OR start date is in the past)
+                    $query->where(function ($q) {
+                        $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                    });
+                    break;
+                case 'not_started':
+                    // Coupons that haven't started yet (start date is in the future)
+                    $query->whereNotNull('starts_at')->where('starts_at', '>', now());
+                    break;
+            }
+        }
+
         // Sorting
         $sortField = $request->input('sort', 'created_at');
         $sortDir = $request->input('dir', 'desc');
@@ -110,7 +126,7 @@ class CouponController extends Controller
         return Inertia::render('Admin/Coupons/Index', [
             'coupons' => $coupons,
             // Cast to object to ensure JSON serializes as {} not [] when empty
-            'filters' => (object) $request->only(['search', 'status', 'type', 'per_page', 'sort', 'dir']),
+            'filters' => (object) $request->only(['search', 'status', 'type', 'started', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
         ]);
     }

@@ -40,6 +40,7 @@ import {
     ClipboardList,
     Ticket,
     Star,
+    LayoutDashboard,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
 
@@ -669,7 +670,10 @@ export default function Dashboard({
                 {/* Header with Date Range and Quick Actions */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex items-center gap-4 flex-wrap">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <LayoutDashboard className="h-6 w-6 text-blue-600" />
+                            Dashboard
+                        </h1>
                         <DateRangeSelector selected={selectedRange} onChange={handleRangeChange} />
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">

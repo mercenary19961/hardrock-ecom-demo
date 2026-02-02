@@ -187,7 +187,7 @@ export default function ReportsIndex({
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <BarChart3 className="h-6 w-6 text-purple-600" />
+                        <BarChart3 className="h-6 w-6 text-emerald-600" />
                         Reports & Analytics
                     </h1>
                     <select

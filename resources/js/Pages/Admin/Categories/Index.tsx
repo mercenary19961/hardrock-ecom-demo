@@ -136,7 +136,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <FolderTree className="h-6 w-6 text-purple-600" />
+                        <FolderTree className="h-6 w-6 text-amber-600" />
                         Categories
                     </h1>
                     <Link href="/admin/categories/create">

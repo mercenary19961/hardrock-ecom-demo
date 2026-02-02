@@ -282,7 +282,7 @@ export default function UsersIndex({ users, filters, roleCounts }: Props) {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Users className="h-6 w-6 text-purple-600" />
+                        <Users className="h-6 w-6 text-blue-600" />
                         Users
                     </h1>
                     {/* View Toggle */}

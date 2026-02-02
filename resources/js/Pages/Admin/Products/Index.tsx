@@ -886,7 +886,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Package className="h-6 w-6 text-purple-600" />
+                        <Package className="h-6 w-6 text-indigo-600" />
                         Products
                     </h1>
                     <div className="flex items-center gap-2">
