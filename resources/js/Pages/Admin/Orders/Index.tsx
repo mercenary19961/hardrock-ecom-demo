@@ -7,7 +7,7 @@ import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import {
     Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package,
     Calendar, Download, CheckSquare, Square, CreditCard, Filter, Layers,
-    Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity, Hash
+    Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePolling, useResizableColumns } from '@/hooks';
@@ -304,57 +304,49 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Hash className="h-3.5 w-3.5" />
-                                Total Orders
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Orders</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {stats.total}
                                 </p>
                             </div>
+                            <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Clock className="h-3.5 w-3.5" />
-                                Pending
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className={`text-3xl font-bold ${stats.pending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.pending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
                                     {stats.pending}
                                 </p>
                             </div>
+                            <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                Revenue (Paid)
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Revenue (Paid)</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {formatPrice(stats.revenue, language)}
                                 </p>
                             </div>
+                            <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Calendar className="h-3.5 w-3.5" />
-                                Today
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className={`text-3xl font-bold ${stats.today > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Today</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {stats.today}
                                 </p>
                             </div>
+                            <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
                     </Card>
                 </div>

@@ -299,60 +299,49 @@ export default function CouponsIndex({ coupons, filters, stats: statsProp }: Pro
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Hash className="h-3.5 w-3.5" />
-                                Total Coupons
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Coupons</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {stats.total}
                                 </p>
                             </div>
+                            <Ticket className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                Active
-                            </p>
-                            <div className="flex-1 flex items-center justify-center gap-2">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                    {stats.active}
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.active} <span className="text-sm font-normal text-gray-400">/ {stats.total}</span>
                                 </p>
-                                <span className="text-sm text-gray-400 dark:text-gray-500">
-                                    / {stats.total}
-                                </span>
                             </div>
+                            <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <AlertCircle className="h-3.5 w-3.5" />
-                                Expired/Exhausted
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className={`text-3xl font-bold ${stats.expired > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Expired/Exhausted</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.expired > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
                                     {stats.expired}
                                 </p>
                             </div>
+                            <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                Total Savings Given
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Savings Given</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {formatCurrency(stats.total_savings)}
                                 </p>
                             </div>
+                            <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                     </Card>
                 </div>

@@ -167,60 +167,49 @@ export default function CategoriesIndex({ categories, filters, statusCounts, sta
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <Hash className="h-3.5 w-3.5" />
-                                Total Categories
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Categories</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                                     {stats.total}
                                 </p>
                             </div>
+                            <Hash className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <CheckCircle className="h-3.5 w-3.5" />
-                                Active
-                            </p>
-                            <div className="flex-1 flex items-center justify-center gap-2">
-                                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                    {stats.active}
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.active} <span className="text-sm font-normal text-gray-400">/ {stats.total}</span>
                                 </p>
-                                <span className="text-sm text-gray-400 dark:text-gray-500">
-                                    / {stats.total}
-                                </span>
                             </div>
+                            <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <XCircle className="h-3.5 w-3.5" />
-                                Inactive
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className={`text-3xl font-bold ${stats.inactive > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Inactive</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.inactive > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
                                     {stats.inactive}
                                 </p>
                             </div>
+                            <XCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
                     </Card>
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
-                        <div className="p-4 min-h-[120px] flex flex-col">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                                <AlertCircle className="h-3.5 w-3.5" />
-                                Empty (0 products)
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                                <p className={`text-3xl font-bold ${stats.empty > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Empty (0 products)</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.empty > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
                                     {stats.empty}
                                 </p>
                             </div>
+                            <AlertCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
                     </Card>
                 </div>
