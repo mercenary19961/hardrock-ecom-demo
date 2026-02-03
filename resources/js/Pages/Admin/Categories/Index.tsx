@@ -1,15 +1,24 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Badge } from '@/Components/ui';
+import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Category, PaginatedData } from '@/types/models';
-import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Settings, Folder, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ChevronLeft, ChevronRight, CornerDownRight, FolderTree, Layers, CheckCircle, XCircle, Type, Link2, Package, ToggleLeft, Folder, Eye, Hash, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePolling } from '@/hooks';
+import { usePolling, useResizableColumns } from '@/hooks';
+import { StickyScrollWrapper, ResizableTh, SortIcon, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 
 interface Props {
     categories: PaginatedData<Category>;
-    filters: { search?: string; status?: string; per_page?: string };
+    filters: { search?: string; status?: string; per_page?: string; sort?: string; dir?: string };
     statusCounts: { active: number; inactive: number };
+    stats?: {
+        total: number;
+        parents: number;
+        subcategories: number;
+        active: number;
+        inactive: number;
+        empty: number;
+    };
 }
 
 // Debounce hook for search
@@ -24,27 +33,65 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['5', '10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
 
-export default function CategoriesIndex({ categories, filters, statusCounts }: Props) {
+const statusOptions = [
+    { value: '', label: 'All Status', icon: Layers },
+    { value: 'active', label: 'Active', icon: CheckCircle },
+    { value: 'inactive', label: 'Inactive', icon: XCircle },
+];
+
+const defaultStats = {
+    total: 0,
+    parents: 0,
+    subcategories: 0,
+    active: 0,
+    inactive: 0,
+    empty: 0,
+};
+
+export default function CategoriesIndex({ categories, filters, statusCounts, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+    const [perPage, setPerPage] = useState(filters.per_page || '16');
+    const [sortField, setSortField] = useState(filters.sort || 'name');
+    const [sortDir, setSortDir] = useState(filters.dir || 'asc');
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
     usePolling({ interval: 30000 });
 
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-categories-table',
+        columns: [
+            { key: 'name', defaultWidth: 250, minWidth: 150 },
+            { key: 'slug', defaultWidth: 200, minWidth: 120 },
+            { key: 'products', defaultWidth: 120, minWidth: 80 },
+            { key: 'status', defaultWidth: 100, minWidth: 80 },
+            { key: 'actions', defaultWidth: 120, minWidth: 100 },
+        ],
+    });
+
     const debouncedSearch = useDebounce(search, 300);
 
     // SPA-style filter function
-    const applyFilters = useCallback((searchVal: string, statusVal: string, perPageVal: string) => {
+    const applyFilters = useCallback((
+        searchVal: string,
+        statusVal: string,
+        sortFieldVal: string,
+        sortDirVal: string,
+        perPageVal: string
+    ) => {
         router.get(
             '/admin/categories',
             {
                 search: searchVal || undefined,
                 status: statusVal || undefined,
-                per_page: perPageVal !== '15' ? perPageVal : undefined,
+                sort: sortFieldVal !== 'name' ? sortFieldVal : undefined,
+                dir: sortDirVal !== 'asc' ? sortDirVal : undefined,
+                per_page: perPageVal !== '16' ? perPageVal : undefined,
             },
             {
                 preserveState: true,
@@ -60,35 +107,45 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, status, perPage);
+        applyFilters(debouncedSearch, status, sortField, sortDir, perPage);
     }, [debouncedSearch, applyFilters]);
 
-    const handleStatusFilter = (newStatus: string) => {
-        const statusValue = newStatus === 'all' ? '' : newStatus;
-        setStatus(statusValue);
-        applyFilters(search, statusValue, perPage);
+    const handleStatusChange = (newStatus: string) => {
+        setStatus(newStatus);
+        applyFilters(search, newStatus, sortField, sortDir, perPage);
+    };
+
+    // Handle sort toggle on column header click
+    const handleSortToggle = (field: string) => {
+        let newDir = 'asc';
+        if (sortField === field) {
+            newDir = sortDir === 'asc' ? 'desc' : 'asc';
+        }
+        setSortField(field);
+        setSortDir(newDir);
+        applyFilters(search, status, field, newDir, perPage);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, status, value);
+        applyFilters(search, status, sortField, sortDir, value);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setStatus('');
-        applyFilters('', '', perPage);
+        setSortField('name');
+        setSortDir('asc');
+        applyFilters('', '', 'name', 'asc', perPage);
     };
 
-    const hasActiveFilters = filters.search || filters.status;
+    const hasActiveFilters = filters.search || filters.status || (filters.sort && filters.sort !== 'name');
 
     const handleDelete = (category: Category) => {
         if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
             router.delete(`/admin/categories/${category.id}`);
         }
     };
-
-    const totalCategories = statusCounts.active + statusCounts.inactive;
 
     return (
         <AdminLayout>
@@ -97,7 +154,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <FolderTree className="h-6 w-6 text-purple-600" />
+                        <FolderTree className="h-6 w-6 text-amber-600" />
                         Categories
                     </h1>
                     <Link href="/admin/categories/create">
@@ -109,69 +166,91 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                     </Link>
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => handleStatusFilter('all')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            !filters.status
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <Layers className="h-4 w-4" />
-                        All
-                        <span className="opacity-70">({totalCategories})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('active')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'active'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <CheckCircle className="h-4 w-4" />
-                        Active
-                        <span className="opacity-70">({statusCounts.active})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('inactive')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'inactive'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <XCircle className="h-4 w-4" />
-                        Inactive
-                        <span className="opacity-70">({statusCounts.inactive})</span>
-                    </button>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Categories</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.total}
+                                </p>
+                            </div>
+                            <Hash className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.active} <span className="text-sm font-normal text-gray-400">/ {stats.total}</span>
+                                </p>
+                            </div>
+                            <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Inactive</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.inactive > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.inactive}
+                                </p>
+                            </div>
+                            <XCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Empty (0 products)</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.empty > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.empty}
+                                </p>
+                            </div>
+                            <AlertCircle className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                    </Card>
                 </div>
 
-                {/* Search */}
+                {/* Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="relative flex-1">
-                            <label htmlFor="categories-search" className="sr-only">Search categories</label>
-                            <input
-                                id="categories-search"
-                                name="search"
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search categories..."
-                                autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <div className="p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div className="relative w-full sm:w-1/2">
+                                <label htmlFor="categories-search" className="sr-only">Search categories</label>
+                                <input
+                                    id="categories-search"
+                                    name="search"
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search categories..."
+                                    autoComplete="off"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-purple-600 dark:focus:border-purple-400 outline-none"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:ml-auto">
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear All Filters
+                                    </button>
+                                )}
+                                <Select
+                                    value={status}
+                                    onChange={handleStatusChange}
+                                    className="w-full sm:w-44"
+                                    placeholder="All Status"
+                                    options={statusOptions}
+                                />
+                            </div>
                         </div>
-                        {hasActiveFilters && (
-                            <Button variant="outline" onClick={handleClearFilters} className="w-full sm:w-auto">
-                                <X className="h-4 w-4 mr-2" />
-                                Clear Filters
-                            </Button>
-                        )}
                     </div>
                 </Card>
 
@@ -239,40 +318,78 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
 
                 {/* Desktop Table Layout */}
                 <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
+                    <StickyScrollWrapper>
+                        <table className="w-full table-fixed min-w-[700px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                    <ResizableTh
+                                        columnKey="name"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('name')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Type className="h-3.5 w-3.5" />
                                             Name
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="name" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="slug"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('slug')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Link2 className="h-3.5 w-3.5" />
                                             Slug
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="slug" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="products"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('products_count')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Package className="h-3.5 w-3.5" />
                                             Products
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="products_count" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="status"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('is_active')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <ToggleLeft className="h-3.5 w-3.5" />
                                             Status
-                                        </div>
-                                    </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center justify-end gap-1.5">
-                                            <Settings className="h-3.5 w-3.5" />
-                                            Actions
-                                        </div>
-                                    </th>
+                                            <SortIcon field="is_active" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
+                                        Actions
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -301,8 +418,8 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                                 {category.is_active ? 'Active' : 'Inactive'}
                                             </Badge>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <Link href={`/admin/categories/${category.id}`} preserveScroll>
                                                     <Button variant="ghost" size="sm" title="View">
                                                         <Eye className="h-4 w-4" />
@@ -327,7 +444,7 @@ export default function CategoriesIndex({ categories, filters, statusCounts }: P
                                 ))}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {categories.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No categories found

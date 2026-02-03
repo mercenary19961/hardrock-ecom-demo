@@ -39,6 +39,50 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+            'verified_via' => null,
+        ]);
+    }
+
+    /**
+     * Create an admin user.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+        ]);
+    }
+
+    /**
+     * Create a customer user.
+     */
+    public function customer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'customer',
+        ]);
+    }
+
+    /**
+     * Indicate that the user was verified via email.
+     */
+    public function verifiedViaEmail(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => now(),
+            'verified_via' => 'email',
+        ]);
+    }
+
+    /**
+     * Indicate that the user was verified via Google OAuth.
+     */
+    public function verifiedViaGoogle(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => now(),
+            'verified_via' => 'google',
+            'avatar' => 'https://lh3.googleusercontent.com/a/default-user',
         ]);
     }
 }

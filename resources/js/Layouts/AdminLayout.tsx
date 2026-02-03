@@ -19,8 +19,12 @@ import {
     Plus,
     Pencil,
     Loader2,
+    Star,
+    Settings,
+    BarChart3,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
+import { SiteSettings } from '@/types';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
 import { SkyToggle } from '@/Components/ui/SkyToggle';
 import axios from 'axios';
@@ -63,6 +67,9 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'orders': { label: 'Orders', icon: ShoppingCart },
     'coupons': { label: 'Coupons', icon: Ticket },
     'users': { label: 'Users', icon: Users },
+    'reviews': { label: 'Reviews', icon: Star },
+    'reports': { label: 'Reports', icon: BarChart3 },
+    'settings': { label: 'Settings', icon: Settings },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -77,14 +84,18 @@ const navigation = [
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Categories', href: '/admin/categories', icon: FolderTree },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Reviews', href: '/admin/reviews', icon: Star },
     { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 // Global sidebar state (persists across navigation)
 let globalSidebarOpen = true;
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
-    const { auth, url } = usePage<{ auth: { user: UserType }; url: string }>().props;
+    const { auth, url, siteSettings } = usePage<{ auth: { user: UserType }; url: string; siteSettings?: SiteSettings }>().props;
+    const storeName = siteSettings?.store_name || 'HardRock';
     const { toggleTheme, isDark } = useAdminTheme();
     const [sidebarOpen, setSidebarOpen] = useState(globalSidebarOpen);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -249,15 +260,15 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
             {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 left-0 z-40 bg-gray-900 text-white transition-all duration-300 ${
-                    mobileMenuOpen ? 'w-64' : sidebarOpen ? 'w-64' : 'w-20'
+                    mobileMenuOpen ? 'w-72' : sidebarOpen ? 'w-72' : 'w-20'
                 } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo */}
-                    <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+                    <div className="flex items-center justify-between h-16 px-6 border-b border-gray-800">
                         {(sidebarOpen || mobileMenuOpen) && (
-                            <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0">
-                                HardRock Admin
+                            <Link href="/admin" className="text-xl font-bold ml-12 lg:ml-0 whitespace-nowrap">
+                                {storeName} Admin
                             </Link>
                         )}
                         <button
@@ -327,12 +338,12 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 
             {/* Main content */}
             <div
-                className={`h-screen flex flex-col transition-all duration-300 ${
-                    sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+                className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${
+                    sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'
                 }`}
             >
                 {/* Top bar */}
-                <header className="bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300 flex-shrink-0">
+                <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-4 lg:px-6 transition-colors duration-300 flex-shrink-0">
                     {/* Breadcrumbs - hidden on mobile */}
                     <nav className="hidden lg:flex items-center gap-1 text-sm">
                         {breadcrumbs.map((crumb, index) => {

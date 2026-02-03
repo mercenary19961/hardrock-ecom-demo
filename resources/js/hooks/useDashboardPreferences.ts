@@ -6,6 +6,7 @@ export type DashboardSectionId =
     | 'revenueChart'
     | 'lowStock'
     | 'topSelling'
+    | 'bestRated'
     | 'recentActivity'
     | 'recentReviews';
 
@@ -26,8 +27,9 @@ const DEFAULT_SECTIONS: DashboardSection[] = [
     { id: 'revenueChart', label: 'Revenue & Orders Chart', visible: true, order: 2 },
     { id: 'lowStock', label: 'Low Stock Products', visible: true, order: 3 },
     { id: 'topSelling', label: 'Top Selling Products', visible: true, order: 4 },
-    { id: 'recentActivity', label: 'Recent Activity', visible: true, order: 5 },
-    { id: 'recentReviews', label: 'Recent Reviews', visible: true, order: 6 },
+    { id: 'bestRated', label: 'Best Rated Products', visible: true, order: 5 },
+    { id: 'recentActivity', label: 'Recent Activity', visible: true, order: 6 },
+    { id: 'recentReviews', label: 'Recent Reviews', visible: true, order: 7 },
 ];
 
 const STORAGE_KEY = 'dashboard_preferences';

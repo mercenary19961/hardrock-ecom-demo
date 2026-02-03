@@ -270,3 +270,26 @@ export interface ProfileStats {
     pending_orders: number;
     wishlist_count: number;
 }
+
+export interface UserStats {
+    total_orders: number;
+    completed_orders: number;
+    total_spent: number;
+    average_order: number;
+    highest_order: number;
+    total_savings: number;
+}
+
+export interface ReviewStats {
+    total_reviews: number;
+    average_rating: number;
+}
+
+export interface TopProduct {
+    id: number;
+    name: string;
+    name_ar: string | null;
+    slug: string;
+    image: string | null;
+    times_purchased: number;
+}

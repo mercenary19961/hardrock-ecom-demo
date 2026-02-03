@@ -8,6 +8,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use Carbon\Carbon;
@@ -55,9 +56,10 @@ class DashboardController extends Controller
             ->map(fn ($v) => (float) $v);
 
         // Low stock products (not date-filtered - current inventory status)
+        $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
         $lowStockProducts = Product::with('category')
             ->where('stock', '>', 0)
-            ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)')
+            ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold])
             ->orderBy('stock')
             ->take(5)
             ->get();
@@ -76,6 +78,7 @@ class DashboardController extends Controller
             'revenueByStatus' => $revenueByStatus,
             'lowStockProducts' => $lowStockProducts,
             'topSellingProducts' => $topSellingProducts,
+            'bestRatedProducts' => $this->getBestRatedProducts(),
             'recentActivities' => $recentActivities,
 
             // Active coupons
@@ -157,14 +160,28 @@ class DashboardController extends Controller
             $customerQuery->whereBetween('created_at', [$start, $end]);
         }
 
+        // Calculate revenue and AOV
+        $completedOrdersQuery = (clone $orderQuery)->where('status', '!=', 'cancelled');
+        $revenue = $completedOrdersQuery->sum('total');
+        $completedOrderCount = (clone $completedOrdersQuery)->count();
+        $averageOrderValue = $completedOrderCount > 0 ? $revenue / $completedOrderCount : 0;
+
+        // Inventory value (price * stock for active products)
+        $inventoryValue = Product::where('is_active', true)
+            ->selectRaw('SUM(price * stock) as total')
+            ->value('total') ?? 0;
+
         return [
             'total_products' => Product::count(), // Products not date-filtered
             'total_categories' => Category::count(), // Categories not date-filtered
             'total_orders' => (clone $orderQuery)->count(),
             'total_customers' => $customerQuery->count(),
-            'revenue' => (clone $orderQuery)->where('status', '!=', 'cancelled')->sum('total'),
+            'new_customers' => $customerQuery->count(), // Same as total_customers for the period
+            'revenue' => $revenue,
+            'average_order_value' => round($averageOrderValue, 2),
             'pending_orders' => (clone $orderQuery)->where('status', 'pending')->count(),
             'out_of_stock' => Product::where('is_active', true)->where('stock', 0)->count(), // Not date-filtered
+            'inventory_value' => (float) $inventoryValue, // Not date-filtered
         ];
     }
 
@@ -177,7 +194,7 @@ class DashboardController extends Controller
 
         foreach ($current as $key => $value) {
             // For non-date-sensitive stats, don't show trends
-            if (in_array($key, ['total_products', 'total_categories', 'out_of_stock'])) {
+            if (in_array($key, ['total_products', 'total_categories', 'out_of_stock', 'inventory_value'])) {
                 $result[$key] = [
                     'value' => $value,
                     'trend' => null,
@@ -215,6 +232,19 @@ class DashboardController extends Controller
         }
 
         return $result;
+    }
+
+    /**
+     * Get best rated products
+     */
+    private function getBestRatedProducts(): \Illuminate\Support\Collection
+    {
+        return Product::where('is_active', true)
+            ->where('rating_count', '>=', 3) // At least 3 reviews
+            ->orderByDesc('average_rating')
+            ->orderByDesc('rating_count')
+            ->take(5)
+            ->get();
     }
 
     /**

@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Badge } from '@/Components/ui';
+import { Button, Card, Badge, Select } from '@/Components/ui';
 import { Coupon, PaginatedData } from '@/types/models';
 import {
     Plus,
@@ -12,25 +12,46 @@ import {
     ChevronRight,
     Ticket,
     Layers,
-    CheckCircle,
-    XCircle,
     Clock,
     Percent,
     DollarSign,
     ToggleLeft,
-    Settings,
     Power,
     Infinity,
     Check,
+    Tag,
+    Hash,
+    Settings,
+    CalendarCheck,
+    CalendarX,
+    Calendar,
+    CheckCircle,
+    AlertCircle,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { usePolling } from '@/hooks';
+import { usePolling, useResizableColumns } from '@/hooks';
+import { StickyScrollWrapper, ResizableTh, SortIcon, ResetColumnsButton } from '@/Components/admin/ResizableTable';
 import axios from 'axios';
 
 interface Props {
     coupons: PaginatedData<Coupon>;
-    filters: { search?: string; status?: string; type?: string; per_page?: string };
+    filters: {
+        search?: string;
+        status?: string;
+        type?: string;
+        started?: string;
+        per_page?: string;
+        sort?: string;
+        dir?: string;
+    };
     statusCounts: { all: number; active: number; inactive: number; expired: number };
+    stats?: {
+        total: number;
+        active: number;
+        expired: number;
+        total_uses: number;
+        total_savings: number;
+    };
 }
 
 // Debounce hook for search
@@ -45,7 +66,19 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const perPageOptions = ['10', '15', '25', '50', '100'];
+const perPageOptions = ['4', '8', '16', '32', '64', '80'];
+
+const typeOptions = [
+    { value: '', label: 'All Types', icon: Layers },
+    { value: 'percentage', label: 'Percentage', icon: Percent },
+    { value: 'fixed', label: 'Fixed Amount', icon: DollarSign },
+];
+
+const startedOptions = [
+    { value: '', label: 'All Coupons', icon: Calendar },
+    { value: 'started', label: 'Started', icon: CalendarCheck },
+    { value: 'not_started', label: 'Not Started', icon: CalendarX },
+];
 
 // Helper to format currency (omit decimals if whole number)
 const formatCurrency = (amount: number) => {
@@ -97,11 +130,23 @@ const getStatusBadgeVariant = (status: string): 'success' | 'default' | 'warning
     }
 };
 
-export default function CouponsIndex({ coupons, filters, statusCounts }: Props) {
+const defaultStats = {
+    total: 0,
+    active: 0,
+    expired: 0,
+    total_uses: 0,
+    total_savings: 0,
+};
+
+export default function CouponsIndex({ coupons, filters, stats: statsProp }: Props) {
+    const stats = statsProp ?? defaultStats;
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [type, setType] = useState(filters.type || '');
-    const [perPage, setPerPage] = useState(filters.per_page || '15');
+    const [started, setStarted] = useState(filters.started || '');
+    const [perPage, setPerPage] = useState(filters.per_page || '16');
+    const [sortField, setSortField] = useState(filters.sort || 'created_at');
+    const [sortDir, setSortDir] = useState(filters.dir || 'desc');
     const isFirstRender = useRef(true);
 
     // Auto-refresh data every 30 seconds
@@ -109,16 +154,33 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
     const debouncedSearch = useDebounce(search, 300);
 
+    // Resizable columns configuration
+    const resizable = useResizableColumns({
+        storageKey: 'admin-coupons-table',
+        columns: [
+            { key: 'code', defaultWidth: 150, minWidth: 100 },
+            { key: 'name', defaultWidth: 180, minWidth: 120 },
+            { key: 'value', defaultWidth: 140, minWidth: 100 },
+            { key: 'usage', defaultWidth: 120, minWidth: 80 },
+            { key: 'dates', defaultWidth: 160, minWidth: 120 },
+            { key: 'status', defaultWidth: 100, minWidth: 80 },
+            { key: 'actions', defaultWidth: 120, minWidth: 100 },
+        ],
+    });
+
     // SPA-style filter function
     const applyFilters = useCallback(
-        (searchVal: string, statusVal: string, typeVal: string, perPageVal: string) => {
+        (searchVal: string, statusVal: string, typeVal: string, startedVal: string, perPageVal: string, sortFieldVal: string, sortDirVal: string) => {
             router.get(
                 '/admin/coupons',
                 {
                     search: searchVal || undefined,
                     status: statusVal || undefined,
                     type: typeVal || undefined,
-                    per_page: perPageVal !== '15' ? perPageVal : undefined,
+                    started: startedVal || undefined,
+                    per_page: perPageVal !== '16' ? perPageVal : undefined,
+                    sort: sortFieldVal !== 'created_at' ? sortFieldVal : undefined,
+                    dir: sortDirVal !== 'desc' ? sortDirVal : undefined,
                 },
                 {
                     preserveState: true,
@@ -136,34 +198,45 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
             isFirstRender.current = false;
             return;
         }
-        applyFilters(debouncedSearch, status, type, perPage);
+        applyFilters(debouncedSearch, status, type, started, perPage, sortField, sortDir);
     }, [debouncedSearch, applyFilters]);
 
-    const handleStatusFilter = (newStatus: string) => {
-        const statusValue = newStatus === 'all' ? '' : newStatus;
-        setStatus(statusValue);
-        applyFilters(search, statusValue, type, perPage);
+    const handleTypeFilter = (newType: string) => {
+        setType(newType);
+        applyFilters(search, status, newType, started, perPage, sortField, sortDir);
     };
 
-    const handleTypeFilter = (newType: string) => {
-        const typeValue = newType === 'all' ? '' : newType;
-        setType(typeValue);
-        applyFilters(search, status, typeValue, perPage);
+    const handleStartedFilter = (newStarted: string) => {
+        setStarted(newStarted);
+        applyFilters(search, status, type, newStarted, perPage, sortField, sortDir);
     };
 
     const handlePerPageChange = (value: string) => {
         setPerPage(value);
-        applyFilters(search, status, type, value);
+        applyFilters(search, status, type, started, value, sortField, sortDir);
+    };
+
+    const handleSortToggle = (field: string) => {
+        let newDir = 'desc';
+        if (sortField === field) {
+            newDir = sortDir === 'desc' ? 'asc' : 'desc';
+        }
+        setSortField(field);
+        setSortDir(newDir);
+        applyFilters(search, status, type, started, perPage, field, newDir);
     };
 
     const handleClearFilters = () => {
         setSearch('');
         setStatus('');
         setType('');
-        applyFilters('', '', '', perPage);
+        setStarted('');
+        setSortField('created_at');
+        setSortDir('desc');
+        applyFilters('', '', '', '', perPage, 'created_at', 'desc');
     };
 
-    const hasActiveFilters = filters.search || filters.status || filters.type;
+    const hasActiveFilters = filters.search || filters.status || filters.type || filters.started || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
 
     const handleDelete = (coupon: Coupon) => {
         if (confirm(`Are you sure you want to delete coupon "${coupon.code}"?`)) {
@@ -213,7 +286,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Ticket className="h-6 w-6 text-purple-600" />
+                        <Ticket className="h-6 w-6 text-green-600" />
                         Coupons
                     </h1>
                     <Link href="/admin/coupons/create">
@@ -225,93 +298,110 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                     </Link>
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => handleStatusFilter('all')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            !filters.status
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <Layers className="h-4 w-4" />
-                        All
-                        <span className="opacity-70">({statusCounts.all})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('active')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'active'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <CheckCircle className="h-4 w-4" />
-                        Active
-                        <span className="opacity-70">({statusCounts.active})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('inactive')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'inactive'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <XCircle className="h-4 w-4" />
-                        Inactive
-                        <span className="opacity-70">({statusCounts.inactive})</span>
-                    </button>
-                    <button
-                        onClick={() => handleStatusFilter('expired')}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                            filters.status === 'expired'
-                                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        <Clock className="h-4 w-4" />
-                        Expired
-                        <span className="opacity-70">({statusCounts.expired})</span>
-                    </button>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Coupons</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.total}
+                                </p>
+                            </div>
+                            <Ticket className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {stats.active} <span className="text-sm font-normal text-gray-400">/ {stats.total}</span>
+                                </p>
+                            </div>
+                            <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Expired/Exhausted</p>
+                                <p className={`text-2xl font-bold mt-1 ${stats.expired > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'}`}>
+                                    {stats.expired}
+                                </p>
+                            </div>
+                            <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        </div>
+                    </Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700 p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Savings Given</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {formatCurrency(stats.total_savings)}
+                                </p>
+                            </div>
+                            <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                        </div>
+                    </Card>
                 </div>
 
-                {/* Search and Type Filter */}
+                {/* Search and Filters */}
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
-                    <div className="p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
-                        <div className="relative flex-1">
-                            <label htmlFor="coupons-search" className="sr-only">
-                                Search coupons
-                            </label>
-                            <input
-                                id="coupons-search"
-                                name="search"
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by code or name..."
-                                autoComplete="off"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
-                        <div className="flex gap-2">
-                            <select
-                                value={type}
-                                onChange={(e) => handleTypeFilter(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm focus:border-gray-900 dark:focus:border-gray-400 outline-none"
-                            >
-                                <option value="">All Types</option>
-                                <option value="percentage">Percentage</option>
-                                <option value="fixed">Fixed Amount</option>
-                            </select>
-                            {hasActiveFilters && (
-                                <Button variant="outline" onClick={handleClearFilters}>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Clear
-                                </Button>
-                            )}
+                    <div className="p-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            {/* Search */}
+                            <div className="relative w-full sm:w-1/2">
+                                <label htmlFor="coupons-search" className="sr-only">
+                                    Search coupons
+                                </label>
+                                <input
+                                    id="coupons-search"
+                                    name="search"
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search by code or name..."
+                                    autoComplete="off"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:border-gray-900 dark:focus:border-gray-400 outline-none"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            </div>
+
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:ml-auto">
+                                {/* Clear Filters */}
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-dashed border-red-300 dark:border-red-700 hover:border-red-400 dark:hover:border-red-600 whitespace-nowrap"
+                                    >
+                                        <X className="h-4 w-4 flex-shrink-0" />
+                                        Clear Filters
+                                    </button>
+                                )}
+
+                                {/* Filter Dropdowns - side by side on mobile */}
+                                <div className="flex gap-3 sm:contents">
+                                    {/* Type Filter */}
+                                    <Select
+                                        value={type}
+                                        onChange={handleTypeFilter}
+                                        className="flex-1 sm:flex-none sm:w-[120px] md:w-40"
+                                        placeholder="All Types"
+                                        options={typeOptions}
+                                    />
+
+                                    {/* Started Filter */}
+                                    <Select
+                                        value={started}
+                                        onChange={handleStartedFilter}
+                                        className="flex-1 sm:flex-none sm:w-[120px] md:w-40"
+                                        placeholder="All Coupons"
+                                        options={startedOptions}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </Card>
@@ -407,46 +497,109 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
 
                 {/* Desktop Table Layout */}
                 <Card className="hidden md:block dark:bg-gray-800 dark:border-gray-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    {/* Header bar with reset button */}
+                    <div className="flex justify-end items-center px-4 h-10 border-b border-gray-200 dark:border-gray-700">
+                        <ResetColumnsButton resizable={resizable} />
+                    </div>
+                    <StickyScrollWrapper>
+                        <table className="w-full table-fixed min-w-[900px]">
                             <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                                 <tr>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                    <ResizableTh
+                                        columnKey="code"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('code')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Ticket className="h-3.5 w-3.5" />
                                             Code
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Name
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="code" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="name"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('name')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Tag className="h-3.5 w-3.5" />
+                                            Name
+                                            <SortIcon field="name" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="value"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('value')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Percent className="h-3.5 w-3.5" />
                                             Value
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        Usage
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="value" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="usage"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('usage_count')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
+                                            <Hash className="h-3.5 w-3.5" />
+                                            Usage
+                                            <SortIcon field="usage_count" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="dates"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('expires_at')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <Clock className="h-3.5 w-3.5" />
                                             Dates
-                                        </div>
-                                    </th>
-                                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5">
+                                            <SortIcon field="expires_at" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="status"
+                                        resizable={resizable}
+                                        className="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                    >
+                                        <button
+                                            onClick={() => handleSortToggle('is_active')}
+                                            className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white"
+                                        >
                                             <ToggleLeft className="h-3.5 w-3.5" />
                                             Status
-                                        </div>
-                                    </th>
-                                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                        <div className="flex items-center justify-end gap-1.5">
+                                            <SortIcon field="is_active" currentSortField={sortField} currentSortDir={sortDir as 'asc' | 'desc'} />
+                                        </button>
+                                    </ResizableTh>
+                                    <ResizableTh
+                                        columnKey="actions"
+                                        resizable={resizable}
+                                        className="text-center px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        isResizable={false}
+                                    >
+                                        <div className="flex items-center justify-center gap-1.5">
                                             <Settings className="h-3.5 w-3.5" />
                                             Actions
                                         </div>
-                                    </th>
+                                    </ResizableTh>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -462,8 +615,13 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                                     {coupon.code}
                                                 </code>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">
-                                                {coupon.name}
+                                            <td className="px-6 py-4 overflow-hidden">
+                                                <span
+                                                    className="block truncate text-gray-900 dark:text-white"
+                                                    title={coupon.name}
+                                                >
+                                                    {coupon.name}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-1 text-gray-900 dark:text-white">
@@ -523,8 +681,8 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                                     {couponStatus.charAt(0).toUpperCase() + couponStatus.slice(1)}
                                                 </Badge>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center justify-center gap-2">
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -559,7 +717,7 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                 })}
                             </tbody>
                         </table>
-                    </div>
+                    </StickyScrollWrapper>
                     {coupons.data.length === 0 && (
                         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                             No coupons found
@@ -599,17 +757,8 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                     pageNum === currentPage - 1 ||
                                     pageNum === currentPage + 1;
 
-                                const showLeftEllipsis = pageNum === currentPage - 1 && currentPage > 3;
-                                const showRightEllipsis =
-                                    pageNum === currentPage + 1 && currentPage < lastPage - 2;
-
                                 return (
                                     <span key={index} className={!showOnMobile ? 'hidden sm:inline' : ''}>
-                                        {showLeftEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
-                                                ...
-                                            </span>
-                                        )}
                                         <Link
                                             href={link.url || '#'}
                                             preserveScroll
@@ -624,11 +773,6 @@ export default function CouponsIndex({ coupons, filters, statusCounts }: Props) 
                                         >
                                             {pageNum}
                                         </Link>
-                                        {showRightEllipsis && (
-                                            <span className="px-2 py-2 text-gray-400 dark:text-gray-500 sm:hidden">
-                                                ...
-                                            </span>
-                                        )}
                                     </span>
                                 );
                             })}

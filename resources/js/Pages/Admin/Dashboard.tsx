@@ -39,6 +39,8 @@ import {
     GitBranch,
     ClipboardList,
     Ticket,
+    Star,
+    LayoutDashboard,
 } from 'lucide-react';
 import { usePolling } from '@/hooks';
 
@@ -49,14 +51,23 @@ interface StatWithTrend {
     percentage: number | null;
 }
 
+// Default stat for missing data
+const defaultStat: StatWithTrend = { value: 0, trend: null, percentage: null };
+
+// Safe stat accessor
+const getStat = (stat: StatWithTrend | undefined): StatWithTrend => stat ?? defaultStat;
+
 interface DashboardStats {
     total_products: StatWithTrend;
     total_categories: StatWithTrend;
     total_orders: StatWithTrend;
     total_customers: StatWithTrend;
+    new_customers: StatWithTrend;
     revenue: StatWithTrend;
+    average_order_value: StatWithTrend;
     pending_orders: StatWithTrend;
     out_of_stock: StatWithTrend;
+    inventory_value: StatWithTrend;
 }
 
 interface ActivityLog {
@@ -100,6 +111,7 @@ interface Props {
     revenueByStatus: Record<string, number>;
     lowStockProducts: Product[];
     topSellingProducts: Product[];
+    bestRatedProducts: Product[];
     recentActivities: ActivityLog[];
     activeCoupons: ActiveCoupon[];
     // Deferred props
@@ -123,6 +135,7 @@ export default function Dashboard({
     revenueByStatus,
     lowStockProducts,
     topSellingProducts,
+    bestRatedProducts,
     recentActivities,
     activeCoupons,
     chartData = [],
@@ -163,6 +176,7 @@ export default function Dashboard({
             'revenueByStatus',
             'lowStockProducts',
             'topSellingProducts',
+            'bestRatedProducts',
             'recentActivities',
             'activeCoupons',
         ],
@@ -212,13 +226,15 @@ export default function Dashboard({
     const totalOrders = Object.values(ordersByStatus).reduce((sum, count) => sum + count, 0);
 
     const statCards = [
-        { name: 'Total Products', stat: stats.total_products, icon: Package, color: 'text-blue-600', isRevenue: false },
-        { name: 'Categories', stat: stats.total_categories, icon: FolderTree, color: 'text-purple-600', isRevenue: false },
-        { name: 'Total Orders', stat: stats.total_orders, icon: ShoppingCart, color: 'text-green-600', isRevenue: false },
-        { name: 'Customers', stat: stats.total_customers, icon: Users, color: 'text-orange-600', isRevenue: false },
-        { name: 'Revenue', stat: stats.revenue, icon: DollarSign, color: 'text-emerald-600', isRevenue: true },
-        { name: 'Pending Orders', stat: stats.pending_orders, icon: Clock, color: 'text-yellow-600', isRevenue: false },
-        { name: 'Out of Stock', stat: stats.out_of_stock, icon: PackageX, color: stats.out_of_stock.value > 0 ? 'text-red-600' : 'text-gray-600', isRevenue: false },
+        { name: 'Total Products', stat: getStat(stats.total_products), icon: Package, color: 'text-blue-600', isRevenue: false },
+        { name: 'Categories', stat: getStat(stats.total_categories), icon: FolderTree, color: 'text-purple-600', isRevenue: false },
+        { name: 'Total Orders', stat: getStat(stats.total_orders), icon: ShoppingCart, color: 'text-green-600', isRevenue: false },
+        { name: 'New Customers', stat: getStat(stats.new_customers), icon: Users, color: 'text-orange-600', isRevenue: false },
+        { name: 'Revenue', stat: getStat(stats.revenue), icon: DollarSign, color: 'text-emerald-600', isRevenue: true },
+        { name: 'Avg Order Value', stat: getStat(stats.average_order_value), icon: TrendingUp, color: 'text-cyan-600', isRevenue: true },
+        { name: 'Pending Orders', stat: getStat(stats.pending_orders), icon: Clock, color: 'text-yellow-600', isRevenue: false },
+        { name: 'Inventory Value', stat: getStat(stats.inventory_value), icon: Package, color: 'text-indigo-600', isRevenue: true },
+        { name: 'Out of Stock', stat: getStat(stats.out_of_stock), icon: PackageX, color: getStat(stats.out_of_stock).value > 0 ? 'text-red-600' : 'text-gray-600', isRevenue: false },
     ];
 
     // Low stock severity helper
@@ -477,6 +493,48 @@ export default function Dashboard({
                     </Card>
                 );
 
+            case 'bestRated':
+                if (!bestRatedProducts || bestRatedProducts.length === 0) return null;
+                return (
+                    <Card key="bestRated" className="dark:bg-gray-800 dark:border-gray-700">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-semibold flex items-center gap-2 dark:text-white">
+                                    <Star className="h-5 w-5 text-yellow-500" />
+                                    Best Rated Products
+                                </h2>
+                                <Link href="/admin/reviews" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white flex items-center gap-1">
+                                    View reviews <ExternalLink className="h-3 w-3" />
+                                </Link>
+                            </div>
+                            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                                {bestRatedProducts.map((product, index) => (
+                                    <div key={product.id} className="flex items-center gap-4 py-2">
+                                        <span className="text-sm font-bold text-gray-400 dark:text-gray-500 w-6 text-right">{index + 1}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <Link href={`/admin/products/${product.id}/edit`} className="text-sm font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 truncate">
+                                                    {product.name}
+                                                </Link>
+                                                <div className="flex items-center gap-1 ml-2 shrink-0">
+                                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{Number(product.average_rating || 0).toFixed(1)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                                                    <div className="bg-yellow-400 h-2 rounded-full transition-all" style={{ width: `${(Number(product.average_rating || 0) / 5) * 100}%` }} />
+                                                </div>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">{product.rating_count || 0} reviews</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+
             case 'recentActivity':
                 return (
                     <Card key="recentActivity" className="dark:bg-gray-800 dark:border-gray-700">
@@ -564,7 +622,7 @@ export default function Dashboard({
     // Sections that should be in a 2-column grid
     const gridPairs: [DashboardSectionId, DashboardSectionId][] = [
         ['lowStock', 'topSelling'],
-        ['recentActivity', 'recentReviews'],
+        ['bestRated', 'recentActivity'],
     ];
 
     // Render sections in order, grouping grid pairs
@@ -612,7 +670,10 @@ export default function Dashboard({
                 {/* Header with Date Range and Quick Actions */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex items-center gap-4 flex-wrap">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <LayoutDashboard className="h-6 w-6 text-blue-600" />
+                            Dashboard
+                        </h1>
                         <DateRangeSelector selected={selectedRange} onChange={handleRangeChange} />
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">

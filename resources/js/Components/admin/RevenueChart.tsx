@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useEffect, useState } from 'react';
+import { lazy, Suspense, useMemo, useEffect, useState, useRef } from 'react';
 import { TrendingUp } from 'lucide-react';
 
 // Lazy load recharts components for code splitting
@@ -8,7 +8,6 @@ const Line = lazy(() => import('recharts').then(m => ({ default: m.Line })));
 const XAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis })));
 const YAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis })));
 const Tooltip = lazy(() => import('recharts').then(m => ({ default: m.Tooltip })));
-const ResponsiveContainer = lazy(() => import('recharts').then(m => ({ default: m.ResponsiveContainer })));
 const CartesianGrid = lazy(() => import('recharts').then(m => ({ default: m.CartesianGrid })));
 const Legend = lazy(() => import('recharts').then(m => ({ default: m.Legend })));
 
@@ -53,6 +52,27 @@ function ChartLoadingFallback() {
 
 export function RevenueChart({ data }: RevenueChartProps) {
     const isDark = useDarkMode();
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Use ResizeObserver to track container dimensions
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const { width, height } = entry.contentRect;
+                if (width > 0 && height > 0) {
+                    setDimensions({ width: Math.floor(width), height: Math.floor(height) });
+                }
+            }
+        });
+
+        resizeObserver.observe(container);
+
+        return () => resizeObserver.disconnect();
+    }, []);
 
     // Format date for display
     const formattedData = useMemo(() => {
@@ -106,84 +126,91 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 </div>
             </div>
 
-            <div className="h-[300px]">
+            <div ref={containerRef} className="h-[300px]">
+                {dimensions.width === 0 || dimensions.height === 0 ? (
+                    <ChartLoadingFallback />
+                ) : (
                 <Suspense fallback={<ChartLoadingFallback />}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
-                            <XAxis
-                                dataKey="displayDate"
-                                tick={{ fontSize: 12, fill: colors.text }}
-                                tickLine={false}
-                                axisLine={{ stroke: colors.axis }}
-                            />
-                            <YAxis
-                                yAxisId="left"
-                                tick={{ fontSize: 12, fill: colors.text }}
-                                tickLine={false}
-                                axisLine={{ stroke: colors.axis }}
-                                label={{
-                                    value: 'Orders',
-                                    angle: -90,
-                                    position: 'insideLeft',
-                                    style: { fontSize: 12, fill: colors.text },
-                                }}
-                            />
-                            <YAxis
-                                yAxisId="right"
-                                orientation="right"
-                                tick={{ fontSize: 12, fill: colors.text }}
-                                tickLine={false}
-                                axisLine={{ stroke: colors.axis }}
-                                label={{
-                                    value: 'Revenue (JOD)',
-                                    angle: 90,
-                                    position: 'insideRight',
-                                    style: { fontSize: 12, fill: colors.text },
-                                }}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: colors.tooltipBg,
-                                    border: `1px solid ${colors.tooltipBorder}`,
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                    color: colors.tooltipText,
-                                }}
-                                formatter={(value, name) => [
-                                    name === 'revenue' ? `${Number(value).toFixed(2)} JOD` : value,
-                                    name === 'revenue' ? 'Revenue' : 'Orders',
-                                ]}
-                                labelStyle={{ color: colors.tooltipText }}
-                            />
-                            <Legend
-                                verticalAlign="top"
-                                height={36}
-                                formatter={(value) => (
-                                    <span style={{ color: colors.legendText }}>
-                                        {value === 'revenue' ? 'Revenue' : 'Orders'}
-                                    </span>
-                                )}
-                            />
-                            <Bar
-                                yAxisId="left"
-                                dataKey="orders"
-                                fill="#7c3aed"
-                                radius={[4, 4, 0, 0]}
-                                barSize={20}
-                            />
-                            <Line
-                                yAxisId="right"
-                                type="monotone"
-                                dataKey="revenue"
-                                stroke="#f97316"
-                                strokeWidth={2}
-                                dot={{ fill: '#f97316', strokeWidth: 2 }}
-                                activeDot={{ r: 6, fill: '#f97316' }}
-                            />
-                        </ComposedChart>
-                    </ResponsiveContainer>
+                    <ComposedChart
+                        width={dimensions.width}
+                        height={dimensions.height}
+                        data={formattedData}
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
+                        <XAxis
+                            dataKey="displayDate"
+                            tick={{ fontSize: 12, fill: colors.text }}
+                            tickLine={false}
+                            axisLine={{ stroke: colors.axis }}
+                        />
+                        <YAxis
+                            yAxisId="left"
+                            tick={{ fontSize: 12, fill: colors.text }}
+                            tickLine={false}
+                            axisLine={{ stroke: colors.axis }}
+                            label={{
+                                value: 'Orders',
+                                angle: -90,
+                                position: 'insideLeft',
+                                style: { fontSize: 12, fill: colors.text },
+                            }}
+                        />
+                        <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            tick={{ fontSize: 12, fill: colors.text }}
+                            tickLine={false}
+                            axisLine={{ stroke: colors.axis }}
+                            label={{
+                                value: 'Revenue (JOD)',
+                                angle: 90,
+                                position: 'insideRight',
+                                style: { fontSize: 12, fill: colors.text },
+                            }}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: colors.tooltipBg,
+                                border: `1px solid ${colors.tooltipBorder}`,
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                color: colors.tooltipText,
+                            }}
+                            formatter={(value, name) => [
+                                name === 'revenue' ? `${Number(value).toFixed(2)} JOD` : value,
+                                name === 'revenue' ? 'Revenue' : 'Orders',
+                            ]}
+                            labelStyle={{ color: colors.tooltipText }}
+                        />
+                        <Legend
+                            verticalAlign="top"
+                            height={36}
+                            formatter={(value) => (
+                                <span style={{ color: colors.legendText }}>
+                                    {value === 'revenue' ? 'Revenue' : 'Orders'}
+                                </span>
+                            )}
+                        />
+                        <Bar
+                            yAxisId="left"
+                            dataKey="orders"
+                            fill="#7c3aed"
+                            radius={[4, 4, 0, 0]}
+                            barSize={20}
+                        />
+                        <Line
+                            yAxisId="right"
+                            type="monotone"
+                            dataKey="revenue"
+                            stroke="#f97316"
+                            strokeWidth={2}
+                            dot={{ fill: '#f97316', strokeWidth: 2 }}
+                            activeDot={{ r: 6, fill: '#f97316' }}
+                        />
+                    </ComposedChart>
                 </Suspense>
+                )}
             </div>
         </div>
     );

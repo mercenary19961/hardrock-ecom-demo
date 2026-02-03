@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -64,11 +67,29 @@ class OrderController extends Controller
             }
         }
 
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
-            ? (int) $request->per_page
-            : 15;
+        // Sorting parameters (default: created_at descending - most recent first)
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
 
-        $orders = $query->recent()->paginate($perPage)->withQueryString();
+        // Validate sort field
+        $allowedSortFields = ['order_number', 'customer_name', 'created_at', 'total', 'status', 'payment_status'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
+
+        // Apply sorting (don't use ->recent() when custom sort is applied)
+        $query->orderBy($sortField, $sortDir);
+
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
+            ? (int) $request->per_page
+            : 16;
+
+        $orders = $query->paginate($perPage)->withQueryString();
 
         // Status counts
         $statusCounts = Order::selectRaw('status, count(*) as count')
@@ -80,11 +101,22 @@ class OrderController extends Controller
             ->groupBy('payment_status')
             ->pluck('count', 'payment_status');
 
+        // Calculate stats for the dashboard cards
+        $totalOrders = Order::count();
+        $stats = [
+            'total' => $totalOrders,
+            'pending' => $statusCounts['pending'] ?? 0,
+            'revenue' => Order::where('payment_status', 'paid')->sum('total'),
+            'today' => Order::whereDate('created_at', today())->count(),
+        ];
+
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders,
             'statusCounts' => $statusCounts,
             'paymentStatusCounts' => $paymentStatusCounts,
-            'filters' => $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'payment_status', 'per_page', 'date_from', 'date_to', 'date_preset', 'sort', 'dir']),
+            'stats' => $stats,
         ]);
     }
 
@@ -176,8 +208,14 @@ class OrderController extends Controller
         return back()->with('success', "{$updatedCount} order(s) updated successfully.");
     }
 
-    public function export(Request $request): StreamedResponse
+    /**
+     * Export orders to various formats (CSV, Excel, JSON)
+     */
+    public function export(Request $request): StreamedResponse|BinaryFileResponse
     {
+        $format = $request->input('format', 'csv');
+        $timestamp = now()->format('Y-m-d_His');
+
         $query = Order::with('items');
 
         // Apply same filters as index
@@ -229,14 +267,30 @@ class OrderController extends Controller
 
         $orders = $query->recent()->get();
 
-        // Generate CSV
+        return match ($format) {
+            'xlsx' => $this->exportExcel($orders, $timestamp),
+            'json' => $this->exportJson($orders, $timestamp),
+            default => $this->exportCsv($orders, $timestamp),
+        };
+    }
+
+    /**
+     * Export orders as CSV
+     */
+    private function exportCsv($orders, string $timestamp): StreamedResponse
+    {
+        $filename = "orders-{$timestamp}.csv";
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="orders-' . now()->format('Y-m-d-His') . '.csv"',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($orders) {
+        return response()->stream(function () use ($orders) {
             $file = fopen('php://output', 'w');
+
+            // Add UTF-8 BOM for Excel compatibility
+            fwrite($file, "\xEF\xBB\xBF");
 
             // Header row
             fputcsv($file, [
@@ -274,25 +328,85 @@ class OrderController extends Controller
                     $order->customer_name,
                     $order->customer_email,
                     $order->customer_phone,
-                    $order->status,
-                    $order->payment_status,
-                    $order->payment_method,
+                    ucfirst($order->status),
+                    ucfirst($order->payment_status),
+                    $order->payment_method ?? '',
                     number_format($order->subtotal, 2),
                     number_format($order->tax, 2),
                     number_format($order->discount ?? 0, 2),
                     number_format($order->total, 2),
                     $order->items->count(),
                     $addressString,
-                    $order->tracking_number,
-                    $order->carrier,
-                    $order->notes,
+                    $order->tracking_number ?? '',
+                    $order->carrier ?? '',
+                    $order->notes ?? '',
                 ]);
             }
 
             fclose($file);
-        };
+        }, 200, $headers);
+    }
 
-        return response()->stream($callback, 200, $headers);
+    /**
+     * Export orders as Excel (.xlsx)
+     */
+    private function exportExcel($orders, string $timestamp): BinaryFileResponse
+    {
+        return Excel::download(
+            new OrdersExport($orders),
+            "orders-{$timestamp}.xlsx"
+        );
+    }
+
+    /**
+     * Export orders as JSON
+     */
+    private function exportJson($orders, string $timestamp): StreamedResponse
+    {
+        $filename = "orders-{$timestamp}.json";
+
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $data = $orders->map(function ($order) {
+            $address = $order->shipping_address;
+
+            return [
+                'order_number' => $order->order_number,
+                'created_at' => $order->created_at->toISOString(),
+                'customer' => [
+                    'name' => $order->customer_name,
+                    'email' => $order->customer_email,
+                    'phone' => $order->customer_phone,
+                ],
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+                'payment_method' => $order->payment_method,
+                'amounts' => [
+                    'subtotal' => (float) $order->subtotal,
+                    'tax' => (float) $order->tax,
+                    'discount' => (float) ($order->discount ?? 0),
+                    'total' => (float) $order->total,
+                ],
+                'items_count' => $order->items->count(),
+                'shipping_address' => [
+                    'area' => $address['area'] ?? null,
+                    'street' => $address['street'] ?? null,
+                    'building' => $address['building'] ?? null,
+                ],
+                'tracking' => [
+                    'number' => $order->tracking_number,
+                    'carrier' => $order->carrier,
+                ],
+                'notes' => $order->notes,
+            ];
+        });
+
+        return response()->stream(function () use ($data) {
+            echo json_encode(['orders' => $data], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, 200, $headers);
     }
 
     public function printInvoice(Order $order): InertiaResponse

@@ -25,13 +25,27 @@ class CategoryController extends Controller
         $searchTerm = $request->filled('search') ? $request->search : null;
         $statusFilter = $request->filled('status') ? $request->status : null;
 
+        // Sorting parameters (default: name ascending, keeps parent-child grouping)
+        $sortField = $request->input('sort', 'name');
+        $sortDir = $request->input('dir', 'asc');
+
+        // Validate sort field
+        $allowedSortFields = ['name', 'slug', 'products_count', 'is_active', 'sort_order', 'created_at'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'sort_order';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'asc';
+        }
+
         // Get all categories ordered hierarchically
         $allCategories = collect();
 
         // First, get parent categories
         $parentQuery = Category::withCount('products')
-            ->whereNull('parent_id')
-            ->ordered();
+            ->whereNull('parent_id');
 
         if ($searchTerm) {
             // When searching, include parents that match OR have matching children
@@ -50,14 +64,20 @@ class CategoryController extends Controller
             $parentQuery->where('is_active', $statusFilter === 'active');
         }
 
-        $parents = $parentQuery->get();
+        // Apply sorting to parent categories
+        if ($sortField === 'products_count') {
+            // products_count is added via withCount, so we sort after the query
+            $parents = $parentQuery->get()->sortBy([[$sortField, $sortDir]]);
+        } else {
+            $parentQuery->orderBy($sortField, $sortDir);
+            $parents = $parentQuery->get();
+        }
 
         // For each parent, add it and then its children
         foreach ($parents as $parent) {
             // Get children of this parent
             $childQuery = Category::withCount('products')
-                ->where('parent_id', $parent->id)
-                ->ordered();
+                ->where('parent_id', $parent->id);
 
             if ($searchTerm) {
                 $childQuery->where('name', 'like', '%' . $searchTerm . '%');
@@ -67,7 +87,13 @@ class CategoryController extends Controller
                 $childQuery->where('is_active', $statusFilter === 'active');
             }
 
-            $children = $childQuery->get();
+            // Apply sorting to child categories
+            if ($sortField === 'products_count') {
+                $children = $childQuery->get()->sortBy([[$sortField, $sortDir]]);
+            } else {
+                $childQuery->orderBy($sortField, $sortDir);
+                $children = $childQuery->get();
+            }
 
             // Calculate total products for parent (parent's own products + all children's products)
             $childrenProductCount = $children->sum('products_count');
@@ -81,9 +107,9 @@ class CategoryController extends Controller
         }
 
         // Manual pagination of the hierarchical collection
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
             ? (int) $request->per_page
-            : 15;
+            : 16;
 
         $page = $request->input('page', 1);
         $total = $allCategories->count();
@@ -103,10 +129,23 @@ class CategoryController extends Controller
             'inactive' => Category::where('is_active', false)->count(),
         ];
 
+        // Calculate stats for the dashboard cards
+        $totalCategories = Category::count();
+        $stats = [
+            'total' => $totalCategories,
+            'parents' => Category::whereNull('parent_id')->count(),
+            'subcategories' => Category::whereNotNull('parent_id')->count(),
+            'active' => $statusCounts['active'],
+            'inactive' => $statusCounts['inactive'],
+            'empty' => Category::withCount('products')->get()->where('products_count', 0)->count(),
+        ];
+
         return Inertia::render('Admin/Categories/Index', [
             'categories' => $categories,
-            'filters' => $request->only(['search', 'status', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
+            'stats' => $stats,
         ]);
     }
 

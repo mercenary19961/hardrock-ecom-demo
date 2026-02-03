@@ -61,12 +61,46 @@ class CouponController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Pagination
-        $perPage = in_array($request->per_page, ['10', '15', '25', '50', '100'])
-            ? (int) $request->per_page
-            : 15;
+        // Filter by started status
+        if ($request->filled('started')) {
+            switch ($request->started) {
+                case 'started':
+                    // Coupons that have started (no start date OR start date is in the past)
+                    $query->where(function ($q) {
+                        $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                    });
+                    break;
+                case 'not_started':
+                    // Coupons that haven't started yet (start date is in the future)
+                    $query->whereNotNull('starts_at')->where('starts_at', '>', now());
+                    break;
+            }
+        }
 
-        $coupons = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        // Sorting
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
+
+        // Validate sort field
+        $allowedSortFields = ['code', 'name', 'type', 'value', 'usage_count', 'expires_at', 'created_at', 'is_active'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Validate sort direction
+        if (!in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
+
+        // Apply sorting
+        $query->orderBy($sortField, $sortDir);
+
+        // Pagination
+        $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
+            ? (int) $request->per_page
+            : 16;
+
+        $coupons = $query->paginate($perPage);
 
         // Get status counts
         $statusCounts = [
@@ -89,10 +123,21 @@ class CouponController extends Controller
             })->count(),
         ];
 
+        // Calculate stats for the dashboard cards
+        $stats = [
+            'total' => $statusCounts['all'],
+            'active' => $statusCounts['active'],
+            'expired' => $statusCounts['expired'],
+            'total_uses' => Coupon::sum('usage_count'),
+            'total_savings' => Order::whereNotNull('coupon_id')->sum('discount'),
+        ];
+
         return Inertia::render('Admin/Coupons/Index', [
             'coupons' => $coupons,
-            'filters' => $request->only(['search', 'status', 'type', 'per_page']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'status', 'type', 'started', 'per_page', 'sort', 'dir']),
             'statusCounts' => $statusCounts,
+            'stats' => $stats,
         ]);
     }
 

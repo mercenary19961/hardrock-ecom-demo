@@ -1201,6 +1201,34 @@ export default function Category({
 }
 ```
 
+### PHP Empty Array → JavaScript Array (not Object) Serialization
+When PHP serializes an empty array `[]` to JSON, it becomes `[]` (array), not `{}` (object). This causes issues when JavaScript code expects an object:
+
+```php
+// PHP: $request->only(['search', 'sort']) returns [] when no params match
+'filters' => $request->only(['search', 'sort', 'per_page']),  // BAD: [] in JSON
+
+// JavaScript receives:
+filters = []  // An array!
+
+// Problem: accessing array properties returns Array.prototype methods
+filters?.sort  // Returns Array.prototype.sort function, NOT undefined!
+filters?.sort || 'default'  // Returns the sort FUNCTION (truthy), not 'default'
+```
+
+**Solution - Cast to object in PHP:**
+```php
+'filters' => (object) $request->only(['search', 'sort', 'per_page']),  // GOOD: {} in JSON
+```
+
+**Frontend defensive check (backup):**
+```typescript
+const rawFilters = props.filters;
+const filters = (Array.isArray(rawFilters) || !rawFilters) ? {} : rawFilters;
+```
+
+**Note:** TypeScript won't catch this at compile time since the type definition expects an object. The error only manifests at runtime when actual data from the backend doesn't match the expected shape.
+
 ### MySQL Index Key Length Error
 MySQL has a max key length of 3072 bytes. JSON columns cannot be indexed:
 ```php

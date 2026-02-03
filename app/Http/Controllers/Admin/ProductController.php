@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProductsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
@@ -9,6 +10,7 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Setting;
 use App\Services\ActivityLogService;
 use App\Services\UndoService;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +18,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductController extends Controller
 {
@@ -47,8 +52,9 @@ class ProductController extends Controller
             } elseif ($request->status === 'out_of_stock') {
                 $query->where('stock', 0);
             } elseif ($request->status === 'low_stock') {
+                $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
                 $query->where('stock', '>', 0)
-                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), 10)');
+                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold]);
             } elseif ($request->status === 'on_sale') {
                 $query->whereNotNull('compare_price')
                     ->whereColumn('compare_price', '>', 'price');
@@ -57,28 +63,34 @@ class ProductController extends Controller
             }
         }
 
-        // Sorting
-        $sortField = $request->input('sort', 'newest');
-        switch ($sortField) {
-            case 'price_asc':
-                $query->orderBy('price', 'asc');
-                break;
-            case 'price_desc':
-                $query->orderBy('price', 'desc');
-                break;
-            case 'popularity':
-                $query->orderBy('times_purchased', 'desc');
-                break;
-            case 'rating':
-                $query->orderBy('average_rating', 'desc')->orderBy('rating_count', 'desc');
-                break;
-            case 'oldest':
-                $query->orderBy('created_at', 'asc');
-                break;
-            case 'newest':
-            default:
-                $query->orderBy('created_at', 'desc');
-                break;
+        // Sorting - supports sort + dir pattern like ReviewController
+        $sortField = $request->get('sort', 'name');
+        $sortDir = $request->get('dir', 'desc');
+        $direction = $sortDir === 'asc' ? 'asc' : 'desc';
+
+        // Allowed sort fields for security
+        $allowedSortFields = ['name', 'price', 'stock', 'average_rating', 'created_at', 'times_purchased', 'category'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'name';
+        }
+
+        // Handle sorting by related model fields
+        if ($sortField === 'name') {
+            $query->orderBy('name', $direction);
+        } elseif ($sortField === 'category') {
+            // Sort by category name using a subquery
+            $query->orderBy(
+                Category::select('name')
+                    ->whereColumn('categories.id', 'products.category_id')
+                    ->limit(1),
+                $direction
+            );
+        } elseif ($sortField === 'average_rating') {
+            // Secondary sort by rating_count for tie-breaking
+            $query->orderBy('average_rating', $direction)
+                ->orderBy('rating_count', $direction);
+        } else {
+            $query->orderBy($sortField, $direction);
         }
 
         $perPage = in_array($request->per_page, ['4', '8', '16', '32', '64', '80'])
@@ -98,10 +110,28 @@ class ProductController extends Controller
             ->ordered()
             ->get(['id', 'name', 'parent_id', 'sort_order']);
 
+        // Calculate stats for the dashboard cards
+        $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
+
+        $stats = [
+            'total' => Product::count(),
+            'active' => Product::where('is_active', true)->count(),
+            'out_of_stock' => Product::where('stock', 0)->count(),
+            'low_stock' => Product::where('stock', '>', 0)
+                ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold])
+                ->count(),
+            'featured' => Product::where('is_featured', true)->count(),
+            'on_sale' => Product::whereNotNull('compare_price')
+                ->whereColumn('compare_price', '>', 'price')
+                ->count(),
+        ];
+
         return Inertia::render('Admin/Products/Index', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category', 'status', 'per_page', 'sort']),
+            // Cast to object to ensure JSON serializes as {} not [] when empty
+            'filters' => (object) $request->only(['search', 'category', 'status', 'per_page', 'sort', 'dir']),
+            'stats' => $stats,
         ]);
     }
 
@@ -463,5 +493,214 @@ class ProductController extends Controller
         $this->activityLogService->log($product, 'restored', $restoredChanges);
 
         return back()->with('success', 'Product restored to previous state.');
+    }
+
+    /**
+     * Export products to CSV, Excel, or JSON format
+     */
+    public function export(Request $request): StreamedResponse|BinaryFileResponse
+    {
+        $query = Product::with(['category', 'primaryImage']);
+
+        // Apply same filters as index()
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        if ($request->filled('category')) {
+            $categoryId = $request->category;
+            $childIds = Category::where('parent_id', $categoryId)->pluck('id')->toArray();
+            $categoryIds = array_merge([$categoryId], $childIds);
+            $query->whereIn('category_id', $categoryIds);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->active();
+            } elseif ($request->status === 'inactive') {
+                $query->where('is_active', false);
+            } elseif ($request->status === 'out_of_stock') {
+                $query->where('stock', 0);
+            } elseif ($request->status === 'low_stock') {
+                $globalThreshold = (int) Setting::get('low_stock_threshold', 10);
+                $query->where('stock', '>', 0)
+                    ->whereRaw('stock <= COALESCE(products.low_stock_threshold, (SELECT low_stock_threshold FROM categories WHERE categories.id = products.category_id), ?)', [$globalThreshold]);
+            } elseif ($request->status === 'on_sale') {
+                $query->whereNotNull('compare_price')
+                    ->whereColumn('compare_price', '>', 'price');
+            } elseif ($request->status === 'featured') {
+                $query->where('is_featured', true);
+            }
+        }
+
+        // If specific IDs are provided (for selected export)
+        if ($request->filled('product_ids')) {
+            $query->whereIn('id', $request->product_ids);
+        }
+
+        $products = $query->orderBy('name')->get();
+
+        $format = $request->input('format', 'csv');
+        $timestamp = now()->format('Y-m-d-His');
+
+        return match ($format) {
+            'json' => $this->exportJson($products, $timestamp),
+            'xlsx' => $this->exportExcel($products, $timestamp),
+            default => $this->exportCsv($products, $timestamp),
+        };
+    }
+
+    /**
+     * Export products as CSV
+     */
+    private function exportCsv($products, string $timestamp): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.csv\"",
+        ];
+
+        $callback = function () use ($products) {
+            $file = fopen('php://output', 'w');
+
+            // Add UTF-8 BOM for proper Arabic display in Excel
+            fwrite($file, "\xEF\xBB\xBF");
+
+            // Header row
+            fputcsv($file, [
+                'ID',
+                'SKU',
+                'Name',
+                'Name (AR)',
+                'Category',
+                'Price',
+                'Compare Price',
+                'Discount %',
+                'Stock',
+                'Size Stock',
+                'Status',
+                'Featured',
+                'Color',
+                'Available Sizes',
+                'Times Purchased',
+                'Avg Rating',
+                'Review Count',
+                'View Count',
+                'Created At',
+                'Primary Image',
+            ]);
+
+            // Data rows
+            foreach ($products as $product) {
+                $discountPercent = '';
+                if ($product->compare_price && $product->compare_price > $product->price) {
+                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1) . '%';
+                }
+
+                $sizeStock = '';
+                if ($product->size_stock && is_array($product->size_stock)) {
+                    $sizeStock = collect($product->size_stock)
+                        ->map(fn($qty, $size) => "{$size}:{$qty}")
+                        ->join(', ');
+                }
+
+                $availableSizes = '';
+                if ($product->available_sizes && is_array($product->available_sizes)) {
+                    $availableSizes = implode(', ', $product->available_sizes);
+                }
+
+                fputcsv($file, [
+                    $product->id,
+                    $product->sku,
+                    $product->name,
+                    $product->name_ar,
+                    $product->category?->name ?? '',
+                    number_format($product->price, 2),
+                    $product->compare_price ? number_format($product->compare_price, 2) : '',
+                    $discountPercent,
+                    $product->stock,
+                    $sizeStock,
+                    $product->is_active ? 'Active' : 'Inactive',
+                    $product->is_featured ? 'Yes' : 'No',
+                    $product->color ?? '',
+                    $availableSizes,
+                    $product->times_purchased,
+                    $product->average_rating ? number_format($product->average_rating, 1) : '',
+                    $product->rating_count,
+                    $product->view_count,
+                    $product->created_at->format('Y-m-d H:i:s'),
+                    $product->primaryImage?->path ?? '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export products as Excel (HTML table format - opens in Excel without dependencies)
+     */
+    private function exportExcel($products, string $timestamp): BinaryFileResponse
+    {
+        return Excel::download(
+            new ProductsExport($products),
+            "products-{$timestamp}.xlsx"
+        );
+    }
+
+    /**
+     * Export products as JSON
+     */
+    private function exportJson($products, string $timestamp): StreamedResponse
+    {
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename=\"products-{$timestamp}.json\"",
+        ];
+
+        $callback = function () use ($products) {
+            $data = $products->map(function ($product) {
+                $discountPercent = null;
+                if ($product->compare_price && $product->compare_price > $product->price) {
+                    $discountPercent = round((($product->compare_price - $product->price) / $product->compare_price) * 100, 1);
+                }
+
+                return [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'name_ar' => $product->name_ar,
+                    'category' => $product->category?->name,
+                    'category_id' => $product->category_id,
+                    'price' => (float) $product->price,
+                    'compare_price' => $product->compare_price ? (float) $product->compare_price : null,
+                    'discount_percent' => $discountPercent,
+                    'stock' => $product->stock,
+                    'size_stock' => $product->size_stock,
+                    'is_active' => $product->is_active,
+                    'is_featured' => $product->is_featured,
+                    'color' => $product->color,
+                    'color_hex' => $product->color_hex,
+                    'available_sizes' => $product->available_sizes,
+                    'times_purchased' => $product->times_purchased,
+                    'average_rating' => $product->average_rating ? (float) $product->average_rating : null,
+                    'rating_count' => $product->rating_count,
+                    'view_count' => $product->view_count,
+                    'created_at' => $product->created_at->toISOString(),
+                    'updated_at' => $product->updated_at->toISOString(),
+                    'primary_image' => $product->primaryImage?->path,
+                ];
+            });
+
+            echo json_encode([
+                'exported_at' => now()->toISOString(),
+                'count' => $data->count(),
+                'products' => $data->values(),
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

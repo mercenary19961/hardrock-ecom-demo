@@ -35,9 +35,9 @@ export function usePolling(options: UsePollingOptions = {}) {
             return;
         }
 
-        router.reload({
-            only: only || [], // If 'only' is specified, reload only those props
-        });
+        // Only pass 'only' option if specific props are requested
+        // Passing empty array would reload NO props, causing undefined errors
+        router.reload(only && only.length > 0 ? { only } : {});
     }, [onlyWhenVisible, only]);
 
     useEffect(() => {
