@@ -500,7 +500,7 @@ class ProductController extends Controller
      */
     public function export(Request $request): StreamedResponse|BinaryFileResponse
     {
-        $query = Product::with(['category', 'primaryImage']);
+        $query = Product::with(['category.parent', 'primaryImage', 'images']);
 
         // Apply same filters as index()
         if ($request->filled('search')) {
@@ -570,24 +570,36 @@ class ProductController extends Controller
             fputcsv($file, [
                 'ID',
                 'SKU',
+                'Slug',
                 'Name',
                 'Name (AR)',
+                'Short Description',
+                'Short Description (AR)',
+                'Description',
+                'Description (AR)',
                 'Category',
+                'Subcategory',
                 'Price',
                 'Compare Price',
                 'Discount %',
                 'Stock',
-                'Size Stock',
+                'Low Stock Threshold',
                 'Status',
                 'Featured',
                 'Color',
+                'Color Hex',
                 'Available Sizes',
+                'Size Stock',
+                'Available Colors',
+                'Variant Stock',
+                'Product Group',
                 'Times Purchased',
                 'Avg Rating',
                 'Review Count',
                 'View Count',
-                'Created At',
                 'Primary Image',
+                'Created At',
+                'Updated At',
             ]);
 
             // Data rows
@@ -609,27 +621,66 @@ class ProductController extends Controller
                     $availableSizes = implode(', ', $product->available_sizes);
                 }
 
+                $availableColors = '';
+                if ($product->available_colors && is_array($product->available_colors)) {
+                    $availableColors = collect($product->available_colors)
+                        ->map(fn($color) => $color['name'] ?? $color)
+                        ->join(', ');
+                }
+
+                $variantStock = '';
+                if ($product->variant_stock && is_array($product->variant_stock)) {
+                    $variantStock = collect($product->variant_stock)
+                        ->map(fn($qty, $key) => "{$key}:{$qty}")
+                        ->join(', ');
+                }
+
+                // Get subcategory (if category has a parent, then category is subcategory)
+                $category = $product->category;
+                $categoryName = '';
+                $subcategoryName = '';
+                if ($category) {
+                    if ($category->parent_id) {
+                        $subcategoryName = $category->name;
+                        $categoryName = $category->parent?->name ?? '';
+                    } else {
+                        $categoryName = $category->name;
+                    }
+                }
+
                 fputcsv($file, [
                     $product->id,
                     $product->sku,
+                    $product->slug ?? '',
                     $product->name,
-                    $product->name_ar,
-                    $product->category?->name ?? '',
+                    $product->name_ar ?? '',
+                    $product->short_description ?? '',
+                    $product->short_description_ar ?? '',
+                    $product->description ?? '',
+                    $product->description_ar ?? '',
+                    $categoryName,
+                    $subcategoryName,
                     number_format($product->price, 2),
                     $product->compare_price ? number_format($product->compare_price, 2) : '',
                     $discountPercent,
                     $product->stock,
-                    $sizeStock,
+                    $product->low_stock_threshold ?? '',
                     $product->is_active ? 'Active' : 'Inactive',
                     $product->is_featured ? 'Yes' : 'No',
                     $product->color ?? '',
+                    $product->color_hex ?? '',
                     $availableSizes,
+                    $sizeStock,
+                    $availableColors,
+                    $variantStock,
+                    $product->product_group ?? '',
                     $product->times_purchased,
                     $product->average_rating ? number_format($product->average_rating, 1) : '',
                     $product->rating_count,
                     $product->view_count,
+                    ($product->slug ?? '') . '.webp',
                     $product->created_at->format('Y-m-d H:i:s'),
-                    $product->primaryImage?->path ?? '',
+                    $product->updated_at->format('Y-m-d H:i:s'),
                 ]);
             }
 
