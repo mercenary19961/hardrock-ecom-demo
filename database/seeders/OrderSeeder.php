@@ -51,7 +51,21 @@ class OrderSeeder extends Seeder
             ],
         ];
 
-        // Create sample orders
+        // Create sample orders with specific dates for dashboard demo
+        // First few orders are recent (Feb 1-2), rest are older
+        $orderDates = [
+            now()->subDays(1)->setHour(10)->setMinute(30), // Feb 2, 10:30 AM
+            now()->subDays(1)->setHour(14)->setMinute(15), // Feb 2, 2:15 PM
+            now()->subDays(1)->setHour(18)->setMinute(45), // Feb 2, 6:45 PM
+            now()->subDays(2)->setHour(9)->setMinute(0),   // Feb 1, 9:00 AM
+            now()->subDays(2)->setHour(16)->setMinute(20), // Feb 1, 4:20 PM
+            now()->subDays(5),
+            now()->subDays(8),
+            now()->subDays(12),
+            now()->subDays(20),
+            now()->subDays(28),
+        ];
+
         for ($i = 0; $i < 10; $i++) {
             $orderProducts = $products->random(rand(1, 3));
             $subtotal = 0;
@@ -75,19 +89,24 @@ class OrderSeeder extends Seeder
             $tax = round($subtotal * 0.1, 2); // 10% tax
             $total = $subtotal + $tax;
 
-            $orderStatus = $statuses[array_rand($statuses)];
-            $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
-
-            // Determine payment status based on order status
-            if ($orderStatus === 'delivered') {
-                $paymentStatus = 'paid';
-            } elseif ($orderStatus === 'cancelled') {
-                $paymentStatus = ['failed', 'refunded'][array_rand(['failed', 'refunded'])];
+            // Recent orders (first 5) are mostly delivered/processing with paid status
+            if ($i < 5) {
+                $orderStatus = ['delivered', 'processing', 'delivered', 'pending', 'delivered'][$i];
+                $paymentStatus = $orderStatus === 'pending' ? 'pending' : 'paid';
             } else {
-                $paymentStatus = $paymentStatuses[array_rand($paymentStatuses)];
+                $orderStatus = $statuses[array_rand($statuses)];
+                // Determine payment status based on order status
+                if ($orderStatus === 'delivered') {
+                    $paymentStatus = 'paid';
+                } elseif ($orderStatus === 'cancelled') {
+                    $paymentStatus = ['failed', 'refunded'][array_rand(['failed', 'refunded'])];
+                } else {
+                    $paymentStatus = $paymentStatuses[array_rand($paymentStatuses)];
+                }
             }
 
-            $createdAt = now()->subDays(rand(1, 30));
+            $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
+            $createdAt = $orderDates[$i];
 
             $order = Order::create([
                 'user_id' => $customer->id,

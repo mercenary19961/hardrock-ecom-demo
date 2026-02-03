@@ -20,14 +20,15 @@ class UserSeeder extends Seeder
         ]);
 
         // Demo customer accounts (for variety in reviews)
+        // Some customers have recent dates (Feb 1-2) for dashboard demo
         $customers = [
-            ['name' => 'Sara Ahmed', 'email' => 'sara@demo.com'],
-            ['name' => 'John Smith', 'email' => 'john@demo.com'],
-            ['name' => 'Layla Hassan', 'email' => 'layla@demo.com'],
-            ['name' => 'Michael Chen', 'email' => 'michael@demo.com'],
-            ['name' => 'Fatima Noor', 'email' => 'fatima@demo.com'],
-            ['name' => 'Omar Khalid', 'email' => 'omar@demo.com'],
-            ['name' => 'Elena Rodriguez', 'email' => 'elena@demo.com'],
+            ['name' => 'Sara Ahmed', 'email' => 'sara@demo.com', 'created_at' => now()->subDays(1)], // Feb 2
+            ['name' => 'John Smith', 'email' => 'john@demo.com', 'created_at' => now()->subDays(2)], // Feb 1
+            ['name' => 'Layla Hassan', 'email' => 'layla@demo.com', 'created_at' => now()->subDays(1)], // Feb 2
+            ['name' => 'Michael Chen', 'email' => 'michael@demo.com', 'created_at' => now()->subDays(10)],
+            ['name' => 'Fatima Noor', 'email' => 'fatima@demo.com', 'created_at' => now()->subDays(15)],
+            ['name' => 'Omar Khalid', 'email' => 'omar@demo.com', 'created_at' => now()->subDays(20)],
+            ['name' => 'Elena Rodriguez', 'email' => 'elena@demo.com', 'created_at' => now()->subDays(25)],
         ];
 
         foreach ($customers as $customer) {
@@ -36,7 +37,8 @@ class UserSeeder extends Seeder
                 'email' => $customer['email'],
                 'role' => 'customer',
                 'password' => Hash::make('demo1234'),
-                'email_verified_at' => now(),
+                'email_verified_at' => $customer['created_at'],
+                'created_at' => $customer['created_at'],
             ]);
         }
 
