@@ -23,6 +23,7 @@ interface ReviewSectionProps {
     reviews: PaginatedData<Review>;
     ratingDistribution: Record<number, number>;
     canReview: boolean;
+    hasVerifiedPurchase: boolean;
     userReview: Review | null;
     isAuthenticated: boolean;
 }
@@ -568,6 +569,7 @@ export function ReviewSection({
     reviews,
     ratingDistribution,
     canReview,
+    hasVerifiedPurchase,
     userReview,
     isAuthenticated,
 }: ReviewSectionProps) {
@@ -620,13 +622,20 @@ export function ReviewSection({
                         {isAuthenticated ? (
                             <>
                                 {canReview && !showForm && !editingReview && (
-                                    <Button
-                                        onClick={() => setShowForm(true)}
-                                        variant="outline"
-                                        className="w-full py-2 border-gray-300 hover:bg-gray-50 shadow-sm"
-                                    >
-                                        {t("shop:reviewsSection.writeReview")}
-                                    </Button>
+                                    <>
+                                        <Button
+                                            onClick={() => setShowForm(true)}
+                                            variant="outline"
+                                            className="w-full py-2 border-gray-300 hover:bg-gray-50 shadow-sm"
+                                        >
+                                            {t("shop:reviewsSection.writeReview")}
+                                        </Button>
+                                        {!hasVerifiedPurchase && (
+                                            <p className="text-xs text-gray-500 mt-2 text-center">
+                                                {t("shop:reviewsSection.verifiedBadgeNote")}
+                                            </p>
+                                        )}
+                                    </>
                                 )}
 
                                 {showForm && (
@@ -652,11 +661,9 @@ export function ReviewSection({
                                     </div>
                                 )}
 
-                                {!canReview && !userReview && (
+                                {userReview && !editingReview && (
                                     <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                        {t(
-                                            "shop:reviewsSection.mustPurchaseToReview"
-                                        )}
+                                        {t("shop:reviewsSection.alreadyReviewed")}
                                     </p>
                                 )}
                             </>

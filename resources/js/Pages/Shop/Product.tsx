@@ -95,6 +95,7 @@ interface Props {
     relatedProducts?: ProductType[];
     breadcrumbs: Breadcrumb[];
     canReview?: boolean;
+    hasVerifiedPurchase?: boolean;
     userReview?: Review | null;
     auth?: { user: { id: number; name: string; email: string } | null };
 }
@@ -118,6 +119,7 @@ function ProductContent({
     relatedProducts,
     breadcrumbs,
     canReview,
+    hasVerifiedPurchase,
     userReview,
     auth,
 }: Props) {
@@ -662,6 +664,7 @@ function ProductContent({
                         reviews={reviews ?? defaultReviews}
                         ratingDistribution={ratingDistribution ?? {}}
                         canReview={canReview ?? false}
+                        hasVerifiedPurchase={hasVerifiedPurchase ?? false}
                         userReview={userReview ?? null}
                         isAuthenticated={!!auth?.user}
                     />
@@ -698,6 +701,7 @@ export default function Product({
     relatedProducts,
     breadcrumbs,
     canReview,
+    hasVerifiedPurchase,
     userReview,
     auth,
 }: Props) {
@@ -710,6 +714,7 @@ export default function Product({
                 relatedProducts={relatedProducts}
                 breadcrumbs={breadcrumbs}
                 canReview={canReview}
+                hasVerifiedPurchase={hasVerifiedPurchase}
                 userReview={userReview}
                 auth={auth}
             />

@@ -67,13 +67,19 @@ class ProductController extends Controller
                     ->get();
             }, 'related'),
 
-            // Deferred: User review status
+            // Deferred: User review status - any authenticated user can review (once)
             'canReview' => Inertia::defer(function () use ($productId) {
                 if (!Auth::check()) {
                     return false;
                 }
                 $hasReview = Product::find($productId)->reviews()->where('user_id', Auth::id())->exists();
-                return !$hasReview && Auth::user()->hasPurchased($productId);
+                return !$hasReview;
+            }, 'userReview'),
+            'hasVerifiedPurchase' => Inertia::defer(function () use ($productId) {
+                if (!Auth::check()) {
+                    return false;
+                }
+                return Auth::user()->hasPurchased($productId);
             }, 'userReview'),
             'userReview' => Inertia::defer(function () use ($productId) {
                 if (!Auth::check()) {
