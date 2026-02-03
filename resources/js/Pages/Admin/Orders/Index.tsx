@@ -2,11 +2,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
+import { ExportDropdown } from '@/Components/admin/ExportDropdown';
 import { Order, PaginatedData } from '@/types/models';
 import { formatPrice, formatDateTime, getStatusColor } from '@/lib/utils';
 import {
     Search, Eye, X, ChevronLeft, ChevronRight, LayoutGrid, List, Package,
-    Calendar, Download, CheckSquare, Square, CreditCard, Filter, Layers,
+    Calendar, CheckSquare, Square, CreditCard, Filter, Layers,
     Clock, Truck, XCircle, ShoppingCart, User, DollarSign, Activity
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -249,20 +250,6 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
         });
     };
 
-    const handleExport = () => {
-        const params = new URLSearchParams();
-        if (filters.search) params.append('search', filters.search);
-        if (filters.status) params.append('status', filters.status);
-        if (filters.payment_status) params.append('payment_status', filters.payment_status);
-        if (filters.date_preset) params.append('date_preset', filters.date_preset);
-        if (filters.date_from) params.append('date_from', filters.date_from);
-        if (filters.date_to) params.append('date_to', filters.date_to);
-        if (selectedOrders.length > 0) {
-            selectedOrders.forEach(id => params.append('order_ids[]', id.toString()));
-        }
-        window.location.href = `/admin/orders/export?${params.toString()}`;
-    };
-
     const hasActiveFilters = filters.search || filters.status || filters.payment_status || filters.date_preset || filters.date_from || filters.date_to || (filters.sort && filters.sort !== 'created_at') || (filters.dir && filters.dir !== 'desc');
     const totalOrders = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
 
@@ -278,11 +265,21 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                         Orders
                     </h1>
                     <div className="flex items-center gap-2">
-                        {/* Export Button */}
-                        <Button variant="outline" onClick={handleExport} className="hidden sm:flex">
-                            <Download className="h-4 w-4 mr-2" />
-                            Export{selectedOrders.length > 0 ? ` (${selectedOrders.length})` : ''}
-                        </Button>
+                        {/* Export Dropdown */}
+                        <ExportDropdown
+                            baseUrl="/admin/orders/export"
+                            filters={{
+                                search: filters.search,
+                                status: filters.status,
+                                payment_status: filters.payment_status,
+                                date_preset: filters.date_preset,
+                                date_from: filters.date_from,
+                                date_to: filters.date_to,
+                            }}
+                            selectedIds={selectedOrders}
+                            idParamName="order_ids"
+                            className="hidden sm:block"
+                        />
                         {/* View Toggle */}
                         <div className="hidden sm:flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
                             <button
@@ -511,14 +508,19 @@ export default function OrdersIndex({ orders, statusCounts, paymentStatusCounts,
                                 >
                                     Apply
                                 </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={handleExport}
-                                >
-                                    <Download className="h-4 w-4 mr-1" />
-                                    Export Selected
-                                </Button>
+                                <ExportDropdown
+                                    baseUrl="/admin/orders/export"
+                                    filters={{
+                                        search: filters.search,
+                                        status: filters.status,
+                                        payment_status: filters.payment_status,
+                                        date_preset: filters.date_preset,
+                                        date_from: filters.date_from,
+                                        date_to: filters.date_to,
+                                    }}
+                                    selectedIds={selectedOrders}
+                                    idParamName="order_ids"
+                                />
                             </div>
                             <Button
                                 variant="ghost"

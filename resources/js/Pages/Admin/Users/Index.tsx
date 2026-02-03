@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Button, Card, Badge, Select } from '@/Components/ui';
+import { ExportDropdown } from '@/Components/admin/ExportDropdown';
 import { User, PaginatedData } from '@/types/models';
 import {
     Edit,
@@ -307,22 +308,35 @@ export default function UsersIndex({ users, filters, roleCounts, stats: statsPro
                         <Users className="h-6 w-6 text-blue-600" />
                         Users
                     </h1>
-                    {/* View Toggle */}
-                    <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => setViewMode('table')}
-                            className={`p-2 ${viewMode === 'table' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                            title="Table view"
-                        >
-                            <List className="h-4 w-4" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('card')}
-                            className={`p-2 ${viewMode === 'card' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                            title="Card view"
-                        >
-                            <LayoutGrid className="h-4 w-4" />
-                        </button>
+                    <div className="flex items-center gap-3">
+                        {/* Export Dropdown */}
+                        <ExportDropdown
+                            baseUrl="/admin/users/export"
+                            filters={{
+                                search: filters.search,
+                                role: filters.role,
+                                sort: filters.sort,
+                                dir: filters.dir,
+                            }}
+                        />
+
+                        {/* View Toggle */}
+                        <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`p-2 ${viewMode === 'table' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                title="Table view"
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('card')}
+                                className={`p-2 ${viewMode === 'card' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                title="Card view"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 

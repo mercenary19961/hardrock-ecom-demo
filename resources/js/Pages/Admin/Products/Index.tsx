@@ -919,6 +919,7 @@ export default function ProductsIndex({ products: productsProp, categories, filt
                                 status: safeFilters.status,
                             }}
                             selectedIds={Array.from(selectedIds)}
+                            idParamName="product_ids"
                             className="hidden sm:block"
                         />
                         {/* View Toggle - hidden on mobile */}

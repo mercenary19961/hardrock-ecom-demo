@@ -48,6 +48,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('reviews/bulk-delete', [ReviewController::class, 'bulkDelete'])->name('reviews.bulk-delete');
 
     // Users management (roles are immutable, only customers can be deleted)
+    Route::get('users/export', [UserController::class, 'export'])->name('users.export');
     Route::resource('users', UserController::class)->except(['create', 'store']);
     // Rate limit email sending to prevent spam (10 per hour per admin)
     Route::post('users/{user}/send-reset-email', [UserController::class, 'sendResetEmail'])

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\UsersExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\Product;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -218,5 +222,165 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Export users to various formats (CSV, Excel, JSON)
+     */
+    public function export(Request $request): StreamedResponse|BinaryFileResponse
+    {
+        $format = $request->input('format', 'csv');
+        $timestamp = now()->format('Y-m-d_His');
+
+        // Build query with same filters as index
+        $query = User::query();
+
+        // Search filter
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Role filter
+        if ($role = $request->input('role')) {
+            $query->where('role', $role);
+        }
+
+        // Specific user IDs (for selected export)
+        if ($request->has('user_ids')) {
+            $userIds = $request->input('user_ids');
+            if (!empty($userIds)) {
+                $query->whereIn('id', $userIds);
+            }
+        }
+
+        // Add aggregates for order stats
+        $query->withCount('orders')
+              ->withSum(['orders as total_spent' => function ($q) {
+                  $q->where('status', 'delivered');
+              }], 'total');
+
+        // Sorting
+        $sortField = $request->input('sort', 'created_at');
+        $sortDir = $request->input('dir', 'desc');
+
+        $sortableFields = [
+            'name' => 'name',
+            'email' => 'email',
+            'phone' => 'phone',
+            'role' => 'role',
+            'created_at' => 'created_at',
+        ];
+
+        $sortColumn = $sortableFields[$sortField] ?? 'created_at';
+        $sortDirection = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
+
+        $users = $query->orderBy($sortColumn, $sortDirection)->get();
+
+        return match ($format) {
+            'xlsx' => $this->exportExcel($users, $timestamp),
+            'json' => $this->exportJson($users, $timestamp),
+            default => $this->exportCsv($users, $timestamp),
+        };
+    }
+
+    /**
+     * Export users as CSV
+     */
+    private function exportCsv($users, string $timestamp): StreamedResponse
+    {
+        $filename = "users-{$timestamp}.csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->stream(function () use ($users) {
+            $handle = fopen('php://output', 'w');
+
+            // Add UTF-8 BOM for Excel compatibility
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            // Headers
+            fputcsv($handle, [
+                'ID',
+                'Name',
+                'Email',
+                'Phone',
+                'Role',
+                'Email Verified',
+                'Verified At',
+                'Verified Via',
+                'Total Orders',
+                'Total Spent',
+                'Created At',
+            ]);
+
+            // Data rows
+            foreach ($users as $user) {
+                fputcsv($handle, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->phone ?? '',
+                    ucfirst($user->role),
+                    $user->email_verified_at ? 'Yes' : 'No',
+                    $user->email_verified_at?->format('Y-m-d H:i:s') ?? '',
+                    $user->verified_via ?? '',
+                    $user->orders_count ?? 0,
+                    $user->total_spent ? number_format($user->total_spent, 2) : '0.00',
+                    $user->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
+
+    /**
+     * Export users as Excel (.xlsx)
+     */
+    private function exportExcel($users, string $timestamp): BinaryFileResponse
+    {
+        return Excel::download(
+            new UsersExport($users),
+            "users-{$timestamp}.xlsx"
+        );
+    }
+
+    /**
+     * Export users as JSON
+     */
+    private function exportJson($users, string $timestamp): StreamedResponse
+    {
+        $filename = "users-{$timestamp}.json";
+
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $data = $users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'email_verified' => (bool) $user->email_verified_at,
+                'email_verified_at' => $user->email_verified_at?->toISOString(),
+                'verified_via' => $user->verified_via,
+                'total_orders' => $user->orders_count ?? 0,
+                'total_spent' => $user->total_spent ? (float) $user->total_spent : 0,
+                'created_at' => $user->created_at->toISOString(),
+            ];
+        });
+
+        return response()->stream(function () use ($data) {
+            echo json_encode(['users' => $data], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }, 200, $headers);
     }
 }

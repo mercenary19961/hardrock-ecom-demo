@@ -19,6 +19,7 @@ interface ExportDropdownProps {
     baseUrl: string;
     filters?: Record<string, string | number | undefined>;
     selectedIds?: number[];
+    idParamName?: string;
     disabled?: boolean;
     className?: string;
 }
@@ -27,6 +28,7 @@ export function ExportDropdown({
     baseUrl,
     filters = {},
     selectedIds = [],
+    idParamName = 'ids',
     disabled = false,
     className = '',
 }: ExportDropdownProps) {
@@ -72,7 +74,7 @@ export function ExportDropdown({
 
         // Add selected IDs if any
         if (selectedIds.length > 0) {
-            selectedIds.forEach((id) => params.append('product_ids[]', id.toString()));
+            selectedIds.forEach((id) => params.append(`${idParamName}[]`, id.toString()));
         }
 
         // Trigger download
