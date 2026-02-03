@@ -33,10 +33,8 @@ class ReviewController extends Controller
             return back()->withErrors(['review' => 'You have already reviewed this product.']);
         }
 
-        // Check if verified purchase (Required to review)
-        if (!$user->hasPurchased($product->id)) {
-            return back()->withErrors(['review' => 'You must purchase this product to leave a review.']);
-        }
+        // Check if this is a verified purchase (user has bought and received the product)
+        $isVerifiedPurchase = $user->hasPurchased($product->id);
 
         Review::create([
             'product_id' => $product->id,
@@ -46,7 +44,7 @@ class ReviewController extends Controller
             'title_ar' => $validated['title_ar'],
             'comment' => $validated['comment'],
             'comment_ar' => $validated['comment_ar'],
-            'is_verified_purchase' => true,
+            'is_verified_purchase' => $isVerifiedPurchase,
             'language' => $request->input('language', 'en'),
         ]);
 

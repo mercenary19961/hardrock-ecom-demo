@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class Review extends Model
 {
@@ -48,11 +49,16 @@ class Review extends Model
 
     public function getIsHelpfulAttribute(): bool
     {
-        if (!auth()->check()) {
+        try {
+            $userId = Auth::id();
+            if (!$userId) {
+                return false;
+            }
+
+            return $this->helpfulVotes()->where('user_id', $userId)->exists();
+        } catch (\Throwable) {
             return false;
         }
-
-        return $this->helpfulVotes()->where('user_id', auth()->id())->exists();
     }
 
     /**
