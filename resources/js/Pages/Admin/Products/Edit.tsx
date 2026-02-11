@@ -439,6 +439,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
 
     // Activity restore state
     const [restoringActivityId, setRestoringActivityId] = useState<number | null>(null);
+    const [expandedActivities, setExpandedActivities] = useState<Set<number>>(new Set());
 
     // Store initial values for reset functionality
     const initialValues = {
@@ -2180,7 +2181,7 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                         </div>
                                                         {(activity.action === 'updated' || activity.action === 'restored') && activity.changes && activity.changes.length > 0 && (
                                                             <div className="space-y-1.5">
-                                                                {activity.changes.slice(0, 4).map((change, idx) => (
+                                                                {(expandedActivities.has(activity.id) ? activity.changes : activity.changes.slice(0, 4)).map((change, idx) => (
                                                                     <div key={idx} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-700/50 rounded px-2 py-1">
                                                                         <span className="text-gray-700 dark:text-gray-300 font-medium truncate max-w-[100px]">
                                                                             {change.label}
@@ -2199,9 +2200,23 @@ export default function EditProduct({ product, categories, undoMeta, activityLog
                                                                     </div>
                                                                 ))}
                                                                 {activity.changes.length > 4 && (
-                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                                                                        +{activity.changes.length - 4} more
-                                                                    </p>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setExpandedActivities(prev => {
+                                                                            const next = new Set(prev);
+                                                                            if (next.has(activity.id)) {
+                                                                                next.delete(activity.id);
+                                                                            } else {
+                                                                                next.add(activity.id);
+                                                                            }
+                                                                            return next;
+                                                                        })}
+                                                                        className="w-full text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-center cursor-pointer transition-colors"
+                                                                    >
+                                                                        {expandedActivities.has(activity.id)
+                                                                            ? 'Show less'
+                                                                            : `+${activity.changes.length - 4} more`}
+                                                                    </button>
                                                                 )}
                                                                 {/* Restore Button - only for 'updated' entries */}
                                                                 {activity.action === 'updated' && (
