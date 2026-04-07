@@ -726,7 +726,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                 onClose={() => setWishlistOpen(false)}
             />
 
-            {/* Mujeeb Floating Action Button */}
+            {/* Mujeeb Floating Action Button - temporarily hidden
             <FloatingActionButton
                 href="https://www.agentsouq.ai/business/demo-amman"
                 ariaLabel={language === "ar" ? "جرب مساعد مجيب الذكي" : "Try Mujeeb AI Assistant"}
@@ -741,6 +741,7 @@ function ShopLayoutContent({ children }: ShopLayoutProps) {
                 }
                 iconClassName="w-full h-full"
             />
+            */}
         </div>
     );
 }

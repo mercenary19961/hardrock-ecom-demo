@@ -1355,6 +1355,7 @@ export default function Category({
                         >
                             {t("shop:cta.chatWhatsApp")}
                         </a>
+                        {/* Mujeeb button - temporarily hidden
                         <a
                             href="https://www.agentsouq.ai/business/demo-amman"
                             target="_blank"
@@ -1363,6 +1364,7 @@ export default function Category({
                         >
                             {t("shop:cta.tryMujeeb")}
                         </a>
+                        */}
                     </div>
                 </div>
             </div>
