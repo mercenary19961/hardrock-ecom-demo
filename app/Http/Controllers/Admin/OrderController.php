@@ -6,6 +6,7 @@ use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderActivity;
+use App\Services\Payments\Tamara\TamaraService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -148,7 +149,7 @@ class OrderController extends Controller
         return back()->with('success', 'Order status updated successfully.');
     }
 
-    public function updateTracking(Request $request, Order $order): RedirectResponse
+    public function updateTracking(Request $request, Order $order, TamaraService $tamaraService): RedirectResponse
     {
         $request->validate([
             'tracking_number' => 'nullable|string|max:100',
@@ -162,6 +163,24 @@ class OrderController extends Controller
 
         // Log the activity
         OrderActivity::logTrackingUpdate($order, $request->tracking_number, $request->carrier, Auth::id());
+
+        // Capture the Tamara payment at shipment. Tamara authorises funds at
+        // approval but only settles on capture, which requires shipping info —
+        // so this is the natural capture point. Best-effort: never let a
+        // capture hiccup block the admin's tracking update.
+        if ($order->payment_provider === 'tamara' && $order->isPaid() && $request->filled('tracking_number')) {
+            try {
+                $tamaraService->capture($order, [
+                    'tracking_number' => $request->tracking_number,
+                    'shipping_company' => $request->carrier ?: 'Standard',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Tamara capture on tracking update failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Tracking information updated successfully.');
     }

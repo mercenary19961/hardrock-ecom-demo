@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
 
+        // Payment gateway webhooks are server-to-server and cannot carry a CSRF
+        // token. They are authenticated by a shared secret + gateway re-fetch.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
+
         // Trust all proxies (Cloudflare, Railway)
         $middleware->trustProxies(at: '*');
     })

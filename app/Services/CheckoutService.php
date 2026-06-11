@@ -15,9 +15,9 @@ class CheckoutService
         protected CartService $cartService
     ) {}
 
-    public function processCheckout(Cart $cart, array $data, ?User $user = null): Order
+    public function processCheckout(Cart $cart, array $data, ?User $user = null, string $paymentMethod = 'cod'): Order
     {
-        return DB::transaction(function () use ($cart, $data, $user) {
+        return DB::transaction(function () use ($cart, $data, $user, $paymentMethod) {
             $cart->load('items.product');
 
             if ($cart->isEmpty()) {
@@ -55,17 +55,20 @@ class CheckoutService
                 'coupon_id' => $couponId,
                 'coupon_code' => $couponCode,
                 'status' => 'pending',
+                'payment_method' => $paymentMethod,
+                'payment_provider' => in_array($paymentMethod, ['moyasar', 'tamara'], true) ? $paymentMethod : null,
+                'payment_status' => 'pending',
                 'subtotal' => $subtotal,
                 'tax' => 0,
                 'discount' => $discount,
                 'total' => $total,
                 'customer_name' => $data['customer_name'],
-                'customer_email' => $data['customer_email'],
+                'customer_email' => $data['customer_email'] ?? $user?->email,
                 'customer_phone' => $data['customer_phone'],
                 'shipping_address' => [
                     'area' => $data['delivery_area'],
-                    'street' => $data['delivery_street'],
-                    'building' => $data['delivery_building'],
+                    'street' => $data['delivery_street'] ?? '',
+                    'building' => $data['delivery_building'] ?? '',
                     'delivery_notes' => $data['delivery_notes'] ?? '',
                 ],
                 'billing_address' => null,
@@ -111,6 +114,33 @@ class CheckoutService
         }
 
         return $errors;
+    }
+
+    /**
+     * Return reserved stock to inventory when an order's payment fails or
+     * expires. Mirrors the decrement performed at order creation. Callers are
+     * responsible for guarding against double-restoration (see Order
+     * stock_restored flag / PaymentService).
+     */
+    public function restoreStock(Order $order): void
+    {
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $product = \App\Models\Product::find($item->product_id);
+            if (! $product) {
+                continue;
+            }
+
+            $product->increment('stock', $item->quantity);
+            if ($product->times_purchased >= $item->quantity) {
+                $product->decrement('times_purchased', $item->quantity);
+            }
+        }
     }
 
     /**

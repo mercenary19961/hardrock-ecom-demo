@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Services\Payments\MoyasarGateway;
+use App\Services\Payments\PaymentGateway;
+use App\Services\Payments\Tamara\TamaraClient;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +18,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind the active payment gateway behind the contract. Swap this single
+        // line to switch providers (e.g. a future TapGateway) app-wide.
+        $this->app->singleton(PaymentGateway::class, function () {
+            return new MoyasarGateway(
+                secretKey: (string) config('services.moyasar.secret_key'),
+                baseUrl: rtrim((string) config('services.moyasar.base_url'), '/'),
+                currency: (string) config('services.moyasar.currency', 'SAR'),
+                webhookToken: (string) config('services.moyasar.webhook_secret'),
+                successUrl: URL::route('shop.payment.callback'),
+                callbackUrl: URL::route('webhooks.moyasar'),
+            );
+        });
+
+        // Tamara BNPL client (TamaraService autoresolves with this + CheckoutService).
+        $this->app->singleton(TamaraClient::class, function () {
+            return new TamaraClient(
+                apiToken: (string) config('services.tamara.api_token'),
+                notificationToken: (string) config('services.tamara.notification_token'),
+                baseUrl: rtrim((string) config('services.tamara.base_url'), '/'),
+            );
+        });
     }
 
     /**

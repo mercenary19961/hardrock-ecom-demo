@@ -15,15 +15,19 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email|max:255',
+            // Optional: the simplified checkout form collects name/phone/area
+            // only and falls back to the authenticated user's email.
+            'customer_email' => 'nullable|email|max:255',
             'customer_phone' => 'required|string|max:50',
 
             'delivery_area' => 'required|string|max:255',
-            'delivery_street' => 'required|string|max:255',
-            'delivery_building' => 'required|string|max:255',
+            'delivery_street' => 'nullable|string|max:255',
+            'delivery_building' => 'nullable|string|max:255',
             'delivery_notes' => 'nullable|string|max:500',
 
             'notes' => 'nullable|string|max:1000',
+
+            'payment_method' => 'nullable|in:moyasar,tamara,cod',
         ];
     }
 
