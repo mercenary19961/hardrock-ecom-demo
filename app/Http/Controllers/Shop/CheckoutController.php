@@ -97,7 +97,9 @@ class CheckoutController extends Controller
         }
 
         // 'moyasar' / 'tamara' = pay online now; 'cod' = cash on delivery.
-        $paymentMethod = $request->input('payment_method', 'moyasar');
+        // Default to 'cod' so a bare POST never triggers a gateway call — the
+        // online buttons always send their method explicitly.
+        $paymentMethod = $request->input('payment_method', 'cod');
         $onlineMethods = ['moyasar', 'tamara'];
 
         try {

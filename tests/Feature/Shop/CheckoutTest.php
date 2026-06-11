@@ -363,18 +363,26 @@ class CheckoutTest extends TestCase
         $response->assertSessionHasErrors(['customer_name']);
     }
 
-    public function test_checkout_requires_customer_email(): void
+    public function test_checkout_allows_missing_email_and_falls_back_to_user(): void
     {
+        // The simplified checkout form collects name/phone/area only; email is
+        // optional and falls back to the authenticated user's email.
         /** @var User $user */
-        $user = User::factory()->create();
-        $this->createCartWithItems($user);
+        $user = User::factory()->create(['email' => 'fallback@example.com']);
+        $this->createCartWithItems($user, [['price' => 50, 'quantity' => 1, 'stock' => 10]]);
 
         $data = $this->getValidCheckoutData();
         unset($data['customer_email']);
 
         $response = $this->actingAs($user)->post('/checkout', $data);
 
-        $response->assertSessionHasErrors(['customer_email']);
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $user->id,
+            'customer_email' => 'fallback@example.com',
+        ]);
     }
 
     public function test_checkout_requires_valid_email(): void
@@ -419,32 +427,35 @@ class CheckoutTest extends TestCase
         $response->assertSessionHasErrors(['delivery_area']);
     }
 
-    public function test_checkout_requires_delivery_street(): void
+    public function test_checkout_allows_missing_delivery_street(): void
     {
+        // Street/building are optional in the simplified form (area is required).
         /** @var User $user */
         $user = User::factory()->create();
-        $this->createCartWithItems($user);
+        $this->createCartWithItems($user, [['price' => 50, 'quantity' => 1, 'stock' => 10]]);
 
         $data = $this->getValidCheckoutData();
         unset($data['delivery_street']);
 
         $response = $this->actingAs($user)->post('/checkout', $data);
 
-        $response->assertSessionHasErrors(['delivery_street']);
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
     }
 
-    public function test_checkout_requires_delivery_building(): void
+    public function test_checkout_allows_missing_delivery_building(): void
     {
         /** @var User $user */
         $user = User::factory()->create();
-        $this->createCartWithItems($user);
+        $this->createCartWithItems($user, [['price' => 50, 'quantity' => 1, 'stock' => 10]]);
 
         $data = $this->getValidCheckoutData();
         unset($data['delivery_building']);
 
         $response = $this->actingAs($user)->post('/checkout', $data);
 
-        $response->assertSessionHasErrors(['delivery_building']);
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
     }
 
     public function test_checkout_allows_optional_notes(): void

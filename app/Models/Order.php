@@ -85,6 +85,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function activities(): HasMany
     {
         return $this->hasMany(OrderActivity::class)->orderBy('created_at', 'desc');
