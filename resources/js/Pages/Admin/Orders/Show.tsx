@@ -60,6 +60,33 @@ export default function OrderShow({ order }: Props) {
     const [adminNotes, setAdminNotes] = useState(order.admin_notes || '');
     const [notesSaving, setNotesSaving] = useState(false);
 
+    // OTO shipment state
+    const [shipmentSaving, setShipmentSaving] = useState(false);
+    const hasOtoShipment = order.shipping_provider === 'oto' && !!order.tracking_number;
+
+    const handleCreateShipment = () => {
+        setShipmentSaving(true);
+        router.post(
+            `/admin/orders/${order.id}/shipment`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setShipmentSaving(false),
+            }
+        );
+    };
+
+    const handleCancelShipment = () => {
+        if (!confirm('Cancel this OTO shipment? The tracking number will be removed.')) {
+            return;
+        }
+        setShipmentSaving(true);
+        router.delete(`/admin/orders/${order.id}/shipment`, {
+            preserveScroll: true,
+            onFinish: () => setShipmentSaving(false),
+        });
+    };
+
     const handleStatusUpdate = (status: string) => {
         router.patch(`/admin/orders/${order.id}/status`, { status });
     };
@@ -435,7 +462,65 @@ export default function OrderShow({ order }: Props) {
                             </CardContent>
                         </Card>
 
-                        {/* Tracking Information */}
+                        {/* OTO Shipping */}
+                        <Card>
+                            <CardHeader>
+                                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <Truck className="h-5 w-5 text-brand-purple" />
+                                    OTO Shipping
+                                </h2>
+                            </CardHeader>
+                            <CardContent>
+                                {hasOtoShipment ? (
+                                    <div className="space-y-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Carrier</span>
+                                            <span className="text-white">{order.carrier}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Tracking #</span>
+                                            <span className="text-white font-mono">{order.tracking_number}</span>
+                                        </div>
+                                        {order.shipping_label_url && (
+                                            <a
+                                                href={order.shipping_label_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 text-brand-purple hover:underline"
+                                            >
+                                                <Printer className="h-4 w-4" />
+                                                Print AWB label
+                                            </a>
+                                        )}
+                                        <Button
+                                            onClick={handleCancelShipment}
+                                            disabled={shipmentSaving}
+                                            variant="outline"
+                                            className="w-full mt-2"
+                                        >
+                                            {shipmentSaving ? 'Working...' : 'Cancel shipment'}
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-gray-400">
+                                            Create a shipment via OTO. The cheapest available carrier is
+                                            selected automatically and a tracking number + AWB label are assigned.
+                                        </p>
+                                        <Button
+                                            onClick={handleCreateShipment}
+                                            disabled={shipmentSaving}
+                                            className="w-full"
+                                        >
+                                            <Truck className="h-4 w-4 mr-2" />
+                                            {shipmentSaving ? 'Creating...' : 'Create OTO shipment'}
+                                        </Button>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Tracking Information (manual) */}
                         <Card>
                             <CardHeader>
                                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">

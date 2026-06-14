@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Services\Payments\MoyasarGateway;
 use App\Services\Payments\PaymentGateway;
 use App\Services\Payments\Tamara\TamaraClient;
+use App\Services\Shipping\Oto\OtoClient;
+use App\Services\Shipping\Oto\OtoGateway;
+use App\Services\Shipping\ShippingGateway;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
@@ -37,6 +40,23 @@ class AppServiceProvider extends ServiceProvider
                 apiToken: (string) config('services.tamara.api_token'),
                 notificationToken: (string) config('services.tamara.notification_token'),
                 baseUrl: rtrim((string) config('services.tamara.base_url'), '/'),
+            );
+        });
+
+        // OTO (Tryoto) shipping. Swap this binding for a future TorodGateway to
+        // change shipping aggregators app-wide.
+        $this->app->singleton(OtoClient::class, function () {
+            return new OtoClient(
+                refreshToken: (string) config('services.oto.refresh_token'),
+                baseUrl: rtrim((string) config('services.oto.base_url'), '/'),
+            );
+        });
+
+        $this->app->singleton(ShippingGateway::class, function ($app) {
+            return new OtoGateway(
+                client: $app->make(OtoClient::class),
+                originCity: (string) config('services.oto.origin_city', 'Riyadh'),
+                webhookSecret: (string) config('services.oto.webhook_secret'),
             );
         });
     }

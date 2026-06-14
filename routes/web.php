@@ -10,6 +10,7 @@ use App\Http\Controllers\Shop\OrderController;
 use App\Http\Controllers\Shop\PaymentController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Http\Controllers\Webhooks\MoyasarWebhookController;
+use App\Http\Controllers\Webhooks\OtoWebhookController;
 use App\Http\Controllers\Webhooks\TamaraWebhookController;
 use App\Http\Controllers\Shop\ProfileController as ShopProfileController;
 use App\Http\Controllers\Shop\ReviewController;
@@ -99,6 +100,7 @@ Route::middleware('auth')->group(function () {
 // Authenticated via shared secret + gateway re-fetch inside the controller.
 Route::post('/webhooks/moyasar', [MoyasarWebhookController::class, 'handle'])->name('webhooks.moyasar');
 Route::post('/webhooks/tamara', [TamaraWebhookController::class, 'handle'])->name('webhooks.tamara');
+Route::post('/webhooks/oto', [OtoWebhookController::class, 'handle'])->name('webhooks.oto');
 
 // Admin routes
 require __DIR__.'/admin.php';

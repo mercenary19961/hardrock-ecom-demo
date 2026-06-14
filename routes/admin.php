@@ -34,6 +34,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('orders/{order}/invoice', [OrderController::class, 'printInvoice'])->name('orders.invoice');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('orders/{order}/tracking', [OrderController::class, 'updateTracking'])->name('orders.tracking');
+    Route::get('orders/{order}/shipping-options', [OrderController::class, 'shippingOptions'])->name('orders.shipping-options');
+    Route::post('orders/{order}/shipment', [OrderController::class, 'createShipment'])->name('orders.shipment.create');
+    Route::delete('orders/{order}/shipment', [OrderController::class, 'cancelShipment'])->name('orders.shipment.cancel');
     Route::patch('orders/{order}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('orders.admin-notes');
     Route::post('orders/bulk-status', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
 

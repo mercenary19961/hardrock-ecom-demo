@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderActivity;
 use App\Services\Payments\Tamara\TamaraService;
+use App\Services\Shipping\ShippingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -183,6 +185,60 @@ class OrderController extends Controller
         }
 
         return back()->with('success', 'Tracking information updated successfully.');
+    }
+
+    /**
+     * Live carrier options + prices for this order's destination (OTO).
+     */
+    public function shippingOptions(Order $order, ShippingService $shipping): JsonResponse
+    {
+        try {
+            $options = array_map(
+                fn ($o) => $o->toArray(),
+                $shipping->quote($order)
+            );
+
+            return response()->json(['success' => true, 'options' => $options]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not fetch shipping options. ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Create the OTO shipment (cheapest carrier by default, or a chosen option)
+     * and store the tracking number, carrier, and AWB label on the order.
+     */
+    public function createShipment(Request $request, Order $order, ShippingService $shipping): RedirectResponse
+    {
+        $request->validate([
+            'delivery_option_id' => 'nullable|integer',
+        ]);
+
+        try {
+            $shipping->fulfill(
+                $order,
+                $request->filled('delivery_option_id') ? (int) $request->delivery_option_id : null,
+                Auth::id()
+            );
+
+            return back()->with('success', 'Shipment created. Tracking number assigned.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to create shipment: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelShipment(Order $order, ShippingService $shipping): RedirectResponse
+    {
+        try {
+            $shipping->cancel($order, Auth::id());
+
+            return back()->with('success', 'Shipment cancelled.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to cancel shipment: ' . $e->getMessage());
+        }
     }
 
     public function updateAdminNotes(Request $request, Order $order): RedirectResponse

@@ -184,6 +184,10 @@ export interface Order {
     admin_notes: string | null;
     tracking_number: string | null;
     carrier: string | null;
+    shipping_provider: string | null;
+    oto_id: number | null;
+    shipping_label_url: string | null;
+    payment_provider?: string | null;
     items?: OrderItem[];
     user?: User;
     coupon?: Coupon;

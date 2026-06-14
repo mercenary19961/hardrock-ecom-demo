@@ -35,6 +35,9 @@ class Order extends Model
         'admin_notes',
         'tracking_number',
         'carrier',
+        'shipping_provider',
+        'oto_id',
+        'shipping_label_url',
     ];
 
     protected function casts(): array

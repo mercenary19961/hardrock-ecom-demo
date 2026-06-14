@@ -68,4 +68,16 @@ return [
         'instalments' => (int) env('TAMARA_INSTALMENTS', 3),
     ],
 
+    // OTO (Tryoto) shipping aggregator — one integration, many KSA carriers
+    // (Aramex, SMSA, iMile, Barq, Naqel, ...). The refresh_token comes from the
+    // OTO dashboard (Sales Channel > OTO API) and is exchanged for short-lived
+    // access tokens. webhook_secret authenticates inbound status callbacks.
+    'oto' => [
+        'refresh_token' => env('OTO_REFRESH_TOKEN'),
+        'base_url' => env('OTO_BASE_URL', 'https://api.tryoto.com/rest/v2'),
+        'webhook_secret' => env('OTO_WEBHOOK_SECRET'),
+        // Warehouse/origin city shipments are dispatched from.
+        'origin_city' => env('OTO_ORIGIN_CITY', 'Riyadh'),
+    ],
+
 ];
