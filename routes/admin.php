@@ -7,11 +7,13 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ShipmentController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\UndoController;
 use App\Http\Controllers\Admin\UserController;
@@ -46,6 +48,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('orders/{order}/shipment', [OrderController::class, 'cancelShipment'])->name('orders.shipment.cancel');
     Route::patch('orders/{order}/admin-notes', [OrderController::class, 'updateAdminNotes'])->name('orders.admin-notes');
     Route::post('orders/bulk-status', [OrderController::class, 'bulkUpdateStatus'])->name('orders.bulk-status');
+    Route::post('orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('orders.mark-paid');
+
+    // Payments
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+
+    // Shipments
+    Route::get('shipments', [ShipmentController::class, 'index'])->name('shipments.index');
 
     // Coupons
     Route::resource('coupons', CouponController::class)->except(['show']);

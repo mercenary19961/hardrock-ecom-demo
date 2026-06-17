@@ -47,6 +47,47 @@ const activityIcons: Record<string, React.ReactNode> = {
     note_added: <FileText className="h-4 w-4 text-gray-400" />,
 };
 
+function MarkAsPaidButton({ orderId }: { orderId: number }) {
+    const [confirming, setConfirming] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    function confirm() {
+        setLoading(true);
+        router.post(`/admin/orders/${orderId}/mark-paid`, {}, {
+            onFinish: () => { setLoading(false); setConfirming(false); },
+        });
+    }
+
+    if (confirming) {
+        return (
+            <div className="mt-2 flex items-center gap-2">
+                <button
+                    onClick={confirm}
+                    disabled={loading}
+                    className="px-2.5 py-1 text-xs font-medium bg-green-500/20 hover:bg-green-500/30 text-green-400 hover:text-green-300 rounded-lg border border-green-500/20 transition-colors disabled:opacity-50"
+                >
+                    {loading ? 'Saving…' : 'Confirm'}
+                </button>
+                <button
+                    onClick={() => setConfirming(false)}
+                    className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                    Cancel
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <button
+            onClick={() => setConfirming(true)}
+            className="mt-2 flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-green-400 hover:text-green-300 bg-green-400/10 hover:bg-green-400/20 rounded-lg border border-green-400/20 transition-colors"
+        >
+            Mark as Paid (COD)
+        </button>
+    );
+}
+
 export default function OrderShow({ order }: Props) {
     const { i18n } = useTranslation();
     const language = i18n.language;
@@ -251,6 +292,9 @@ export default function OrderShow({ order }: Props) {
                                             {order.payment_status.charAt(0).toUpperCase() +
                                                 order.payment_status.slice(1)}
                                         </Badge>
+                                        {order.payment_method === 'cod' && order.payment_status === 'pending' && (
+                                            <MarkAsPaidButton orderId={order.id} />
+                                        )}
                                     </div>
                                     {order.transaction_id && (
                                         <div>
