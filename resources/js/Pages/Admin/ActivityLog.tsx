@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { PaginatedData } from '@/types/models';
+import { AdminSelect } from '@/Components/admin/AdminSelect';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,25 +99,6 @@ const PERIOD_OPTIONS = [
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function Select({ value, onChange, options, className = '' }: {
-    value: string;
-    onChange: (v: string) => void;
-    options: { value: string; label: string }[];
-    className?: string;
-}) {
-    return (
-        <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${className}`}
-        >
-            {options.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-        </select>
-    );
-}
 
 function ConfirmButton({ onConfirm, children, title, className = '' }: {
     onConfirm: () => void;
@@ -237,7 +219,7 @@ export default function ActivityLog() {
 
             {/* Filter row */}
             <div className="flex flex-wrap items-center gap-2 mb-5">
-                <Select
+                <AdminSelect variant="filter"
                     className="w-44"
                     value={filters.model_type ?? ''}
                     onChange={(v) => applyFilter('model_type', v)}
@@ -246,19 +228,19 @@ export default function ActivityLog() {
                         ...Object.entries(sectionLabels).map(([value, label]) => ({ value, label })),
                     ]}
                 />
-                <Select
+                <AdminSelect variant="filter"
                     className="w-40"
                     value={filters.action ?? ''}
                     onChange={(v) => applyFilter('action', v)}
                     options={ACTION_OPTIONS}
                 />
-                <Select
+                <AdminSelect variant="filter"
                     className="w-40"
                     value={filters.status ?? ''}
                     onChange={(v) => applyFilter('status', v)}
                     options={STATUS_OPTIONS}
                 />
-                <Select
+                <AdminSelect variant="filter"
                     className="w-44"
                     value={filters.changed_by ?? ''}
                     onChange={(v) => applyFilter('changed_by', v)}
@@ -267,7 +249,7 @@ export default function ActivityLog() {
                         ...users.map((u) => ({ value: String(u.id), label: u.name })),
                     ]}
                 />
-                <Select
+                <AdminSelect variant="filter"
                     className="w-40"
                     value={filters.period ?? ''}
                     onChange={(v) => applyFilter('period', v)}
@@ -410,7 +392,7 @@ export default function ActivityLog() {
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                     <span>Rows</span>
-                    <Select
+                    <AdminSelect variant="filter"
                         className="w-20"
                         value={String(filters.per_page ?? 20)}
                         onChange={(v) => applyFilter('per_page', v)}

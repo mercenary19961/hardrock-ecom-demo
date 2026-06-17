@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { AdminSelect } from '@/Components/admin/AdminSelect';
 
 export default function TeamCreate() {
     const [showPw, setShowPw] = useState(false);
@@ -55,14 +56,14 @@ export default function TeamCreate() {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">Role</label>
-                        <select
+                        <AdminSelect
                             value={data.role}
-                            onChange={(e) => setData('role', e.target.value as 'admin' | 'editor')}
-                            className="w-full rounded-lg bg-gray-700 border border-gray-600 text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                        >
-                            <option value="editor">Editor</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                            onChange={(v) => setData('role', v as 'admin' | 'editor')}
+                            options={[
+                                { value: 'editor', label: 'Editor' },
+                                { value: 'admin', label: 'Admin' },
+                            ]}
+                        />
                         {data.role === 'editor' && (
                             <p className="text-xs text-gray-500 mt-1">Editors get default permissions. You can adjust them in Authorization.</p>
                         )}
