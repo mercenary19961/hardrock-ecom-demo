@@ -8,7 +8,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { PaginatedData } from '@/types/models';
 import { AdminSelect } from '@/Components/admin/AdminSelect';
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type LogAction = 'created' | 'updated' | 'deleted' | 'restored';
 
@@ -60,11 +60,18 @@ interface PageProps {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ACTION_STYLES: Record<LogAction, string> = {
+const ACTION_BADGE: Record<LogAction, string> = {
     created:  'bg-green-900/50 text-green-400',
     updated:  'bg-blue-900/50 text-blue-400',
     deleted:  'bg-red-900/50 text-red-400',
     restored: 'bg-amber-900/50 text-amber-400',
+};
+
+const ACTION_BORDER: Record<LogAction, string> = {
+    created:  'border-l-green-500',
+    updated:  'border-l-blue-500',
+    deleted:  'border-l-red-500',
+    restored: 'border-l-amber-500',
 };
 
 const SECTION_ICONS: Record<string, React.ElementType> = {
@@ -110,12 +117,14 @@ function ConfirmButton({ onConfirm, children, title, className = '' }: {
 
     if (confirming) {
         return (
-            <span className="flex items-center gap-1.5 text-xs">
-                <button onClick={() => { onConfirm(); setConfirming(false); }} className="text-red-400 hover:text-red-300 font-medium">
+            <span className="flex items-center gap-2 text-xs">
+                <button
+                    onClick={() => { onConfirm(); setConfirming(false); }}
+                    className="px-2 py-0.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 rounded font-medium transition-colors"
+                >
                     Confirm
                 </button>
-                <span className="text-gray-600">·</span>
-                <button onClick={() => setConfirming(false)} className="text-gray-500 hover:text-gray-300">
+                <button onClick={() => setConfirming(false)} className="text-gray-500 hover:text-gray-300 transition-colors">
                     Cancel
                 </button>
             </span>
@@ -126,6 +135,102 @@ function ConfirmButton({ onConfirm, children, title, className = '' }: {
         <button onClick={() => setConfirming(true)} title={title} className={className}>
             {children}
         </button>
+    );
+}
+
+function LogCard({ log, onRevert, onDestroy }: {
+    log: ActivityLogItem;
+    onRevert: (id: number) => void;
+    onDestroy: (id: number) => void;
+}) {
+    const Icon = SECTION_ICONS[log.model_type] ?? History;
+    const borderColor = ACTION_BORDER[log.action] ?? 'border-l-gray-600';
+
+    return (
+        <div className={`bg-gray-800 border border-gray-700 border-l-2 ${borderColor} rounded-xl overflow-hidden hover:border-t-gray-600 hover:border-r-gray-600 hover:border-b-gray-600 transition-colors ${log.reverted ? 'opacity-55' : ''}`}>
+
+            {/* Header */}
+            <div className="px-4 pt-4 pb-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Icon size={14} className="text-gray-500 flex-shrink-0" />
+                        <span className="text-sm font-semibold text-white">{log.section}</span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${ACTION_BADGE[log.action] ?? 'bg-gray-700 text-gray-300'}`}>
+                            {log.action}
+                        </span>
+                        {log.reverted && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700/70 text-gray-500 border border-gray-600">
+                                reverted
+                            </span>
+                        )}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                        <div className="text-xs text-gray-300">{log.created_time}</div>
+                        <div className="text-xs text-gray-500">{log.created_ago}</div>
+                    </div>
+                </div>
+
+                {log.model_name && (
+                    <div className="text-xs text-gray-400 mb-0.5">
+                        {log.model_url ? (
+                            <Link href={log.model_url} className="hover:text-purple-400 inline-flex items-center gap-0.5 transition-colors">
+                                {log.model_name}
+                                <ExternalLink size={10} className="ml-0.5" />
+                            </Link>
+                        ) : (
+                            log.model_name
+                        )}
+                    </div>
+                )}
+                <div className="text-xs text-gray-600">by {log.changed_by ?? 'system'}</div>
+            </div>
+
+            {/* Field diffs */}
+            {log.changes.length > 0 && (
+                <div className="border-t border-gray-700/60 px-4 py-3 bg-gray-700/20 space-y-2">
+                    {log.changes.slice(0, 4).map((c, i) => (
+                        <div key={i} className="text-xs flex items-start gap-1.5 flex-wrap">
+                            <span className="font-medium text-gray-300 whitespace-nowrap">{c.label}:</span>
+                            <span className="text-gray-500 line-through break-all">{c.old}</span>
+                            <ArrowRight size={10} className="text-gray-600 shrink-0 mt-0.5" />
+                            <span className="text-gray-200 break-all">{c.new}</span>
+                        </div>
+                    ))}
+                    {log.changes.length > 4 && (
+                        <p className="text-xs text-gray-600">+{log.changes.length - 4} more fields</p>
+                    )}
+                </div>
+            )}
+
+            {/* Footer actions */}
+            <div className="border-t border-gray-700/60 px-4 py-2.5 flex items-center justify-between">
+                {log.reverted ? (
+                    <span className="text-xs text-gray-600" title={log.reverted_at ?? undefined}>
+                        Reverted{log.reverted_by ? ` by ${log.reverted_by}` : ''}
+                        {log.reverted_ago ? ` · ${log.reverted_ago}` : ''}
+                    </span>
+                ) : log.revertable ? (
+                    <ConfirmButton
+                        onConfirm={() => onRevert(log.id)}
+                        title="Revert this change"
+                        className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-purple-400 transition-colors"
+                    >
+                        <Undo2 size={13} />
+                        Revert
+                    </ConfirmButton>
+                ) : (
+                    <span className="text-xs text-gray-600">audit only</span>
+                )}
+
+                <ConfirmButton
+                    onConfirm={() => onDestroy(log.id)}
+                    title="Remove log entry"
+                    className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                >
+                    <Trash2 size={13} />
+                </ConfirmButton>
+            </div>
+        </div>
     );
 }
 
@@ -183,16 +288,19 @@ export default function ActivityLog() {
         <AdminLayout>
             <Head title="Activity Log" />
 
-            <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <div className="flex-1 min-w-48">
-                    <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            {/* Page header */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-600/15 rounded-xl border border-purple-500/20">
                         <History className="h-5 w-5 text-purple-400" />
-                        Activity Log
-                    </h1>
-                    <p className="text-sm text-gray-400 mt-0.5">
-                        Every tracked change to products, categories, orders, users and coupons.{' '}
-                        <span className="text-gray-200 font-medium">{logs.total}</span> matching entr{logs.total === 1 ? 'y' : 'ies'}.
-                    </p>
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-white">Activity Log</h1>
+                        <p className="text-sm text-gray-400 mt-0.5">
+                            Every tracked change to products, categories, orders, users and coupons.{' '}
+                            <span className="text-gray-200 font-medium">{logs.total}</span> matching entr{logs.total === 1 ? 'y' : 'ies'}.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Search */}
@@ -218,7 +326,7 @@ export default function ActivityLog() {
             </div>
 
             {/* Filter row */}
-            <div className="flex flex-wrap items-center gap-2 mb-5">
+            <div className="flex flex-wrap items-center gap-2 mb-6">
                 <AdminSelect variant="filter"
                     className="w-44"
                     value={filters.model_type ?? ''}
@@ -267,129 +375,42 @@ export default function ActivityLog() {
                 )}
             </div>
 
-            {/* Table */}
-            <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-                {logs.data.length === 0 ? (
-                    <div className="py-16 text-center text-gray-500 text-sm">
-                        No activity recorded for this filter.
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-gray-700/50 border-b border-gray-700">
-                            <tr>
-                                <th className="text-start px-4 py-3 font-medium text-gray-400">Change</th>
-                                <th className="text-start px-4 py-3 font-medium text-gray-400 hidden lg:table-cell">Details</th>
-                                <th className="text-start px-4 py-3 font-medium text-gray-400 hidden sm:table-cell whitespace-nowrap">When</th>
-                                <th className="text-end px-4 py-3 font-medium text-gray-400">Actions</th>
-                            </tr>
-                        </thead>
-                        {groups.map((group) => (
-                            <tbody key={group.key} className="divide-y divide-gray-700/50">
-                                {/* Day header */}
-                                <tr className="bg-gray-700/30 border-t border-gray-700">
-                                    <td colSpan={4} className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                        {group.label}
-                                    </td>
-                                </tr>
+            {/* Card groups */}
+            {logs.data.length === 0 ? (
+                <div className="py-20 text-center text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">
+                    No activity recorded for this filter.
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    {groups.map((group) => (
+                        <div key={group.key}>
+                            {/* Day divider */}
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="h-px flex-1 bg-gray-700/60" />
+                                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                                    {group.label}
+                                </span>
+                                <div className="h-px flex-1 bg-gray-700/60" />
+                            </div>
 
-                                {group.items.map((log) => {
-                                    const Icon = SECTION_ICONS[log.model_type] ?? History;
-                                    return (
-                                        <tr
-                                            key={log.id}
-                                            className={`hover:bg-gray-700/30 transition-colors align-top ${log.reverted ? 'opacity-50' : ''}`}
-                                        >
-                                            {/* Change summary */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-gray-500"><Icon size={14} /></span>
-                                                    <span className="font-medium text-white">{log.section}</span>
-                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${ACTION_STYLES[log.action] ?? 'bg-gray-700 text-gray-300'}`}>
-                                                        {log.action}
-                                                    </span>
-                                                </div>
-                                                {log.model_name && (
-                                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                                        {log.model_url ? (
-                                                            <Link href={log.model_url} className="hover:text-purple-400 flex items-center gap-0.5 transition-colors">
-                                                                {log.model_name}
-                                                                <ExternalLink size={10} />
-                                                            </Link>
-                                                        ) : (
-                                                            log.model_name
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <div className="text-xs text-gray-500 mt-1">by {log.changed_by ?? 'system'}</div>
-                                            </td>
-
-                                            {/* Field diffs */}
-                                            <td className="px-4 py-3 hidden lg:table-cell max-w-md">
-                                                {log.changes.length === 0 ? (
-                                                    <span className="text-xs text-gray-600">—</span>
-                                                ) : (
-                                                    <ul className="space-y-1">
-                                                        {log.changes.slice(0, 4).map((c, i) => (
-                                                            <li key={i} className="text-xs flex items-center gap-1.5 flex-wrap">
-                                                                <span className="font-medium text-gray-300">{c.label}:</span>
-                                                                <span className="text-gray-500 line-through">{c.old}</span>
-                                                                <ArrowRight size={10} className="text-gray-600 shrink-0" />
-                                                                <span className="text-gray-200">{c.new}</span>
-                                                            </li>
-                                                        ))}
-                                                        {log.changes.length > 4 && (
-                                                            <li className="text-xs text-gray-500">+{log.changes.length - 4} more fields</li>
-                                                        )}
-                                                    </ul>
-                                                )}
-                                            </td>
-
-                                            {/* When */}
-                                            <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap" title={log.created_at}>
-                                                <div className="text-gray-300">{log.created_time}</div>
-                                                <div className="text-xs text-gray-500">{log.created_ago}</div>
-                                            </td>
-
-                                            {/* Actions */}
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center justify-end gap-3">
-                                                    {log.reverted ? (
-                                                        <span className="text-xs text-gray-600 whitespace-nowrap" title={log.reverted_at ?? undefined}>
-                                                            Reverted{log.reverted_by ? ` by ${log.reverted_by}` : ''}
-                                                            {log.reverted_ago ? ` · ${log.reverted_ago}` : ''}
-                                                        </span>
-                                                    ) : log.revertable ? (
-                                                        <ConfirmButton
-                                                            onConfirm={() => revert(log.id)}
-                                                            title="Revert this change"
-                                                            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-purple-400 transition-colors"
-                                                        >
-                                                            <Undo2 size={14} />
-                                                            Revert
-                                                        </ConfirmButton>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-600" title="This action can't be reverted">audit only</span>
-                                                    )}
-                                                    <ConfirmButton
-                                                        onConfirm={() => destroy(log.id)}
-                                                        title="Remove log entry"
-                                                        className="text-gray-600 hover:text-red-400 transition-colors"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </ConfirmButton>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        ))}
-                    </table>
-                )}
-            </div>
+                            {/* Cards */}
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                                {group.items.map((log) => (
+                                    <LogCard
+                                        key={log.id}
+                                        log={log}
+                                        onRevert={revert}
+                                        onDestroy={destroy}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Footer: per-page + pagination */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                     <span>Rows</span>
                     <AdminSelect variant="filter"
@@ -399,7 +420,7 @@ export default function ActivityLog() {
                         options={perPageOptions.map((n) => ({ value: String(n), label: String(n) }))}
                     />
                     {logs.total > 0 && (
-                        <span className="whitespace-nowrap">
+                        <span className="whitespace-nowrap text-xs">
                             Showing {logs.from}–{logs.to} of {logs.total}
                         </span>
                     )}
