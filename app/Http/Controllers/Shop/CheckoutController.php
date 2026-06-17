@@ -7,6 +7,8 @@ use App\Http\Requests\Shop\CheckoutRequest;
 use App\Models\Coupon;
 use App\Services\CartService;
 use App\Services\CheckoutService;
+use App\Services\Payments\PaymentService;
+use App\Services\Payments\Tamara\TamaraService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,12 +16,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-        protected CheckoutService $checkoutService
+        protected CheckoutService $checkoutService,
+        protected PaymentService $paymentService,
+        protected TamaraService $tamaraService
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -81,7 +86,7 @@ class CheckoutController extends Controller
         ];
     }
 
-    public function store(CheckoutRequest $request): RedirectResponse
+    public function store(CheckoutRequest $request): RedirectResponse|HttpResponse
     {
         $cart = $this->cartService->getCart(Auth::user());
 
@@ -91,18 +96,50 @@ class CheckoutController extends Controller
             return back()->withErrors(['stock' => 'Some items are no longer available in the requested quantity']);
         }
 
+        // 'moyasar' / 'tamara' = pay online now; 'cod' = cash on delivery.
+        // Default to 'cod' so a bare POST never triggers a gateway call — the
+        // online buttons always send their method explicitly.
+        $paymentMethod = $request->input('payment_method', 'cod');
+        $onlineMethods = ['moyasar', 'tamara'];
+
         try {
             $order = $this->checkoutService->processCheckout(
                 $cart,
                 $request->validated(),
-                Auth::user()
+                Auth::user(),
+                $paymentMethod
             );
+        } catch (\Exception $e) {
+            Log::error('Checkout failed', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
 
+            return back()->withErrors(['checkout' => 'Failed to process order. Please try again.']);
+        }
+
+        // Cash on delivery: the order is placed, no payment to collect now.
+        if (! in_array($paymentMethod, $onlineMethods, true)) {
             return redirect()
                 ->route('shop.order.confirmation', $order)
                 ->with('success', 'Order placed successfully!');
-        } catch (\Exception $e) {
-            return back()->withErrors(['checkout' => 'Failed to process order. Please try again.']);
+        }
+
+        // Online payment: hand the customer off to the hosted gateway. The order
+        // already exists (pending/unpaid); if initiation fails it will be
+        // auto-cancelled and restocked by the expiry sweeper.
+        try {
+            $url = $paymentMethod === 'tamara'
+                ? $this->tamaraService->initiate($order)
+                : $this->paymentService->initiate($order);
+
+            return Inertia::location($url);
+        } catch (\Throwable $e) {
+            Log::error('Payment initiation failed at checkout', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('shop.order.confirmation', $order)
+                ->with('error', 'Your order was created but we could not start the payment. You can retry payment from the order page.');
         }
     }
 

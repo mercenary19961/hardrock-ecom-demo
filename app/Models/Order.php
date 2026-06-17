@@ -35,6 +35,9 @@ class Order extends Model
         'admin_notes',
         'tracking_number',
         'carrier',
+        'shipping_provider',
+        'oto_id',
+        'shipping_label_url',
     ];
 
     protected function casts(): array
@@ -83,6 +86,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function activities(): HasMany

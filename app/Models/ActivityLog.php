@@ -14,20 +14,30 @@ class ActivityLog extends Model
         'action',
         'changes',
         'user_id',
+        'reverted_at',
+        'reverted_by',
     ];
 
     protected $casts = [
         'changes' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'reverted_at' => 'datetime',
     ];
 
-    /**
-     * Get the user who performed the action.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function revertedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reverted_by');
+    }
+
+    public function isReverted(): bool
+    {
+        return $this->reverted_at !== null;
     }
 
     /**

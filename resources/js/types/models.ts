@@ -4,7 +4,7 @@ export interface User {
     email: string;
     phone: string | null;
     avatar: string | null;
-    role: "admin" | "customer";
+    role: "admin" | "editor" | "customer";
     email_verified_at: string | null;
     verified_via: "email" | "google" | null;
     created_at: string;
@@ -184,6 +184,10 @@ export interface Order {
     admin_notes: string | null;
     tracking_number: string | null;
     carrier: string | null;
+    shipping_provider: string | null;
+    oto_id: number | null;
+    shipping_label_url: string | null;
+    payment_provider?: string | null;
     items?: OrderItem[];
     user?: User;
     coupon?: Coupon;

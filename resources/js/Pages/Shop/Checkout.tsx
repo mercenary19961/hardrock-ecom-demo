@@ -27,6 +27,7 @@ import {
     ChevronDown,
     ChevronUp,
     Ticket,
+    CreditCard,
 } from "lucide-react";
 import axios from "axios";
 
@@ -292,6 +293,65 @@ export default function Checkout({
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    // Pay online via Moyasar (mada / Apple Pay / Visa / Mastercard / STC Pay).
+    // Posts the order through the standard checkout endpoint; the server creates
+    // the order then returns an Inertia::location redirect to the hosted Moyasar
+    // checkout page. Verification + fulfillment happen server-side via webhook.
+    const handlePayOnline = () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        router.post(
+            "/checkout",
+            {
+                customer_name: formData.customer_name,
+                customer_phone: formData.customer_phone,
+                delivery_area: formData.delivery_area,
+                payment_method: "moyasar",
+            },
+            {
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+                onFinish: () => {
+                    setIsSubmitting(false);
+                },
+            }
+        );
+    };
+
+    // Pay later with Tamara (BNPL — split in 4). Same flow as Pay online: the
+    // server creates the order then Inertia::location-redirects to Tamara's
+    // hosted checkout. Fulfillment is webhook-driven server-side.
+    const handlePayTamara = () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        router.post(
+            "/checkout",
+            {
+                customer_name: formData.customer_name,
+                customer_phone: formData.customer_phone,
+                delivery_area: formData.delivery_area,
+                payment_method: "tamara",
+            },
+            {
+                onError: () => {
+                    setIsSubmitting(false);
+                },
+                onFinish: () => {
+                    setIsSubmitting(false);
+                },
+            }
+        );
     };
 
     const handleGoHome = () => {
@@ -1072,10 +1132,78 @@ export default function Checkout({
                                         </div>
                                     </div>
 
+                                    {/* Pay online (mada / Apple Pay / cards / STC Pay via Moyasar) */}
+                                    <Button
+                                        type="button"
+                                        size="lg"
+                                        onClick={handlePayOnline}
+                                        className="w-full mt-6 bg-brand-purple hover:bg-brand-purple/90 flex items-center justify-center gap-2"
+                                        disabled={
+                                            stockErrors.length > 0 ||
+                                            isSubmitting
+                                        }
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                {t("checkout:processing")}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CreditCard className="h-5 w-5" />
+                                                {t("checkout:payOnline", "Pay online")}
+                                            </>
+                                        )}
+                                    </Button>
+                                    <p className="text-[11px] text-gray-500 text-center mt-1">
+                                        {t(
+                                            "checkout:payOnlineNote",
+                                            "mada · Apple Pay · Visa · Mastercard · STC Pay"
+                                        )}
+                                    </p>
+
+                                    {/* Pay later with Tamara (BNPL) */}
+                                    <Button
+                                        type="button"
+                                        size="lg"
+                                        onClick={handlePayTamara}
+                                        className="w-full mt-3 bg-[#3F1052] hover:bg-[#3F1052]/90 text-white flex items-center justify-center gap-2"
+                                        disabled={
+                                            stockErrors.length > 0 ||
+                                            isSubmitting
+                                        }
+                                    >
+                                        {isSubmitting ? (
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                            <span className="font-semibold">
+                                                {t(
+                                                    "checkout:payWithTamara",
+                                                    "Pay later with Tamara"
+                                                )}
+                                            </span>
+                                        )}
+                                    </Button>
+                                    <p className="text-[11px] text-gray-500 text-center mt-1">
+                                        {t(
+                                            "checkout:tamaraNote",
+                                            "Split in up to 4 — no interest"
+                                        )}
+                                    </p>
+
+                                    {/* Divider */}
+                                    <div className="flex items-center gap-3 my-4">
+                                        <div className="h-px flex-1 bg-gray-200" />
+                                        <span className="text-xs text-gray-400">
+                                            {t("checkout:or", "or")}
+                                        </span>
+                                        <div className="h-px flex-1 bg-gray-200" />
+                                    </div>
+
                                     <Button
                                         type="submit"
                                         size="lg"
-                                        className="w-full mt-6 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                        className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
                                         disabled={
                                             stockErrors.length > 0 ||
                                             isSubmitting

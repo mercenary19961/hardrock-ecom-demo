@@ -7,7 +7,11 @@ use App\Http\Controllers\Shop\CouponController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\LandingController;
 use App\Http\Controllers\Shop\OrderController;
+use App\Http\Controllers\Shop\PaymentController;
 use App\Http\Controllers\Shop\ProductController;
+use App\Http\Controllers\Webhooks\MoyasarWebhookController;
+use App\Http\Controllers\Webhooks\OtoWebhookController;
+use App\Http\Controllers\Webhooks\TamaraWebhookController;
 use App\Http\Controllers\Shop\ProfileController as ShopProfileController;
 use App\Http\Controllers\Shop\ReviewController;
 use App\Models\User;
@@ -35,7 +39,16 @@ Route::name('shop.')->group(function () {
         Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
         Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
         Route::post('/checkout/whatsapp', [CheckoutController::class, 'whatsappOrder'])->name('checkout.whatsapp');
+
+        // Start / retry hosted gateway payment for an order
+        Route::get('/pay/{order}', [PaymentController::class, 'pay'])->name('payment.pay');
     });
+
+    // Gateway returns the customer's browser here (success_url). Kept outside
+    // the auth group so a returning shopper with an expired session is still
+    // confirmed — fulfillment is verified against the gateway, not the session.
+    Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+    Route::get('/payment/tamara/callback', [PaymentController::class, 'tamaraCallback'])->name('payment.tamara.callback');
 
     // Coupon routes
     Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
@@ -82,6 +95,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ShopProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/order/{order}', [ShopProfileController::class, 'orderDetails'])->name('profile.order');
 });
+
+// Payment gateway webhook (server-to-server, no auth, CSRF-exempt).
+// Authenticated via shared secret + gateway re-fetch inside the controller.
+Route::post('/webhooks/moyasar', [MoyasarWebhookController::class, 'handle'])->name('webhooks.moyasar');
+Route::post('/webhooks/tamara', [TamaraWebhookController::class, 'handle'])->name('webhooks.tamara');
+Route::post('/webhooks/oto', [OtoWebhookController::class, 'handle'])->name('webhooks.oto');
 
 // Admin routes
 require __DIR__.'/admin.php';

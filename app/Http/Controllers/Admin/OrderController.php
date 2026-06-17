@@ -6,6 +6,10 @@ use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderActivity;
+use App\Services\NotificationService;
+use App\Services\Payments\Tamara\TamaraService;
+use App\Services\Shipping\ShippingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
     public function index(Request $request): InertiaResponse
     {
         $query = Order::with('user');
@@ -141,14 +146,18 @@ class OrderController extends Controller
         if ($oldStatus !== $newStatus) {
             $order->update(['status' => $newStatus]);
 
-            // Log the activity
             OrderActivity::logStatusChange($order, $oldStatus, $newStatus, Auth::id());
+            $this->notifications->notifyEditorAction(
+                "changed order status to {$newStatus}",
+                "Order #{$order->order_number}",
+                "/admin/orders/{$order->id}",
+            );
         }
 
         return back()->with('success', 'Order status updated successfully.');
     }
 
-    public function updateTracking(Request $request, Order $order): RedirectResponse
+    public function updateTracking(Request $request, Order $order, TamaraService $tamaraService): RedirectResponse
     {
         $request->validate([
             'tracking_number' => 'nullable|string|max:100',
@@ -163,7 +172,79 @@ class OrderController extends Controller
         // Log the activity
         OrderActivity::logTrackingUpdate($order, $request->tracking_number, $request->carrier, Auth::id());
 
+        // Capture the Tamara payment at shipment. Tamara authorises funds at
+        // approval but only settles on capture, which requires shipping info —
+        // so this is the natural capture point. Best-effort: never let a
+        // capture hiccup block the admin's tracking update.
+        if ($order->payment_provider === 'tamara' && $order->isPaid() && $request->filled('tracking_number')) {
+            try {
+                $tamaraService->capture($order, [
+                    'tracking_number' => $request->tracking_number,
+                    'shipping_company' => $request->carrier ?: 'Standard',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Tamara capture on tracking update failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return back()->with('success', 'Tracking information updated successfully.');
+    }
+
+    /**
+     * Live carrier options + prices for this order's destination (OTO).
+     */
+    public function shippingOptions(Order $order, ShippingService $shipping): JsonResponse
+    {
+        try {
+            $options = array_map(
+                fn ($o) => $o->toArray(),
+                $shipping->quote($order)
+            );
+
+            return response()->json(['success' => true, 'options' => $options]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not fetch shipping options. ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Create the OTO shipment (cheapest carrier by default, or a chosen option)
+     * and store the tracking number, carrier, and AWB label on the order.
+     */
+    public function createShipment(Request $request, Order $order, ShippingService $shipping): RedirectResponse
+    {
+        $request->validate([
+            'delivery_option_id' => 'nullable|integer',
+        ]);
+
+        try {
+            $shipping->fulfill(
+                $order,
+                $request->filled('delivery_option_id') ? (int) $request->delivery_option_id : null,
+                Auth::id()
+            );
+
+            return back()->with('success', 'Shipment created. Tracking number assigned.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to create shipment: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelShipment(Order $order, ShippingService $shipping): RedirectResponse
+    {
+        try {
+            $shipping->cancel($order, Auth::id());
+
+            return back()->with('success', 'Shipment cancelled.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Failed to cancel shipment: ' . $e->getMessage());
+        }
     }
 
     public function updateAdminNotes(Request $request, Order $order): RedirectResponse

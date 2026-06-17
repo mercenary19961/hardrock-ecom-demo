@@ -20,7 +20,20 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        // Determine if we're serving the staff-accessible customers route
+        $customersRoute = $request->routeIs('admin.customers.*');
+
         $query = User::query();
+
+        // Customers route: lock to customer role only
+        if ($customersRoute) {
+            $query->where('role', 'customer');
+        } else {
+            // Full users view (admin-only legacy route): allow role filter
+            if ($role = $request->input('role')) {
+                $query->where('role', $role);
+            }
+        }
 
         // Search filter
         if ($search = $request->input('search')) {
@@ -30,34 +43,39 @@ class UserController extends Controller
             });
         }
 
-        // Role filter
-        if ($role = $request->input('role')) {
-            $query->where('role', $role);
-        }
-
-        // Get counts for tabs
-        $roleCounts = [
-            'all' => User::count(),
-            'admin' => User::where('role', 'admin')->count(),
-            'customer' => User::where('role', 'customer')->count(),
-        ];
-
-        // Calculate stats for the dashboard cards
+        // Get counts
         $thirtyDaysAgo = now()->subDays(30);
-        $stats = [
-            'total' => $roleCounts['all'],
-            'admins' => $roleCounts['admin'],
-            'customers' => $roleCounts['customer'],
-            'verified' => User::whereNotNull('email_verified_at')->count(),
-            'unverified' => User::whereNull('email_verified_at')->count(),
-            'new_users' => User::where('created_at', '>=', $thirtyDaysAgo)->count(),
-        ];
+        if ($customersRoute) {
+            $roleCounts = [
+                'all' => User::where('role', 'customer')->count(),
+            ];
+            $stats = [
+                'total' => $roleCounts['all'],
+                'verified' => User::where('role', 'customer')->whereNotNull('email_verified_at')->count(),
+                'unverified' => User::where('role', 'customer')->whereNull('email_verified_at')->count(),
+                'new_users' => User::where('role', 'customer')->where('created_at', '>=', $thirtyDaysAgo)->count(),
+            ];
+        } else {
+            $roleCounts = [
+                'all' => User::count(),
+                'admin' => User::where('role', 'admin')->count(),
+                'editor' => User::where('role', 'editor')->count(),
+                'customer' => User::where('role', 'customer')->count(),
+            ];
+            $stats = [
+                'total' => $roleCounts['all'],
+                'admins' => ($roleCounts['admin'] ?? 0) + ($roleCounts['editor'] ?? 0),
+                'customers' => $roleCounts['customer'],
+                'verified' => User::whereNotNull('email_verified_at')->count(),
+                'unverified' => User::whereNull('email_verified_at')->count(),
+                'new_users' => User::where('created_at', '>=', $thirtyDaysAgo)->count(),
+            ];
+        }
 
         // Sorting
         $sortField = $request->input('sort', 'created_at');
         $sortDir = $request->input('dir', 'desc');
 
-        // Map frontend field names to database columns
         $sortableFields = [
             'name' => 'name',
             'email' => 'email',
@@ -69,7 +87,6 @@ class UserController extends Controller
         $sortColumn = $sortableFields[$sortField] ?? 'created_at';
         $sortDirection = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
 
-        // Pagination
         $perPage = $request->input('per_page', 16);
         $users = $query->orderBy($sortColumn, $sortDirection)
                        ->paginate($perPage)
@@ -77,10 +94,10 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            // Cast to object to ensure JSON serializes as {} not [] when empty
             'filters' => (object) $request->only(['search', 'role', 'per_page', 'sort', 'dir']),
             'roleCounts' => $roleCounts,
             'stats' => $stats,
+            'customersOnly' => $customersRoute,
         ]);
     }
 

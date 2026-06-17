@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreCouponRequest;
 use App\Http\Requests\Admin\UpdateCouponRequest;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use Inertia\Response;
 
 class CouponController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
     public function index(Request $request): Response
     {
         $query = Coupon::query();
@@ -153,7 +155,8 @@ class CouponController extends Controller
         // Uppercase the code
         $data['code'] = strtoupper($data['code']);
 
-        Coupon::create($data);
+        $coupon = Coupon::create($data);
+        $this->notifications->notifyEditorAction('created a coupon', $coupon->code, '/admin/coupons');
 
         return redirect()
             ->route('admin.coupons.index')
@@ -186,6 +189,7 @@ class CouponController extends Controller
         $data['is_active'] = $request->boolean('is_active');
 
         $coupon->update($data);
+        $this->notifications->notifyEditorAction('edited a coupon', $coupon->code, "/admin/coupons/{$coupon->id}/edit");
 
         return redirect()
             ->route('admin.coupons.edit', $coupon)
@@ -203,7 +207,9 @@ class CouponController extends Controller
             ]);
         }
 
+        $code = $coupon->code;
         $coupon->delete();
+        $this->notifications->notifyEditorAction('deleted a coupon', $code, '/admin/coupons');
 
         return redirect()
             ->route('admin.coupons.index')

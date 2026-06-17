@@ -24,3 +24,10 @@ Homestead.yaml
 Thumbs.db
 .claude
 CLAUDE.md
+
+# Laravel IDE Helper (machine-generated, for editor type hints only)
+# _ide_helper.php lives in ide-helper/ so Intelephense can index it as a
+# reference (via intelephense.environment.includePaths) without diagnosing it.
+/ide-helper/
+_ide_helper_models.php
+.phpstorm.meta.php

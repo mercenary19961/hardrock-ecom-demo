@@ -285,7 +285,7 @@ export default function UsersIndex({ users, filters, roleCounts, stats: statsPro
     };
 
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const successTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Auto-hide success message after 3 seconds
     useEffect(() => {
