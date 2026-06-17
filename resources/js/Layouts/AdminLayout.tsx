@@ -23,12 +23,28 @@ import {
     Settings,
     BarChart3,
     History,
+    Bell,
+    ShieldCheck,
+    Shield,
+    CheckCheck,
+    ExternalLink,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
 import { SiteSettings } from '@/types';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
 import { SkyToggle } from '@/Components/ui/SkyToggle';
 import axios from 'axios';
+
+// Notification item type
+interface NotificationItem {
+    id: string;
+    type: string;
+    title: string;
+    body: string;
+    url: string | null;
+    read: boolean;
+    created_at: string;
+}
 
 // Search result types
 interface SearchResults {
@@ -72,6 +88,10 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'reports': { label: 'Reports', icon: BarChart3 },
     'settings': { label: 'Settings', icon: Settings },
     'activity-log': { label: 'Activity Log', icon: History },
+    'team': { label: 'Team', icon: Shield },
+    'authorization': { label: 'Authorization', icon: ShieldCheck },
+    'customers': { label: 'Customers', icon: Users },
+    'notifications': { label: 'Notifications', icon: Bell },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -79,19 +99,6 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
 interface AdminLayoutProps {
     children: ReactNode;
 }
-
-const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Categories', href: '/admin/categories', icon: FolderTree },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Reviews', href: '/admin/reviews', icon: Star },
-    { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Activity Log', href: '/admin/activity-log', icon: History },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
-];
 
 // Global sidebar state (persists across navigation)
 let globalSidebarOpen = true;
@@ -109,20 +116,79 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     const searchRef = useRef<HTMLDivElement>(null);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Notification bell state
+    const [bellOpen, setBellOpen] = useState(false);
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const bellRef = useRef<HTMLDivElement>(null);
+
+    // Dynamic navigation based on role
+    const navigation = useMemo(() => {
+        const isAdmin = auth.user.role === 'admin';
+        return [
+            { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+            { name: 'Products', href: '/admin/products', icon: Package },
+            { name: 'Categories', href: '/admin/categories', icon: FolderTree },
+            { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+            { name: 'Reviews', href: '/admin/reviews', icon: Star },
+            { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+            { name: 'Customers', href: '/admin/customers', icon: Users },
+            { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+            { name: 'Activity Log', href: '/admin/activity-log', icon: History },
+            ...(isAdmin ? [
+                { name: 'Team', href: '/admin/team', icon: Shield },
+                { name: 'Authorization', href: '/admin/authorization', icon: ShieldCheck },
+                { name: 'Settings', href: '/admin/settings', icon: Settings },
+            ] : []),
+        ];
+    }, [auth.user.role]);
+
     // Sync sidebar state globally
     useEffect(() => {
         globalSidebarOpen = sidebarOpen;
     }, [sidebarOpen]);
 
-    // Close dropdown when clicking outside
+    // Close search dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setShowDropdown(false);
             }
+            if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
+                setBellOpen(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Fetch notifications
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await axios.get<{ notifications: NotificationItem[]; unread_count: number }>('/admin/notifications');
+            setNotifications(res.data.notifications);
+            setUnreadCount(res.data.unread_count);
+        } catch {
+            // silently ignore
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [fetchNotifications]);
+
+    const markRead = useCallback(async (id: string) => {
+        await axios.post(`/admin/notifications/${id}/read`);
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+    }, []);
+
+    const markAllRead = useCallback(async () => {
+        await axios.post('/admin/notifications/read-all');
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
     }, []);
 
     // Global keyboard shortcuts
@@ -504,6 +570,96 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
                                             Press <kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">Enter</kbd> to search all products
                                         </div>
                                     )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Bell Notification Dropdown */}
+                        <div ref={bellRef} className="relative">
+                            <button
+                                onClick={() => setBellOpen(o => !o)}
+                                className="relative p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                aria-label="Notifications"
+                            >
+                                <Bell className="h-5 w-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {bellOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                        <span className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <button
+                                                onClick={markAllRead}
+                                                className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                                            >
+                                                <CheckCheck className="h-3.5 w-3.5" />
+                                                Mark all read
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* List */}
+                                    <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                                        {notifications.length === 0 ? (
+                                            <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                                                No notifications yet
+                                            </div>
+                                        ) : (
+                                            notifications.map(n => (
+                                                <div
+                                                    key={n.id}
+                                                    className={`px-4 py-3 flex gap-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${!n.read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`text-sm font-medium truncate ${!n.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                                                            {n.title}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.body}</p>
+                                                        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{n.created_at}</p>
+                                                    </div>
+                                                    <div className="flex flex-col gap-1 flex-shrink-0 items-end">
+                                                        {!n.read && (
+                                                            <button
+                                                                onClick={() => markRead(n.id)}
+                                                                className="text-[10px] text-indigo-500 hover:text-indigo-700 dark:text-indigo-400"
+                                                                title="Mark read"
+                                                            >
+                                                                <CheckCheck className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+                                                        {n.url && (
+                                                            <a
+                                                                href={n.url}
+                                                                onClick={() => { setBellOpen(false); if (!n.read) markRead(n.id); }}
+                                                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                                                title="View"
+                                                            >
+                                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2.5">
+                                        <Link
+                                            href="/admin/notifications/preferences"
+                                            onClick={() => setBellOpen(false)}
+                                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                                        >
+                                            Notification preferences
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
                         </div>

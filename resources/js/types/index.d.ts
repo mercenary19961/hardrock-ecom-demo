@@ -4,7 +4,7 @@ export interface User {
     email: string;
     email_verified_at?: string | null;
     verified_via?: 'email' | 'google' | null;
-    role?: 'admin' | 'customer';
+    role?: 'admin' | 'editor' | 'customer';
 }
 
 export interface SiteSettings {

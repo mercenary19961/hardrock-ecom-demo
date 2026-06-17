@@ -7,12 +7,14 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class CheckoutService
 {
     public function __construct(
-        protected CartService $cartService
+        protected CartService $cartService,
+        protected NotificationService $notificationService,
     ) {}
 
     public function processCheckout(Cart $cart, array $data, ?User $user = null, string $paymentMethod = 'cod'): Order
@@ -88,14 +90,20 @@ class CheckoutService
                 ]);
 
                 // Decrease stock and increment times_purchased
+                $previousStock = $item->product->stock;
                 $item->product->decrement('stock', $item->quantity);
                 $item->product->increment('times_purchased', $item->quantity);
+                $item->product->refresh();
+                $this->notificationService->checkAndNotifyLowStock($item->product, $previousStock);
             }
 
             // Clear cart
             $this->cartService->clear($cart);
 
-            return $order->load('items');
+            $loaded = $order->load('items');
+            $this->notificationService->notifyNewOrder($loaded);
+
+            return $loaded;
         });
     }
 
@@ -216,14 +224,20 @@ class CheckoutService
                 ]);
 
                 // Decrease stock and increment times_purchased
+                $previousStock = $item->product->stock;
                 $item->product->decrement('stock', $item->quantity);
                 $item->product->increment('times_purchased', $item->quantity);
+                $item->product->refresh();
+                $this->notificationService->checkAndNotifyLowStock($item->product, $previousStock);
             }
 
             // Clear cart
             $this->cartService->clear($cart);
 
-            return $order->load('items');
+            $loaded = $order->load('items');
+            $this->notificationService->notifyNewOrder($loaded);
+
+            return $loaded;
         });
     }
 }

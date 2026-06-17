@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ use Inertia\Response;
 
 class ReviewController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
     public function index(Request $request): Response
     {
         $query = Review::with(['user:id,name,email,avatar', 'product:id,name,name_ar,slug']);
@@ -154,10 +156,11 @@ class ReviewController extends Controller
     public function destroy(Review $review): RedirectResponse
     {
         $productId = $review->product_id;
+        $productName = $review->product?->name ?? "product #{$productId}";
         $review->delete();
 
-        // Update product rating stats
         $this->updateProductRating($productId);
+        $this->notifications->notifyEditorAction('deleted a review', "on {$productName}", "/admin/products/{$productId}/edit");
 
         return redirect()
             ->route('admin.reviews.index')

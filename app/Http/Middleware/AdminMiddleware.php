@@ -8,19 +8,29 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
-    public function handle(Request $request, Closure $next): Response
+    /**
+     * Allow admins and editors into the admin panel.
+     * Pass $guard = 'admin' on specific routes that only admins may access.
+     */
+    public function handle(Request $request, Closure $next, string $guard = 'staff'): Response
     {
-        if (!$request->user() || !$request->user()->isAdmin()) {
-            if ($request->wantsJson()) {
+        $user = $request->user();
+
+        $allowed = match ($guard) {
+            'admin' => $user?->isAdmin(),
+            default => $user?->isStaff(),
+        };
+
+        if (! $allowed) {
+            if ($request->wantsJson() || $request->header('X-Inertia')) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
 
-            abort(403, 'Unauthorized. Admin access required.');
+            abort(403, 'Unauthorized.');
         }
 
-        // Extend session lifetime for admin users
-        $adminLifetime = config('session.admin_lifetime', 480);
-        config(['session.lifetime' => $adminLifetime]);
+        // Extend session lifetime for staff users
+        config(['session.lifetime' => config('session.admin_lifetime', 480)]);
 
         return $next($request);
     }

@@ -6,6 +6,7 @@ use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderActivity;
+use App\Services\NotificationService;
 use App\Services\Payments\Tamara\TamaraService;
 use App\Services\Shipping\ShippingService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
+    public function __construct(private NotificationService $notifications) {}
     public function index(Request $request): InertiaResponse
     {
         $query = Order::with('user');
@@ -144,8 +146,12 @@ class OrderController extends Controller
         if ($oldStatus !== $newStatus) {
             $order->update(['status' => $newStatus]);
 
-            // Log the activity
             OrderActivity::logStatusChange($order, $oldStatus, $newStatus, Auth::id());
+            $this->notifications->notifyEditorAction(
+                "changed order status to {$newStatus}",
+                "Order #{$order->order_number}",
+                "/admin/orders/{$order->id}",
+            );
         }
 
         return back()->with('success', 'Order status updated successfully.');
