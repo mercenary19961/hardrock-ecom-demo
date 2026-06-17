@@ -22,6 +22,7 @@ import {
     Star,
     Settings,
     BarChart3,
+    History,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
 import { SiteSettings } from '@/types';
@@ -70,6 +71,7 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'reviews': { label: 'Reviews', icon: Star },
     'reports': { label: 'Reports', icon: BarChart3 },
     'settings': { label: 'Settings', icon: Settings },
+    'activity-log': { label: 'Activity Log', icon: History },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
 };
@@ -87,6 +89,7 @@ const navigation = [
     { name: 'Reviews', href: '/admin/reviews', icon: Star },
     { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+    { name: 'Activity Log', href: '/admin/activity-log', icon: History },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

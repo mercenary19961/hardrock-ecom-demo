@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -72,4 +73,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('undo/{model}/{id}', [UndoController::class, 'status'])->name('undo.status');
     Route::post('undo/{model}/{id}', [UndoController::class, 'restore'])->name('undo.restore');
     Route::delete('undo/{model}/{id}', [UndoController::class, 'clear'])->name('undo.clear');
+
+    // Activity log
+    Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::post('activity-log/{activityLog}/revert', [ActivityLogController::class, 'revert'])->name('activity-log.revert');
+    Route::delete('activity-log/{activityLog}', [ActivityLogController::class, 'destroy'])->name('activity-log.destroy');
 });
