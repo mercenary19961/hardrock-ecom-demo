@@ -30,6 +30,7 @@
 22. [Admin Activity Log & Undo System](#admin-activity-log--undo-system)
 23. [Optimistic Locking](#optimistic-locking)
 24. [Deployment (Railway)](#deployment-railway)
+25. [Admin Panel UI System](#admin-panel-ui-system)
 
 ---
 
@@ -969,12 +970,18 @@ Product images use native lazy loading:
 |------|-------------|
 | `Components/admin/UndoButton.tsx` | Floating undo button with confirmation dialog |
 | `Components/admin/NumberInput.tsx` | Custom number input with purple spinner buttons |
+| `Components/admin/AdminSelect.tsx` | Custom dark-themed dropdown replacing native `<select>` |
 
 ### Admin Pages
 | File | Description |
 |------|-------------|
 | `Pages/Admin/Products/Edit.tsx` | Product edit page (stock matrix, activity log, undo, optimistic locking) |
 | `Pages/Admin/Dashboard.tsx` | Admin dashboard |
+| `Pages/Admin/Team/Index.tsx` | Team member card grid (Admins + Editors sections) |
+| `Pages/Admin/Team/Create.tsx` | Add team member form |
+| `Pages/Admin/Team/Edit.tsx` | Edit team member form |
+| `Pages/Admin/ActivityLog.tsx` | Activity log card grid with day dividers and action-colored accents |
+| `Pages/Admin/Notifications/Preferences.tsx` | Notification preferences (in-app + email toggles per event) |
 
 ### Backend Services
 | File | Description |
@@ -1756,3 +1763,158 @@ Phase 1 (completed) added: orders by status breakdown, top selling products, out
 - With 30-second polling, ensure deferred groups are scoped so polling doesn't re-fetch everything
 - Chart library must be lazy-loaded (`React.lazy`) to avoid adding ~150KB to the global bundle
 - Consider increasing polling interval to 60 seconds once Phase 2 is implemented to reduce server load
+
+---
+
+## Admin Panel UI System
+
+### Roles
+
+Three user roles exist: `admin`, `editor`, `customer`. Both TypeScript type files must stay in sync:
+- `resources/js/types/models.ts` — `role: "admin" | "editor" | "customer"`
+- `resources/js/types/index.d.ts` — `role?: 'admin' | 'editor' | 'customer'`
+
+### Role-Aware Sidebar Navigation
+
+`AdminLayout.tsx` builds the `navigation` array via `useMemo` based on `auth.user.role`. Team, Authorization, and Settings entries are only included for `admin` role:
+
+```typescript
+const navigation = useMemo(() => {
+    const base = [ /* Products, Categories, Orders, Customers, Users */ ];
+    const adminOnly = [ /* Team, Authorization, Settings */ ];
+    return auth.user.role === 'admin' ? [...base, ...adminOnly] : base;
+}, [auth.user.role]);
+```
+
+### Bell Notification Dropdown
+
+Located in the AdminLayout header (before the SkyToggle). Polls `/admin/notifications` every 30 seconds via `setInterval`.
+
+**State:**
+- `bellOpen` — dropdown visibility
+- `notifications` — `NotificationItem[]` array
+- `unreadCount` — badge count (hidden when 0)
+
+**Endpoints used:**
+| Method | URL | Action |
+|--------|-----|--------|
+| GET | `/admin/notifications` | Fetch latest notifications |
+| POST | `/admin/notifications/{id}/read` | Mark single read |
+| POST | `/admin/notifications/read-all` | Mark all read |
+
+**Click-outside:** A single `mousedown` handler on `document` covers both the search dropdown and the bell dropdown (checks `bellRef` and `searchRef`).
+
+### AdminSelect Component
+
+File: `Components/admin/AdminSelect.tsx`
+
+Fully custom dropdown to replace native `<select>` (which cannot be themed for its OS-rendered option list).
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `string` | — | Currently selected value |
+| `onChange` | `(v: string) => void` | — | Change callback |
+| `options` | `{ value: string; label: string }[]` | — | Options list |
+| `className` | `string` | `''` | Outer wrapper classes (controls width) |
+| `variant` | `'form' \| 'filter'` | `'form'` | Visual style |
+
+**Variants:**
+- `form` — `bg-gray-700 border-gray-600 text-white` — used in form inputs (Team/Create, Team/Edit)
+- `filter` — `bg-gray-800 border-gray-700 text-gray-200` — used in filter bars (ActivityLog)
+
+**Selected option:** highlighted with `bg-purple-600/25 text-purple-300` + Check icon. ChevronDown rotates 180° when open.
+
+**Usage:**
+```tsx
+import { AdminSelect } from '@/Components/admin/AdminSelect';
+
+<AdminSelect
+    value={data.role}
+    onChange={(v) => setData('role', v as 'admin' | 'editor')}
+    options={[
+        { value: 'editor', label: 'Editor' },
+        { value: 'admin',  label: 'Admin' },
+    ]}
+/>
+
+{/* In a filter bar */}
+<AdminSelect variant="filter" className="w-44" value={...} onChange={...} options={...} />
+```
+
+### Activity Log Card Layout
+
+File: `Pages/Admin/ActivityLog.tsx`
+
+Cards are grouped by day (horizontal rule dividers with centered date label). Within each day, cards are in a responsive 2-column grid (`grid-cols-1 xl:grid-cols-2`).
+
+**Left accent border colors (constant `ACTION_BORDER`):**
+| Action | Color |
+|--------|-------|
+| `created` | `border-l-green-500` |
+| `updated` | `border-l-blue-500` |
+| `deleted` | `border-l-red-500` |
+| `restored` | `border-l-amber-500` |
+
+**Hover behavior:** Only the top, right, and bottom borders lighten on hover — the left accent is preserved:
+```tsx
+className="border border-l-2 {ACTION_BORDER[action]}
+           hover:border-t-gray-600 hover:border-r-gray-600 hover:border-b-gray-600"
+```
+
+**Do NOT use** `hover:border-gray-600` (shorthand) as it overrides all 4 sides including the accent.
+
+**Card anatomy:**
+- Header: action icon + model section + action badge + timestamp
+- Body (diffs): tinted background (`bg-gray-900/40`), old → new field changes
+- Footer: Revert button (updated entries only) + Delete button
+- Reverted entries: `opacity-55` + "reverted" pill badge, no Revert button
+
+### Team Page Card Layout
+
+File: `Pages/Admin/Team/Index.tsx`
+
+Two sections: **Admins** (amber/ShieldCheck) and **Editors** (blue/Shield), each with a count pill. Empty state for Editors shows an "Add an editor" link.
+
+**`MemberCard` features:**
+- Avatar: 2-letter initials in purple circle
+- "You" absolute badge (top-right) for the current user
+- Role badge: amber/Crown for admin, blue/Shield for editor
+- Edit button (Pencil) → `/admin/team/{id}/edit`
+- `DeleteButton`: disabled (grayed Trash2) for self; otherwise shows inline confirm ("Remove / Cancel")
+
+**Grid:** `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
+
+### Customers Route Scoping
+
+`/admin/customers` reuses `UserController@index` with route detection:
+
+```php
+// UserController.php
+if ($request->routeIs('admin.customers.*')) {
+    $query->where('role', 'customer');
+    // ... customer-specific stats
+    $customersOnly = true;
+}
+```
+
+The `customersOnly` boolean is passed to the Inertia view to adjust page title and filter UI.
+
+### Notification Preferences Page
+
+File: `Pages/Admin/Notifications/Preferences.tsx`
+
+Submits via `put('/admin/notifications/preferences')`.
+
+**Event types:**
+| Key | Label | Admin only? |
+|-----|-------|-------------|
+| `new_order` | New Order | No |
+| `low_stock` | Low Stock Alert | No |
+| `editor_sensitive_action` | Editor Sensitive Actions | Yes |
+
+**Channels:** `in_app`, `email` (toggle switches per event × channel).
+
+Toggle switch sizing: outer `w-9 h-5`, thumb `w-3.5 h-3.5`. "On" position uses `translate-x-5` (20px). Using `translate-x-4.5` (18px) causes the thumb to not reach the end.
+
+The `editor_sensitive_action` row is hidden for non-admin users (`auth.user.role !== 'admin'`).

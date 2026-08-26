@@ -247,6 +247,28 @@ class OrderController extends Controller
         }
     }
 
+    public function markAsPaid(Order $order): RedirectResponse
+    {
+        if ($order->isPaid()) {
+            return back()->with('error', 'Order is already marked as paid.');
+        }
+
+        if ($order->payment_method !== 'cod') {
+            return back()->with('error', 'Only COD orders can be manually confirmed.');
+        }
+
+        $order->markAsPaid('COD-CONFIRMED');
+
+        OrderActivity::create([
+            'order_id'    => $order->id,
+            'action'      => 'payment_confirmed',
+            'description' => 'Payment confirmed manually by admin (COD)',
+            'user_id'     => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Order marked as paid.');
+    }
+
     public function updateAdminNotes(Request $request, Order $order): RedirectResponse
     {
         $request->validate([

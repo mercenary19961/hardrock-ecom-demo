@@ -28,6 +28,8 @@ import {
     Shield,
     CheckCheck,
     ExternalLink,
+    CreditCard,
+    Truck,
 } from 'lucide-react';
 import { User as UserType } from '@/types/models';
 import { SiteSettings } from '@/types';
@@ -91,6 +93,8 @@ const breadcrumbConfig: Record<string, { label: string; icon: React.ComponentTyp
     'team': { label: 'Team', icon: Shield },
     'authorization': { label: 'Authorization', icon: ShieldCheck },
     'customers': { label: 'Customers', icon: Users },
+    'payments': { label: 'Payments', icon: CreditCard },
+    'shipments': { label: 'Shipments', icon: Truck },
     'notifications': { label: 'Notifications', icon: Bell },
     'create': { label: 'Create', icon: Plus },
     'edit': { label: 'Edit', icon: Pencil },
@@ -130,6 +134,8 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
             { name: 'Products', href: '/admin/products', icon: Package },
             { name: 'Categories', href: '/admin/categories', icon: FolderTree },
             { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+            { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+            { name: 'Shipments', href: '/admin/shipments', icon: Truck },
             { name: 'Reviews', href: '/admin/reviews', icon: Star },
             { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
             { name: 'Customers', href: '/admin/customers', icon: Users },
